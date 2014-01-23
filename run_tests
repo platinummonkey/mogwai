@@ -1,0 +1,6 @@
+#!/bin/sh
+VENV='venv/bin/activate'
+
+rm -Rf build/ dist/ prometheus.egg-info
+source $VENV && echo -e 'y\n' | pip uninstall prometheus
+source $VENV && nosetests -vv --attr=unit
