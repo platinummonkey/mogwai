@@ -26,6 +26,7 @@ html/
 *.iml
 
 # Unit test / coverage reports
+coverage/
 .coverage
 .tox
 
@@ -37,3 +38,7 @@ html/
 
 # virtualenv
 venv*/
+
+# ignore coverage directory
+coverage/
+coverage.xml

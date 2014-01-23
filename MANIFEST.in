@@ -1,4 +1,4 @@
 include AUTHORS
 include LICENSE
 include README.rst
-recursive-include prometheus *.py *.groovy VERSION
+recursive-include mogwai *.py *.groovy VERSION
