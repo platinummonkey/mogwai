@@ -17,6 +17,9 @@ pip-log.txt
 
 # Docs
 html/
+docs/_build
+docs/_static
+docs/_templates
 
 # IDE
 .project

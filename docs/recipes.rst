@@ -1,0 +1,6 @@
+.. _recipes:
+
+Recipes
+=======
+
+TODO
