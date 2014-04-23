@@ -103,6 +103,19 @@ class Vertex(Element):
                                                           getattr(self, '_id', None),
                                                           getattr(self, '_values', []))
 
+    def __getstate__(self):
+        state = {'_id': self.id, '_type': 'vertex'}
+        properties = self.as_save_params()
+        properties['element_type'] = self.get_element_type()
+        state['_properties'] = properties
+        print "outputting state from vertex: %s" % state
+        return state
+
+    def __setstate__(self, state):
+        print "outputting state from vertex: %s" % state
+        self.__init__(**self.translate_db_fields(state))
+        return self
+
     @classmethod
     def get_element_type(cls):
         """
@@ -156,6 +169,7 @@ class Vertex(Element):
     def _reload_values(self):
         """
         Method for reloading the current vertex by reading its current values from the database.
+
         """
         reloaded_values = {}
         results = execute_query('g.v(id)', {'id': self._id})
