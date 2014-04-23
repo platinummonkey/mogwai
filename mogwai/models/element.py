@@ -263,12 +263,14 @@ class BaseElement(object):
     def _reload_values(self):
         """
         Base method for reloading an element from the database.
+
         """
         raise NotImplementedError
 
     def reload(self):
         """
         Reload the given element from the database.
+
         """
         values = self._reload_values()
         for name, prop in self._properties.items():

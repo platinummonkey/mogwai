@@ -65,6 +65,20 @@ class Edge(Element):
         self._inV = inV
         super(Edge, self).__init__(**values)
 
+    def __getstate__(self):
+        state = {u'_id': self.id,
+                 u'_type': u'edge',
+                 u'_outV': str(self.outV().id),
+                 u'_inV': str(self.inV().id),
+                 u'_label': self.get_label(),
+                 u'_properties': self.as_save_params()}
+        return state
+
+    def __setstate__(self, state):
+        data = self.translate_db_fields(state)
+        self.__init__(state['_outV'], state['_inV'], **data)
+        return self
+
     @classmethod
     def all(cls, ids, as_dict=False):
         """
