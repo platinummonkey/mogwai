@@ -98,10 +98,10 @@ class Vertex(Element):
     FACTORY_CLASS = None
 
     def __repr__(self):
-        return "%s(element_type=%s, id=%s, values=%s)" % (self.__class__.__name__,
-                                                          self.element_type,
-                                                          getattr(self, '_id', None),
-                                                          getattr(self, '_values', []))
+        return "{}(element_type={}, id={}, values={})".format(self.__class__.__name__,
+                                                              self.element_type,
+                                                              getattr(self, '_id', None),
+                                                              getattr(self, '_values', {}))
 
     def __getstate__(self):
         state = {'_id': self.id, '_type': 'vertex'}

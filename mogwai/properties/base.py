@@ -46,7 +46,7 @@ class BaseValueManager(object):
                                                                                   self.previous_value,
                                                                                   self.strategy)
         else:
-            return self.value
+            return repr(self.value)
 
     def _create_private_fields(self):
         self._previous_value = None
