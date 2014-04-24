@@ -6,12 +6,18 @@ from mogwai.connection import generate_spec, execute_query
 
 
 def get_existing_indices():
+    """ Find all Vertex and Edge types available in the database """
     vertex_indices = execute_query('g.getIndexedKeys(Vertex.class)')
     edge_indices = execute_query('g.getIndexedKeys(Edge.class)')
     return vertex_indices, edge_indices
 
 
 def write_diff_indices_to_file(filename, spec=None):  # pragma: no cover
+    """ Preview of index diff specification to write to file
+
+    :param filename: The file to write to
+    :type filename: basestring
+    """
     if not spec:
         print_("Generating Specification...")
         spec = generate_spec()
@@ -27,6 +33,11 @@ def write_diff_indices_to_file(filename, spec=None):  # pragma: no cover
 
 
 def write_compiled_indices_to_file(filename, spec=None):  # pragma: no cover
+    """ Write the compile index specification to file
+
+    :param filename: The file to write to
+    :type filename: basestring
+    """
     if not spec:
         print_("Generating Specification...")
         spec = generate_spec()
@@ -38,6 +49,11 @@ def write_compiled_indices_to_file(filename, spec=None):  # pragma: no cover
 
 
 def write_specs_to_file(filename):  # pragma: no cover
+    """ Generate and write a specification to file
+
+    :param filename: The file to write to
+    :type filename: basestring
+    """
     print_("Generating Specification...")
     spec = generate_spec()
     print_("Writing Specification to File %s ..." % filename)

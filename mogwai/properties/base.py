@@ -6,6 +6,8 @@ from mogwai.exceptions import ValidationError, MogwaiException
 from strategy import Strategy, SaveAlways, SaveOnce
 from validators import pass_all_validator
 
+DEBUG = False
+
 
 class BaseValueManager(object):
     """
@@ -19,12 +21,12 @@ class BaseValueManager(object):
         """
         Initialize the value manager.
 
-        @param graph_property: The graph property to manage
-            @type graph_property: mogwai.properties.base.GraphProperty
-        @param value: The initial value of the column
-            @type value: Object
-        @param strategy: The callable condition to compare against. If none given, it won't be used
-            @type strategy: mogwai.properties.strategy.Strategy
+        :param graph_property: The graph property to manage
+        :type graph_property: mogwai.properties.base.GraphProperty
+        :param value: The initial value of the column
+        :type value: Object
+        :param strategy: The callable condition to compare against. If none given, it won't be used
+        :type strategy: mogwai.properties.strategy.Strategy
         """
         self._create_private_fields()
 
@@ -37,11 +39,14 @@ class BaseValueManager(object):
                           category=SyntaxWarning)
 
     def __repr__(self):
-        return "%s(property=%s, value=%s, previous_value=%s, strategy=%s)" % (self.__class__.__name__,
-                                                                              self.graph_property,
-                                                                              self.value,
-                                                                              self.previous_value,
-                                                                              self.strategy)
+        if DEBUG:
+            return "%s(property=%s, value=%s, previous_value=%s, strategy=%s)" % (self.__class__.__name__,
+                                                                                  self.graph_property,
+                                                                                  self.value,
+                                                                                  self.previous_value,
+                                                                                  self.strategy)
+        else:
+            return self.value
 
     def _create_private_fields(self):
         self._previous_value = None
@@ -59,7 +64,7 @@ class BaseValueManager(object):
         """
         Indicates whether or not this value has been deleted.
 
-        @returns: bool
+        :rtype: bool
 
         """
         return self.value is None and self.previous_value is not None
@@ -69,7 +74,7 @@ class BaseValueManager(object):
         """
         Indicates whether or not this value has changed.
 
-        @returns: bool
+        :rtype: bool
         """
         try:
             return self.strategy.condition(self.previous_value,
@@ -87,8 +92,8 @@ class BaseValueManager(object):
         """
         Updates the current value.
 
-        @param val: The new value
-        @type val: mixed
+        :param val: The new value
+    :type val: mixed
 
         """
         self.value = val
@@ -126,27 +131,27 @@ class GraphProperty(object):
         """
         Initialize this graph property with the given information.
 
-        @param description: description of this field
-            @type description: basestring | str
-        @param primary_key: Indicates whether or not this is primary key
-            @type primary_key: bool
-        @param index: Indicates whether or not this field is indexed
-            @type index: bool
-        @param db_field: The property this field will map to in the database
-            @type db_field: basestring | str
-        @param choices: A dict of possible choices where the key is the value to store, and the value is the
+        :param description: description of this field
+        :type description: basestring | str
+        :param primary_key: Indicates whether or not this is primary key
+        :type primary_key: bool
+        :param index: Indicates whether or not this field is indexed
+        :type index: bool
+        :param db_field: The property this field will map to in the database
+        :type db_field: basestring | str
+        :param choices: A dict of possible choices where the key is the value to store, and the value is the
                         user-friendly value
-            @type choices: tuple(tuple(Object, Object)) | list[list[Object, Object]] | None
-        @param default: Value or callable with no args to set default value
-            @type default: Callable | Number
-        @param required: Whether or not this field is required
-            @type required: bool
-        @param save_strategy: Strategy used when saving the value of the column
-            @type save_strategy: strategy.Strategy
-        @param unique: Uniqueness constraint left in for backwards compatibility -- used by Spec system.
-            @type unique: bool
-        @param db_field_prefix: The property prefix associated with the Model.
-            @type db_field_prefix: basestring | None
+        :type choices: tuple(tuple(Object, Object)) | list[list[Object, Object]] | None
+        :param default: Value or callable with no args to set default value
+        :type default: Callable | Number
+        :param required: Whether or not this field is required
+        :type required: bool
+        :param save_strategy: Strategy used when saving the value of the column
+        :type save_strategy: strategy.Strategy
+        :param unique: Uniqueness constraint left in for backwards compatibility -- used by Spec system.
+        :type unique: bool
+        :param db_field_prefix: The property prefix associated with the Model.
+        :type db_field_prefix: basestring | None
 
         """
         self.description = description
@@ -183,9 +188,9 @@ class GraphProperty(object):
 
         Note if you are using classes, they must implement the __in__ and __eq__ for the logical comparison.
 
-        @param value: The raw value to test if it exists in the valid choices. Could be the key or the value in the dict
-            @type value: Object
-        @returns Object
+        :param value: The raw value to test if it exists in the valid choices. Could be the key or the value in the dict
+        :type value: Object
+        :rtype: Object
         """
         if not choices:
             return None
@@ -198,7 +203,7 @@ class GraphProperty(object):
         """
         Returns a cleaned and validated value. Raises a ValidationError if there's a problem
 
-        @returns: Object
+        :rtype: Object
         """
         if self.choices:
             orig_value = value
@@ -216,7 +221,7 @@ class GraphProperty(object):
         """
         Converts data from the database into python values raises a ValidationError if the value can't be converted
 
-        @returns: Object
+        :rtype: Object
         """
         return value
 
@@ -224,7 +229,7 @@ class GraphProperty(object):
         """
         Converts python value into database value
 
-        @returns: Object
+        :rtype: Object
         """
         if value is None and self.has_default:
             return self.get_default()
@@ -235,7 +240,7 @@ class GraphProperty(object):
         """
         Indicates whether or not this graph property has a default value.
 
-        @returns: bool
+        :rtype: bool
         """
         return self.default is not None
 
@@ -247,7 +252,7 @@ class GraphProperty(object):
         """
         Indicates whether or not the property should be saved based on it's save strategy.
 
-        @returns: bool
+        :rtype: bool
         """
         return self.get_save_strategy().condition(previous_value=self.value_manager.previous_value,
                                                   value=self.value_manager.value,
@@ -259,7 +264,7 @@ class GraphProperty(object):
         """
         Returns the save strategy attached to this graph property.
 
-        @returns: Callable
+        :rtype: Callable
 
         """
         return self.save_strategy or (SaveAlways if not self.primary_key else SaveOnce)
@@ -268,7 +273,7 @@ class GraphProperty(object):
         """
         Returns the default value for this graph property if one is available.
 
-        @returns: Object | None
+        :rtype: Object | None
         """
         if self.has_default:
             if callable(self.default):
@@ -282,8 +287,8 @@ class GraphProperty(object):
 
         This value will be ignored if db_field is set in __init__
 
-        @param name: The name of this graph property
-            @type name: str
+        :param name: The name of this graph property
+        :type name: str
         """
         self.property_name = name
 
@@ -310,6 +315,6 @@ class GraphProperty(object):
         """
         Returns the name of the mogwai name of this graph property
 
-        @returns: basestring | str
+        :rtype: basestring | str
         """
         return (self.db_field_prefix or '') + (self.db_field or self.property_name or '')

@@ -30,15 +30,15 @@ class Query(object):
 
     def count(self):
         """
-        @returns: number of matching vertices
-        @rtype: int
+        :returns: number of matching vertices
+        :rtype: int
         """
         return self._execute('count', deserialize=False)
 
     def direction(self, direction):
         """
-        @param direction: direction to compare or traverse
-        @returns: Query
+        :param direction: direction to compare or traverse
+        :rtype: Query
         """
         q = copy.copy(self)
         if self._direction:
@@ -48,19 +48,19 @@ class Query(object):
 
     def edges(self):
         """
-        @returns: list[edge.Edge]
+        :rtype: list[edge.Edge]
         """
         return self._execute('edges')
 
     def has(self, key, value, compare=EQUAL):
         """
-        @param key: key to lookup
-            @type key: str | mogwai.properties.GraphProperty
-        @param value: value to compare
-            @type value: str, float, int
-        @param compare: comparison keyword
-            @type compare: str
-        @returns: Query
+        :param key: key to lookup
+        :type key: str | mogwai.properties.GraphProperty
+        :param value: value to compare
+        :type value: str, float, int
+        :param compare: comparison keyword
+        :type compare: str
+        :rtype: Query
         """
         compare = "Query.Compare.{}".format(compare)
 
@@ -74,7 +74,7 @@ class Query(object):
 
     def interval(self, key, start, end):
         """
-        @returns : Query
+        :rtype : Query
         """
         if start > end:
             start, end = end, start
@@ -85,9 +85,9 @@ class Query(object):
 
     def labels(self, *args):
         """
-        @param args: list of Edges
-            @type args: list[edge.Edge]
-        @returns: Query
+        :param args: list of Edges
+        :type args: list[edge.Edge]
+        :rtype: Query
         """
         tmp = []
         for x in args:

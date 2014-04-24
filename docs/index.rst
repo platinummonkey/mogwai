@@ -23,6 +23,7 @@ Features
  - Optionally can utilize `factory_boy <http://factoryboy.readthedocs.org/en/latest/>`_ to generate models.
  - Interactive shell available
  - Performance monitoring tools available.
+ - Serialization support for Pickle
 
 
 .. _links:
@@ -46,7 +47,7 @@ PyPI: https://pypi.python.org/pypi/mogwai/
 
 .. code-block:: sh
 
-    $ pip install mogwai
+    $ pip install mogwa
 
 Source: https://bitbucket.org/wellaware/mogwai.git
 
@@ -62,10 +63,10 @@ Contents
 .. toctree::
    :maxdepth: 2
 
+   Home <self>
    quickstart
-   internals
-   reference
-   recipes
+   internals/index
+   examples/index
    changelog
    contribute
    ideas

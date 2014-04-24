@@ -25,19 +25,19 @@ class BaseGremlinMethod(object):
         """
         Initialize the gremlin method and define how it is attached to class.
 
-        @param path: Path to the gremlin source (relative to file class is defined in). Absolute paths work as well.
+        :param path: Path to the gremlin source (relative to file class is defined in). Absolute paths work as well.
                      Defaults to gremlin.groovy.
-            @type path: str
-        @param method_name: The name of the function definition in the groovy file
-            @type method_name: str
-        @param classmethod: Method should behave as a classmethod if True
-            @type classmethod: bool
-        @param property: Method should behave as a property
-            @type property: bool
-        @param defaults: The default parameters to the function
-            @type defaults: dict
-        @param transaction: Close previous transaction before executing (True by default)
-            @type transaction: bool
+        :type path: str
+        :param method_name: The name of the function definition in the groovy file
+        :type method_name: str
+        :param classmethod: Method should behave as a classmethod if True
+        :type classmethod: bool
+        :param property: Method should behave as a property
+        :type property: bool
+        :param defaults: The default parameters to the function
+        :type defaults: dict
+        :param transaction: Close previous transaction before executing (True by default)
+        :type transaction: bool
 
         """
         self.is_configured = False
@@ -61,12 +61,12 @@ class BaseGremlinMethod(object):
         """
         Sets up the methods internals
 
-        @param klass: The class object this function is being added to
-            @type klass: object
-        @param attr_name: The attribute name this function will be added as
-            @type attr_name: str
-        @param gremlin_path: The path to the gremlin file containing method
-            @type gremlin_path: str
+        :param klass: The class object this function is being added to
+        :type klass: object
+        :param attr_name: The attribute name this function will be added as
+        :type attr_name: str
+        :param gremlin_path: The path to the gremlin file containing method
+        :type gremlin_path: str
 
         """
         if not self.is_configured:
@@ -120,15 +120,15 @@ class BaseGremlinMethod(object):
         """
         Intercept attempts to call the GremlinMethod attribute and perform a gremlin query returning the results.
 
-        @param instance: The class instance the method was called on
-            @type instance: object
+        :param instance: The class instance the method was called on
+        :type instance: object
 
         """
         self._setup()
 
         args = list(args)
         if not self.classmethod:
-            print "Instance: ", instance
+            #print "Instance: ", instance
             args = [instance._id] + args
 
         params = self.defaults.copy()
@@ -187,9 +187,9 @@ class BaseGremlinMethod(object):
         Takes a dictionary of parameters and recursively translates them into parameters appropriate for sending over
         Rexpro.
 
-        @param params: The parameters to be sent to the function
-            @type params: dict
-        @returns: dict
+        :param params: The parameters to be sent to the function
+        :type params: dict
+        :rtype: dict
 
         """
         import inspect
@@ -227,8 +227,8 @@ class GremlinMethod(BaseGremlinMethod):
         """
         Recursively deserializes elements returned from rexster
 
-        @param obj: The raw result returned from rexster
-            @type obj: object
+        :param obj: The raw result returned from rexster
+        :type obj: object
 
         """
         from mogwai.models.element import Element

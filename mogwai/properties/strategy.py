@@ -11,7 +11,7 @@ class Strategy(object):
     def condition(cls, previous_value, value, has_changed=False, first_save=False, graph_property=None):
         """ Default save strategy condition
 
-        @raises: NotImplementedError
+        :raises: NotImplementedError
         """
         raise NotImplementedError("No Save Strategy condition defined")
 
@@ -29,8 +29,8 @@ class SaveOnce(Strategy):
     def condition(cls, previous_value, value, has_changed=False, first_save=False, graph_property=None):
         """ Always save this value if it has changed
 
-        @raises: SaveStrategyException
-        @returns: bool
+        :raises: SaveStrategyException
+        :rtype: bool
         """
         if not first_save:
             field_name = getattr(graph_property, 'field_db_name', None)
@@ -46,7 +46,7 @@ class SaveOnChange(Strategy):
     def condition(cls, previous_value, value, has_changed=False, first_save=False, graph_property=None):
         """ Always save this value if it has changed
 
-        @returns: bool
+        :rtype: bool
         """
         return has_changed
 
@@ -58,7 +58,7 @@ class SaveAlways(Strategy):
     def condition(cls, previous_value, value, has_changed=False, first_save=False, graph_property=None):
         """ Save this value every time the corresponding model is saved.
 
-        @returns: bool
+        :rtype: bool
         """
         return True
 
@@ -70,7 +70,7 @@ class SaveOnIncrease(Strategy):
     def condition(cls, previous_value, value, has_changed=False, first_save=False, graph_property=None):
         """ Only save this value if it is increasing
 
-        @returns: bool
+        :rtype: bool
         """
         return value > previous_value
 
@@ -82,6 +82,6 @@ class SaveOnDecrease(Strategy):
     def condition(cls, previous_value, value, has_changed=False, first_save=False, graph_property=None):
         """ Only save this value if it is decreasing
 
-        @returns: bool
+        :rtype: bool
         """
         return value < previous_value

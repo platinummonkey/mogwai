@@ -7,7 +7,7 @@ We'll keep a running list of ideas for future enhancements. Please note this is 
 up-to-date with the issue tracker. Also these are in no-particular order.
 
  * **Titan 0.5.x + support --> TinkerPop3 and Gremlin3 Support**
-    * Websocket support for streaming results
+    * Websocket support for streaming results (generators)
  * **Improved Index/Constraint Specification System**
     * Create Faunus or runnable job against the database to enforce a specification
  * **Support Migrations - The `South` project lends inspiration here.**

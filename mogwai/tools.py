@@ -159,6 +159,7 @@ class LazyImportClass(object):
 
     @cached_property
     def klass(self):
+        """ Imports the class and caches """
         return import_string(self.import_name)
 
     def __call__(self, *args, **kwargs):

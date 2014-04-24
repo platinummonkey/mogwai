@@ -24,12 +24,12 @@ class BaseMetricsReporter(object):
             # do my stuff...
             super(MyClass, self).__init__(*args, **kwargs)
 
-        @param registry: The pyformance registry
-            @type registry: list[ MetricsRegistry | RegexRegistry ] | MetricsRegistry | RegexRegistry
-        @param reportingInterval: The interval (number of seconds) on which to report the collected metrics.
-            @type reportingInterval: float | long | int
-        @param metric_prefix: The prefix on the collected metrics. The default implementation ignores this.
-            @type metric_prefix: basestring | None
+        :param registry: The pyformance registry
+        :type registry: list[ MetricsRegistry | RegexRegistry ] | MetricsRegistry | RegexRegistry
+        :param reportingInterval: The interval (number of seconds) on which to report the collected metrics.
+        :type reportingInterval: float | long | int
+        :param metric_prefix: The prefix on the collected metrics. The default implementation ignores this.
+        :type metric_prefix: basestring | None
         """
         self.setup_registry(registry=registry)
         self.reporting_interval = reportingInterval
@@ -37,12 +37,15 @@ class BaseMetricsReporter(object):
         self.task = None
 
     def start(self):
+        """ Start the Metric Reporter """
         self.start_reporter(self.reporting_interval)
 
     def stop(self):
+        """ Stop the Metric Reporter """
         self.task.stop()
 
     def setup_registry(self, registry=None):
+        """ Setup the Metric Reporter with the given registry(s) """
         if not registry:
             self.registry = [MetricsRegistry(), ]
         else:
@@ -61,8 +64,8 @@ class BaseMetricsReporter(object):
 
         Kicks off a loop that every reportingInterval runs the `send_metrics` method.
 
-        @param reportingInterval: The interval (number of seconds) on which to report the collected metrics.
-            @type reportingInterval: float | long | int
+        :param reportingInterval: The interval (number of seconds) on which to report the collected metrics.
+        :type reportingInterval: float | long | int
         """
         self.task = task.LoopingCall(self.send_metrics)
         self.task.start(reportingInterval)
@@ -72,10 +75,10 @@ class BaseMetricsReporter(object):
 
         Change only if you know what you are doing.
 
-        @param timestamp: use this timestamp instead of the generated timestamp when the method is run
-            @type timestamp: long | int
-        @returns: Timestamp and aggregated metrics from all registries.
-            @rtype: tuple( long | int, dict )
+        :param timestamp: use this timestamp instead of the generated timestamp when the method is run
+        :type timestamp: long | int
+        :returns: Timestamp and aggregated metrics from all registries.
+        :rtype: tuple( long | int, dict )
         """
         if not timestamp:
             timestamp = get_time()
@@ -89,10 +92,10 @@ class BaseMetricsReporter(object):
 
         Change this if you wan't customize for a particular metric collection system, ie. graphite, newrelic, etc.
 
-        @param timestamp: use this timestamp instead of the generated timestamp when the method is run
-            @type timestamp: long | int
-        @returns: Timestamp and aggregated metrics from all registries.
-            @rtype: tuple( long | int, dict )
+        :param timestamp: use this timestamp instead of the generated timestamp when the method is run
+        :type timestamp: long | int
+        :returns: Timestamp and aggregated metrics from all registries.
+        :rtype: tuple( long | int, dict )
         """
         return self._get_metrics(timestamp)
 

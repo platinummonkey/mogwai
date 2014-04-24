@@ -53,12 +53,12 @@ class Edge(Element):
         """
         Initialize this edge with the outgoing and incoming vertices as well as edge properties.
 
-        @param outV: The vertex this edge is coming out of
-            @type outV: Vertex
-        @param inV: The vertex this edge is going into
-            @type inV: Vertex
-        @param values: The properties for this edge
-            @type values: dict
+        :param outV: The vertex this edge is coming out of
+        :type outV: Vertex
+        :param inV: The vertex this edge is going into
+        :type inV: Vertex
+        :param values: The properties for this edge
+        :type values: dict
 
         """
         self._outV = outV
@@ -85,11 +85,11 @@ class Edge(Element):
         Load all edges with the given edge_ids from the graph. By default this will return a list of edges but if
         as_dict is True then it will return a dictionary containing edge_ids as keys and edges found as values.
 
-        @param ids: A list of titan IDs
-            @type ids: list
-        @param as_dict: Toggle whether to return a dictionary or list
-            @type as_dict: boolean
-        @returns: dict or list
+        :param ids: A list of titan IDs
+        :type ids: list
+        :param as_dict: Toggle whether to return a dictionary or list
+        :type as_dict: boolean
+        :rtype: dict | list
         """
         if not isinstance(ids, array_types):
             raise MogwaiQueryError("ids must be of type list or tuple")
@@ -120,7 +120,7 @@ class Edge(Element):
         """
         Returns the label for this edge.
 
-        @returns: str
+        :rtype: str
 
         """
         return cls._type_name(cls.label)
@@ -130,15 +130,15 @@ class Edge(Element):
         """
         Return all the edges with a given label between two vertices.
 
-        @param outV: The vertex the edge comes out of.
-            @type outV: Vertex
-        @param inV: The vertex the edge goes into.
-            @type inV: Vertex
-        @param page_num: The page number of the results
-            @type page_num: int
-        @param per_page: The number of results per page
-            @type per_page : int
-        @returns: list
+        :param outV: The vertex the edge comes out of.
+        :type outV: Vertex
+        :param inV: The vertex the edge goes into.
+        :type inV: Vertex
+        :param page_num: The page number of the results
+        :type page_num: int
+        :param per_page: The number of results per page
+        :type per_page: int
+        :rtype: list
 
         """
         return cls._get_edges_between(out_v=outV,
@@ -191,9 +191,9 @@ class Edge(Element):
         Look up edge by titan assigned ID. Raises a DoesNotExist exception if a edge with the given edge id was not
         found. Raises a MultipleObjectsReturned exception if the edge_id corresponds to more than one edge in the graph.
 
-        @param id: The titan assigned ID
-            @type id: str | basestring
-        @returns: mogwai.models.Edge
+        :param id: The titan assigned ID
+        :type id: str | basestring
+        :rtype: mogwai.models.Edge
         """
         try:
             results = cls.all([id])
@@ -216,10 +216,10 @@ class Edge(Element):
         Create a new edge of the current type coming out of vertex outV and going into vertex inV with the given
         properties.
 
-        @param outV: The vertex the edge is coming out of
-            @type outV: Vertex
-        @param inV: The vertex the edge is going into
-            @type inV: Vertex
+        :param outV: The vertex the edge is coming out of
+        :type outV: Vertex
+        :param inV: The vertex the edge is going into
+        :type inV: Vertex
 
         """
         return super(Edge, cls).create(outV, inV, *args, **kwargs)
@@ -245,9 +245,9 @@ class Edge(Element):
         """
         Perform a simple traversal starting from the current edge returning a list of results.
 
-        @param operation: The operation to be performed
-            @type operation: str
-        @returns: list
+        :param operation: The operation to be performed
+        :type operation: str
+        :rtype: list
 
         """
         results = execute_query('g.e(id).%s()' % operation, {'id': self.id})
@@ -257,7 +257,7 @@ class Edge(Element):
         """
         Return the vertex that this edge goes into.
 
-        @returns: Vertex
+        :rtype: Vertex
 
         """
         from vertex import Vertex

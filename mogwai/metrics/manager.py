@@ -45,6 +45,7 @@ class MetricManager(object):
         self.metric_reporters = []  #BaseMetricsReporter()]
 
     def setup_reporters(self, metric_reporters):
+        """ Setup the Metric Reporter(s) for the MetricManager """
         if not metric_reporters:
             raise MogwaiMetricsException("No Metric Reporters provided!")
         if not isinstance(metric_reporters, (list, tuple)):
@@ -57,14 +58,21 @@ class MetricManager(object):
         self.metric_reporters = metric_reporters
 
     def start(self):
+        """ Start the Metric Reporter """
         for mr in self.metric_reporters:
             mr.start()
 
     def stop(self):
+        """ Stop the Metric Reporter """
         for mr in self.metric_reporters:
             mr.stop()
 
     def timers(self, key=None):
+        """ Yield Metric Reporter Timers
+
+        :param key: The metric key to use
+        :type key: basestring
+        """
         if not key:
             for mr in self.metric_reporters:
                 for reg in mr.registry:
@@ -75,6 +83,11 @@ class MetricManager(object):
                     yield reg.timer(key)
 
     def histograms(self, key=None):
+        """ Yield Metric Reporter Histograms
+
+        :param key: The metric key to use
+        :type key: basestring
+        """
         if not key:
             for mr in self.metric_reporters:
                 for reg in mr.registry:
@@ -85,6 +98,11 @@ class MetricManager(object):
                     yield reg.histogram(key)
 
     def meters(self, key=None):
+        """ Yield Metric Reporter Meters
+
+        :param key: The metric key to use
+        :type key: basestring
+        """
         if not key:
             for mr in self.metric_reporters:
                 for reg in mr.registry:
@@ -95,6 +113,11 @@ class MetricManager(object):
                     yield reg.meter(key)
 
     def counters(self, key=None):
+        """ Yield Metric Reporter Counters
+
+        :param key: The metric key to use
+        :type key: basestring
+        """
         if not key:
             for mr in self.metric_reporters:
                 for reg in mr.registry:
@@ -108,10 +131,10 @@ class MetricManager(object):
         """
         Decorator to time the execution of the function.
 
-        @param fn: the function to be decorated
-            @type fn: C{func}
-        @return: the decorated function
-            @rtype: C{func}
+        :param fn: the function to be decorated
+        :type fn: C{func}
+        :return: the decorated function
+        :rtype: C{func}
         """
         @wraps(fn)
         def wrapper(*args, **kwargs):
@@ -138,11 +161,10 @@ class MetricManager(object):
         """
         Decorator to check the distribution of return values of a function.
 
-        @param fn: the function to be decorated
-            @type fn: C{func}
-
-        @return: the decorated function
-            @rtype: C{func}
+        :param fn: the function to be decorated
+        :type fn: C{func}
+        :return: the decorated function
+        :rtype: C{func}
         """
         @wraps(fn)
         def wrapper(*args, **kwargs):
@@ -173,11 +195,10 @@ class MetricManager(object):
         """
         Decorator to the rate at which a function is called.
 
-        @param fn: the function to be decorated
-        @type fn: C{func}
-
-        @return: the decorated function
-        @rtype: C{func}
+        :param fn: the function to be decorated
+        :type fn: C{func}
+        :return: the decorated function
+        :rtype: C{func}
         """
         @wraps(fn)
         def wrapper(*args, **kwargs):
@@ -206,11 +227,10 @@ class MetricManager(object):
         """
         Decorator to track the number of times a function is called.
 
-        @param fn: the function to be decorated
-            @type fn: C{func}
-
-        @return: the decorated function
-            @rtype: C{func}
+        :param fn: the function to be decorated
+        :type fn: C{func}
+        :return: the decorated function
+        :rtype: C{func}
         """
         @wraps(fn)
         def wrapper(*args, **kwargs):

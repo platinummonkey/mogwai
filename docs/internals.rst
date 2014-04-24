@@ -1,6 +1,0 @@
-.. _internals:
-
-Internals
-=========
-
-TODO

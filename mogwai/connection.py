@@ -40,7 +40,7 @@ def execute_query(query, params={}, transaction=True, isolate=True, *args, **kwa
     """ @type conn: rexpro.RexProConnection """
     try:
         response = conn.execute(query, params=params, isolate=isolate, transaction=transaction)
-        print_("Got raw response: %s" % response)
+        #print_("Got raw response: %s" % response)
 
     except RexProConnectionException as ce:  # pragma: no cover
         raise MogwaiConnectionError("Connection Error during query - {}".format(ce))
@@ -161,15 +161,15 @@ def sync_spec(filename, host, graph_name='graph', username='', password='', dry_
     """
     Sync the given spec file to mogwai.
 
-    @param filename: The filename of the spec file
-        @type filename: str
-    @param host: The host the be synced
-        @type host: str
-    @param graph_name: The name of the graph to be synced
-        @type graph_name: str
-    @param dry_run: Only prints generated Gremlin if True
-        @type dry_run: boolean
-    @returns: None
+    :param filename: The filename of the spec file
+    :type filename: str
+    :param host: The host the be synced
+    :type host: str
+    :param graph_name: The name of the graph to be synced
+    :type graph_name: str
+    :param dry_run: Only prints generated Gremlin if True
+    :type dry_run: boolean
+    :returns: None
 
     """
     conn = RexProConnection(graph_name=graph_name, **_parse_host(host, username, password, graph_name))

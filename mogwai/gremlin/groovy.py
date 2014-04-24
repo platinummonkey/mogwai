@@ -27,9 +27,9 @@ class GroovyFunctionParser(object):
         """
         Parse the given function definition and return information regarding the contained definition.
 
-        @param data: The function definition in a string
-            @type data: str
-        @returns: dict
+        :param data: The function definition in a string
+        :type data: str
+        :rtype: dict
 
         """
         try:
@@ -51,9 +51,9 @@ def parse(file):
     Parse Groovy code in the given file and return a list of information about each function necessary for usage in
     queries to database.
 
-    @param file: The file containing groovy code.
-        @type file: str
-    @returns: list
+    :param file: The file containing groovy code.
+    :type file: str
+    :rtype: list
 
     """
     # Check cache before parsing file

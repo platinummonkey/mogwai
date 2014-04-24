@@ -1,6 +1,0 @@
-.. _reference:
-
-Reference
-=========
-
-TODO

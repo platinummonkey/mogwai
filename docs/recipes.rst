@@ -1,6 +1,0 @@
-.. _recipes:
-
-Recipes
-=======
-
-TODO

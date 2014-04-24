@@ -18,16 +18,16 @@ class HostedGraphiteReporter(BaseMetricsReporter):
             # do my stuff...
             super(MyClass, self).__init__(*args, **kwargs)
 
-        @param api_key: The Hosted Graphite API key
-            @type api_key: basestring
-        @param url: The Hosted Graphite API url
-            @type url: basestring
-        @param metric_prefix: The prefix on the collected metrics. The default implementation ignores this.
-            @type metric_prefix: basestring | None
-        @param registry: The pyformance registry
-            @type registry: list[ MetricsRegistry | RegexRegistry ] | MetricsRegistry | RegexRegistry
-        @param reportingInterval: The interval (number of seconds) on which to report the collected metrics.
-            @type reportingInterval: float | long | int
+        :param api_key: The Hosted Graphite API key
+        :type api_key: basestring
+        :param url: The Hosted Graphite API url
+        :type url: basestring
+        :param metric_prefix: The prefix on the collected metrics. The default implementation ignores this.
+        :type metric_prefix: basestring | None
+        :param registry: The pyformance registry
+        :type registry: list[ MetricsRegistry | RegexRegistry ] | MetricsRegistry | RegexRegistry
+        :param reportingInterval: The interval (number of seconds) on which to report the collected metrics.
+        :type reportingInterval: float | long | int
         """
         self.url = url
         self.api_key = api_key
@@ -51,10 +51,10 @@ class HostedGraphiteReporter(BaseMetricsReporter):
         """ Default Hosted Graphite implementation to collect all the metrics from the registries and upload to a
         hosted graphite
 
-        @param timestamp: use this timestamp instead of the generated timestamp when the method is run
-            @type timestamp: long | int
-        @returns: Timestamp and aggregated metrics from all registries.
-            @rtype: tuple( long | int, dict )
+        :param timestamp: use this timestamp instead of the generated timestamp when the method is run
+        :type timestamp: long | int
+        :returns: Timestamp and aggregated metrics from all registries.
+        :rtype: tuple( long | int, dict )
         """
         timestamp, metrics = self._get_metrics(timestamp)
         metrics_data = []

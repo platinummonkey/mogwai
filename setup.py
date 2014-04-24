@@ -9,6 +9,10 @@ version = open('mogwai/VERSION', 'r').readline().strip()
 
 long_desc = """
 mogwai is an Object-Graph Mapper (OGM) for Python
+
+`Documentation <https://mogwai.readthedocs.org/en/latest/>`_
+
+`Report a Bug <https://bitbucket.org/wellaware/mogwai/issues>`_
 """
 
 setup(
@@ -34,14 +38,15 @@ setup(
     ],
     keywords='cassandra,titan,ogm,mogwai,thunderdome',
     install_requires=['pyparsing>=1.5.7',
-                      'rexpro>=0.1.1',
+                      'rexpro>=0.1.2',
                       'six>=1.5.2',
                       'argparse>=1.2.1',
                       'factory-boy>=2.3.1',
                       'pyformance==0.2.4'],
     extras_require={
-        'develop': ['nose==1.3.0', 'coverage==3.7.1', 'pyformance==0.2.4', 'tox==1.7.1'],
-        'newrelic': ['newrelic==2.18.1.15']
+        'develop': ['nose==1.3.0', 'coverage==3.7.1', 'tox==1.7.1'],
+        'newrelic': ['newrelic>=2.18.1.15'],
+        'docs': ['Sphinx>=1.2.2', 'sphinx-rtd-theme>=0.1.6', 'watchdog>=0.7.1', 'pytz>=2013.9', 'newrelic>=2.18.1.15']
     },
     test_suite='nose.collector',
     tests_require=['nose==1.3.0', 'coverage==3.7.1', 'tox==1.7.1'],

@@ -108,11 +108,9 @@ class Vertex(Element):
         properties = self.as_save_params()
         properties['element_type'] = self.get_element_type()
         state['_properties'] = properties
-        print "outputting state from vertex: %s" % state
         return state
 
     def __setstate__(self, state):
-        print "outputting state from vertex: %s" % state
         self.__init__(**self.translate_db_fields(state))
         return self
 
@@ -132,11 +130,11 @@ class Vertex(Element):
         Load all vertices with the given ids from the graph. By default this will return a list of vertices but if
         as_dict is True then it will return a dictionary containing ids as keys and vertices found as values.
 
-        @param ids: A list of titan ids
-            @type ids: list
-        @param as_dict: Toggle whether to return a dictionary or list
-            @type as_dict: boolean
-        @returns: dict | list
+        :param ids: A list of titan ids
+        :type ids: list
+        :param as_dict: Toggle whether to return a dictionary or list
+        :type as_dict: boolean
+        :rtype: dict | list
 
         """
         if not isinstance(ids, array_types):
@@ -186,9 +184,9 @@ class Vertex(Element):
         Look up vertex by its ID. Raises a DoesNotExist exception if a vertex with the given vid was not found.
         Raises a MultipleObjectsReturned exception if the vid corresponds to more than one vertex in the graph.
 
-        @param id: The ID of the vertex
-            @type id: str
-        @returns: mogwai.models.Vertex
+        :param id: The ID of the vertex
+        :type id: str
+        :rtype: mogwai.models.Vertex
 
         """
         try:
@@ -242,16 +240,16 @@ class Vertex(Element):
         """
         Perform simple graph database traversals with ubiquitous pagination.
 
-        @param operation: The operation to be performed
-            @type operation: str
-        @param labels: The edge labels to be used
-            @type labels: list of Edges or strings
-        @param start: The starting offset
-            @type start: int
-        @param max_results: The maximum number of results to return
-            @type max_results: int
-        @param types: The list of allowed result elements
-            @type types: list
+        :param operation: The operation to be performed
+        :type operation: str
+        :param labels: The edge labels to be used
+        :type labels: list of Edges or strings
+        :param start: The starting offset
+        :type start: int
+        :param max_results: The maximum number of results to return
+        :type max_results: int
+        :param types: The list of allowed result elements
+        :type types: list
 
         """
         from edge import Edge
@@ -293,10 +291,10 @@ class Vertex(Element):
         """
         Perform simple bulk graph deletion operation.
 
-        @param operation: The operation to be performed
-            @type operation: str
-        @param label: The edge label to be used
-            @type label: str or Edge
+        :param operation: The operation to be performed
+        :type operation: str
+        :param labels: The edge label to be used
+        :type labels: str or Edge
 
         """
         from edge import Edge
@@ -319,14 +317,14 @@ class Vertex(Element):
         """
         Return a list of vertices reached by traversing the outgoing edge with the given label.
 
-        @param labels: pass in the labels to follow in as positional arguments
-            @type labels: str or BaseEdge
-        @param limit: The number of the page to start returning results at
-            @type limit: int or None
-        @param offset: The maximum number of results to return
-            @type offset: int or None
-        @param types: A list of allowed element types
-            @type types: list
+        :param labels: pass in the labels to follow in as positional arguments
+        :type labels: str or BaseEdge
+        :param limit: The number of the page to start returning results at
+        :type limit: int or None
+        :param offset: The maximum number of results to return
+        :type offset: int or None
+        :param types: A list of allowed element types
+        :type types: list
 
         """
         return self._simple_traversal('outV', labels, **kwargs)
@@ -335,14 +333,14 @@ class Vertex(Element):
         """
         Return a list of vertices reached by traversing the incoming edge with the given label.
 
-        @param label: The edge label to be traversed
-            @type label: str or BaseEdge
-        @param limit: The number of the page to start returning results at
-            @type limit: int or None
-        @param offset: The maximum number of results to return
-            @type offset: int or None
-        @param types: A list of allowed element types
-            @type types: list
+        :param label: The edge label to be traversed
+        :type label: str or BaseEdge
+        :param limit: The number of the page to start returning results at
+        :type limit: int or None
+        :param offset: The maximum number of results to return
+        :type offset: int or None
+        :param types: A list of allowed element types
+        :type types: list
 
         """
         return self._simple_traversal('inV', labels, **kwargs)
@@ -351,14 +349,14 @@ class Vertex(Element):
         """
         Return a list of edges with the given label going out of this vertex.
 
-        @param label: The edge label to be traversed
-            @type label: str or BaseEdge
-        @param limit: The number of the page to start returning results at
-            @type limit: int or None
-        @param offset: The maximum number of results to return
-            @type offset: int or None
-        @param types: A list of allowed element types
-            @type types: list
+        :param label: The edge label to be traversed
+        :type label: str or BaseEdge
+        :param limit: The number of the page to start returning results at
+        :type limit: int or None
+        :param offset: The maximum number of results to return
+        :type offset: int or None
+        :param types: A list of allowed element types
+        :type types: list
 
         """
         return self._simple_traversal('outE', labels, **kwargs)
@@ -367,14 +365,14 @@ class Vertex(Element):
         """
         Return a list of edges with the given label coming into this vertex.
 
-        @param label: The edge label to be traversed
-            @type label: str or BaseEdge
-        @param limit: The number of the page to start returning results at
-            @type limit: int or None
-        @param offset: The maximum number of results to return
-            @type offset: int or None
-        @param types: A list of allowed element types
-            @type types: list
+        :param label: The edge label to be traversed
+        :type label: str or BaseEdge
+        :param limit: The number of the page to start returning results at
+        :type limit: int or None
+        :param offset: The maximum number of results to return
+        :type offset: int or None
+        :param types: A list of allowed element types
+        :type types: list
 
         """
         return self._simple_traversal('inE', labels, **kwargs)
@@ -383,14 +381,14 @@ class Vertex(Element):
         """
         Return a list of edges both incoming and outgoing from this vertex.
 
-        @param label: The edge label to be traversed (optional)
-            @type label: str or BaseEdge or None
-        @param limit: The number of the page to start returning results at
-            @type limit: int or None
-        @param offset: The maximum number of results to return
-            @type offset: int or None
-        @param types: A list of allowed element types
-            @type types: list
+        :param label: The edge label to be traversed (optional)
+        :type label: str or BaseEdge or None
+        :param limit: The number of the page to start returning results at
+        :type limit: int or None
+        :param offset: The maximum number of results to return
+        :type offset: int or None
+        :param types: A list of allowed element types
+        :type types: list
 
         """
         return self._simple_traversal('bothE', labels, **kwargs)
@@ -399,14 +397,14 @@ class Vertex(Element):
         """
         Return a list of vertices both incoming and outgoing from this vertex.
 
-        @param label: The edge label to be traversed (optional)
-            @type label: str or BaseEdge or None
-        @param limit: The number of the page to start returning results at
-            @type limit: int or None
-        @param offset: The maximum number of results to return
-            @type offset: int or None
-        @param types: A list of allowed element types
-            @type types: list
+        :param label: The edge label to be traversed (optional)
+        :type label: str or BaseEdge or None
+        :param limit: The number of the page to start returning results at
+        :type limit: int or None
+        :param offset: The maximum number of results to return
+        :type offset: int or None
+        :param types: A list of allowed element types
+        :type types: list
 
         """
         return self._simple_traversal('bothV', labels, **kwargs)

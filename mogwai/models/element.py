@@ -64,8 +64,8 @@ class BaseElement(object):
         """
         Initialize the element with the given properties.
 
-        @param values: The properties for this element
-            @type values: dict
+        :param values: The properties for this element
+        :type values: dict
 
         """
         self._id = values.get('_id')
@@ -94,9 +94,9 @@ class BaseElement(object):
         """
         Check for equality between two elements.
 
-        @param other: Element to be compared to
-            @type other: BaseElement
-        @returns: boolean
+        :param other: Element to be compared to
+        :type other: BaseElement
+        :rtype: boolean
 
         """
         if not isinstance(other, BaseElement):  # pragma: no cover
@@ -107,9 +107,9 @@ class BaseElement(object):
         """
         Check for inequality between two elements.
 
-        @param other: Element to be compared to
-            @type other: BaseElement
-        @returns: boolean
+        :param other: Element to be compared to
+        :type other: BaseElement
+        :rtype: boolean
 
         """
         return not self.__eq__(other)  # pragma: no cover
@@ -119,9 +119,9 @@ class BaseElement(object):
         """
         Returns the element name if it has been defined, otherwise it creates it from the module and class name.
 
-        @param manual_name: Name to override the default type name
-            @type manual_name: str
-        @returns: str
+        :param manual_name: Name to override the default type name
+        :type manual_name: str
+        :rtype: str
 
         """
         pf_name = ''
@@ -139,10 +139,10 @@ class BaseElement(object):
         """
         Perform the validations associated with the field with the given name on the value passed.
 
-        @param field_name: The name of property whose validations will be run
-            @type field_name: str
-        @param val: The value to be validated
-            @type val: mixed
+        :param field_name: The name of property whose validations will be run
+        :type field_name: str
+        :param val: The value to be validated
+        :type val: mixed
 
         """
         return self._properties[field_name].validate(val)
@@ -162,7 +162,7 @@ class BaseElement(object):
         """
         Returns a map of column names to cleaned values
 
-        @returns: dict
+        :rtype: dict
 
         """
         values = {}
@@ -175,7 +175,7 @@ class BaseElement(object):
         Returns a map of property names to cleaned values containing only the properties which should be persisted on
         save.
 
-        @returns: dict
+        :rtype: dict
 
         """
         values = {}
@@ -205,8 +205,8 @@ class BaseElement(object):
 
         this is for cases where we're saving a field under a different name than it's model property
 
-        @param data: dict
-        @returns: dict
+        :param data: dict
+        :rtype: dict
         """
         dst_data = data.copy().get('_properties', {})
         if data.get('_id', None):
@@ -285,9 +285,9 @@ class BaseElement(object):
         """
         Get's the db_field_name of a property by key
 
-        @param key: attribute of the model
-            @type key: basestring | str
-        @returns: basestring | str | None
+        :param key: attribute of the model
+        :type key: basestring | str
+        :rtype: basestring | str | None
         """
         if isinstance(key, string_types):
             prop = cls._properties.get(key, None)

@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 import logging
 import warnings
+from functools import wraps
 
 from mogwai._compat import array_types, string_types
 from mogwai.tools import LazyImportClass
@@ -11,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def requires_vertex(method):
+    @wraps(method)
     def method_wrapper(self, *args, **kwargs):
         if self.top_level_vertex:
             return method(self, *args, **kwargs)
@@ -50,12 +52,12 @@ class Relationship(object):
     def __create_class_tuple(self, model_class, enforce_type=None):
         """ Take in an string, array of classes, or a single class and make a tuple of said referenced classes
 
-        @param model_class: Input to be transformed into reference class(es)
-            @type model_class: string_types | array_types | mogwai.models.Edge | mogwai.models.Vertex
-        @param enforce_type: Enforce a specific model type? If not provided, everything that is resolved passes,
+        :param model_class: Input to be transformed into reference class(es)
+        :type model_class: string_types | array_types | mogwai.models.Edge | mogwai.models.Vertex
+        :param enforce_type: Enforce a specific model type? If not provided, everything that is resolved passes,
                              otherwise if a type is given, the classes are filtered out that don't match.
-            @type enforce_type: None | mogwai.models.Vertex | mogwai.models.Edge
-        @returns: tuple[enforce_type | Object]
+        :type enforce_type: None | mogwai.models.Vertex | mogwai.models.Edge
+        :rtype: tuple[enforce_type | Object]
         """
         if isinstance(model_class, string_types):
             model_classes = (LazyImportClass(model_class), )
@@ -87,13 +89,13 @@ class Relationship(object):
         """ Query and return all Vertices attached to the current Vertex
 
         TODO: fix this, the instance method isn't properly setup
-        @param limit: Limit the number of returned results
-            @type limit: int | long
-        @param offset: Query offset of the number of paginated results
-            @type offset: int | long
-        @param callback: (Optional) Callback function to handle results
-            @type callback: method
-        @returns: List[mogwai.models.Vertex] | Object
+        :param limit: Limit the number of returned results
+        :type limit: int | long
+        :param offset: Query offset of the number of paginated results
+        :type offset: int | long
+        :param callback: (Optional) Callback function to handle results
+        :type callback: method
+        :rtype: List[mogwai.models.Vertex] | Object
         """
         allowed_elts = []
         allowed_vlts = []
@@ -123,13 +125,13 @@ class Relationship(object):
         """ Query and return all Edges attached to the current Vertex
 
         TODO: fix this, the instance method isn't properly setup
-        @param limit: Limit the number of returned results
-            @type limit: int | long
-        @param offset: Query offset of the number of paginated results
-            @type offset: int | long
-        @param callback: (Optional) Callback function to handle results
-            @type callback: method
-        @returns: List[mogwai.models.Edge] | Object
+        :param limit: Limit the number of returned results
+        :type limit: int | long
+        :param offset: Query offset of the number of paginated results
+        :type offset: int | long
+        :param callback: (Optional) Callback function to handle results
+        :type callback: method
+        :rtype: List[mogwai.models.Edge] | Object
         """
         allowed_elts = []
         for e in self.edge_classes:
@@ -154,11 +156,11 @@ class Relationship(object):
     def allowed(self, edge_type, vertex_type):
         """ Check whether or not the allowed Edge and Vertex type are compatible with the schema defined
 
-        @param edge_type: Edge Class
-            @type: mogwai.models.Edge
-        @param vertex_type: Vertex Class
-            @type: mogwai.models.Vertex
-        @returns: bool
+        :param edge_type: Edge Class
+        :type: mogwai.models.Edge
+        :param vertex_type: Vertex Class
+        :type: mogwai.models.Vertex
+        :rtype: bool
         """
         if self.strict:
             if edge_type in self.edge_classes and vertex_type in self.vertex_classes:
@@ -172,11 +174,11 @@ class Relationship(object):
     def query(self, edge_types=None, callback=None):
         """ Generic Query method for quick access
 
-        @param edge_types: List of Edge classes to query against
-            @type edge_types: List[mogwai.models.Edge] | None
-        @param callback: (Optional) Callback function to handle results
-            @type callback: method
-        @returns: mogwai.models.query.Query | Object
+        :param edge_types: List of Edge classes to query against
+        :type edge_types: List[mogwai.models.Edge] | None
+        :param callback: (Optional) Callback function to handle results
+        :type callback: method
+        :rtype: mogwai.models.query.Query | Object
         """
         #if not self.top_level_vertex:
         #    raise MogwaiRelationshipException("No vertex known to start with, this is an error")
@@ -200,15 +202,15 @@ class Relationship(object):
     def _create_entity(self, model_cls, model_params, outV=None, inV=None):
         """ Create Vertex and Edge between current Vertex and New Vertex
 
-        @param model_cls: Vertex or Edge Class for the relationship
-            @type model_cls: mogwai.models.Vertex | mogwai.models.Edge
-        @param model_params: Vertex or Edge class parameters for instantiating the model
-            @type model_params: dict
-        @param outV: Outgoing Vertex if creating an Edge between two vertices (otherwise ignored)
-            @type outV: mogwai.models.Vertex
-        @param inV: Incoming Vertex if creating an Edge between two vertices (otherwise ignored)
-            @type inV: mogwai.models.Vertex
-        @returns: mogwai.models.Vertex | mogwai.models.Edge
+        :param model_cls: Vertex or Edge Class for the relationship
+        :type model_cls: mogwai.models.Vertex | mogwai.models.Edge
+        :param model_params: Vertex or Edge class parameters for instantiating the model
+        :type model_params: dict
+        :param outV: Outgoing Vertex if creating an Edge between two vertices (otherwise ignored)
+        :type outV: mogwai.models.Vertex
+        :param inV: Incoming Vertex if creating an Edge between two vertices (otherwise ignored)
+        :type inV: mogwai.models.Vertex
+        :rtype: mogwai.models.Vertex | mogwai.models.Edge
         """
         create_cls = model_cls._get_factory()
 
@@ -222,17 +224,17 @@ class Relationship(object):
     def create(self, edge_params={}, vertex_params={}, edge_type=None, vertex_type=None, callback=None):
         """ Creates a Relationship defined by the schema
 
-        @param edge_params: (Optional) Parameters passed to the instantiation method of the Edge
-            @type edge_params: dict
-        @param vertex_params: (Optional) Parameters passed to the instantiation method
-            @type vertex_params: dict
-        @param edge_type: (Optional) Edge class type, otherwise it defaults to the first Edge type known
-            @type edge_type: mogwai.models.Edge | None
-        @param edge_type: (Optional) Vertex class type, otherwise it defaults to the first Vertex type known
-            @type edge_type: mogwai.models.Vertex | None
-        @param callback: (Optional) Callback function to handle results
-            @type callback: method
-        @returns: tuple(mogwai.models.Edge, mogwai.models.Vertex) | Object
+        :param edge_params: (Optional) Parameters passed to the instantiation method of the Edge
+        :type edge_params: dict
+        :param vertex_params: (Optional) Parameters passed to the instantiation method
+        :type vertex_params: dict
+        :param edge_type: (Optional) Edge class type, otherwise it defaults to the first Edge type known
+        :type edge_type: mogwai.models.Edge | None
+        :param edge_type: (Optional) Vertex class type, otherwise it defaults to the first Vertex type known
+        :type edge_type: mogwai.models.Vertex | None
+        :param callback: (Optional) Callback function to handle results
+        :type callback: method
+        :rtype: tuple(mogwai.models.Edge, mogwai.models.Vertex) | Object
         """
         #if not self.top_level_vertex:
         #    raise MogwaiRelationshipException("No existing vertex known, have you created a vertex?")
