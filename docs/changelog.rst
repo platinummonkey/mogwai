@@ -5,6 +5,18 @@ ChangeLog
 
 Changes to the library are recorded here.
 
+v0.2.11
+-------
+
+ * Documentation Updates
+
+
+v0.2.10
+-------
+
+ * Minor bug fixes
+
+
 v0.2.9
 ------
 
