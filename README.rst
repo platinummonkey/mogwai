@@ -15,31 +15,28 @@ mogwai documentation can be found at http://mogwai.readthedocs.org/
 Installation
 ============
 
-``
-$ pip install mogwai
-``
+``$ pip install mogwai``
 
 Testing
 =======
 
-To get mogwai unit tests running you'll need a titan installation with rexster server configured with a mogwai graph.
+To get mogwai unit tests running you'll need a titan installation with rexster server configured with a mogwai graph::
 
-``
-<graph>
-    <graph-name>mogwai</graph-name>
-    <graph-type>com.thinkaurelius.titan.tinkerpop.rexster.TitanGraphConfiguration</graph-type>
-    <graph-read-only>false</graph-read-only>
-    <graph-location>/tmp/mogwai</graph-location>
-    <properties>
-          <storage.backend>local</storage.backend>
-          <storage.directory>/tmp/mogwai</storage.directory>
-          <buffer-size>100</buffer-size>
-    </properties>
+    <graph>
+        <graph-name>mogwai</graph-name>
+        <graph-type>com.thinkaurelius.titan.tinkerpop.rexster.TitanGraphConfiguration</graph-type>
+        <graph-read-only>false</graph-read-only>
+        <graph-location>/tmp/mogwai</graph-location>
+        <properties>
+              <storage.backend>local</storage.backend>
+              <storage.directory>/tmp/mogwai</storage.directory>
+              <buffer-size>100</buffer-size>
+        </properties>
 
-    <extensions>
-      <allows>
-        <allow>tp:gremlin</allow>
-      </allows>
-    </extensions>
-</graph>
-``
+        <extensions>
+          <allows>
+            <allow>tp:gremlin</allow>
+          </allows>
+        </extensions>
+    </graph>
+
