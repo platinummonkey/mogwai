@@ -5,11 +5,14 @@ build:
   steps:
     - bundle-install
     - script:
+        name: setup virtualenv
+        code: virtualenv venv
+    - script:
         name: install mogwai
-        code: python setup.py -q install
+        code: source venv/bin/activate && python setup.py -q install
     - script:
         name: install requirements
-        code: pip install -q -r requirements.pip
+        code: source venv/bin/activate && pip install -q -r requirements.pip
     - script:
         name: Run Coverage tests
-        code: ./run_coverage.sh
+        code: source venv/bin/activate && ./run_coverage.sh
