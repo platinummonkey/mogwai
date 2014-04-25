@@ -4,6 +4,7 @@ from nose.tools import nottest
 from mogwai.connection import setup, sync_spec
 from mogwai.models import Vertex, Edge
 from mogwai.properties import String, Integer
+import os
 
 _val = 0
 
@@ -53,7 +54,7 @@ class BaseMogwaiTestCase(TestCase):
     def setUpClass(cls):
         super(BaseMogwaiTestCase, cls).setUpClass()
         #sync_spec(filename='test.spec', host='192.168.133.12', graph_name='graph')
-        setup('localhost', graph_name='graph')
+        setup(os.getenv('TITAN_REXPRO_URL', 'localhost'), graph_name='graph')
 
     def assertHasAttr(self, obj, attr):
         self.assertTrue(hasattr(obj, attr), "%s doesn't have attribute: %s" % (obj, attr))
