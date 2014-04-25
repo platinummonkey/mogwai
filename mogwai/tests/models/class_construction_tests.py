@@ -95,13 +95,16 @@ class TestAbstractElementAttribute(BaseMogwaiTestCase):
         self.assertFalse(DerivedAbstractVertex.__abstract__)
 
     def test_abstract_element_persistence_methods_fail(self):
-        bm = BaseAbstractVertex(data='something')
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            bm = BaseAbstractVertex(data='something')
 
-        with self.assertRaises(MogwaiException):
-            bm.save()
+            with self.assertRaises(MogwaiException):
+                bm.save()
 
-        with self.assertRaises(MogwaiException):
-            bm.delete()
+            with self.assertRaises(MogwaiException):
+                bm.delete()
 
-        with self.assertRaises(MogwaiException):
-            bm.update(data='something else')
+            with self.assertRaises(MogwaiException):
+                bm.update(data='something else')

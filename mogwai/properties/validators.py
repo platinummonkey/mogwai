@@ -5,7 +5,7 @@ try:
 except ImportError:     # Python 2
     from urlparse import urlsplit, urlunsplit
 
-from mogwai._compat import string_types, text_type, float_types, integer_types, array_types, bool_types
+from mogwai._compat import string_types, text_type, float_types, integer_types, array_types, bool_types, print_
 from mogwai.exceptions import MogwaiException, ValidationError
 import datetime
 from pytz import utc
@@ -145,12 +145,17 @@ class DateTimeValidator(BaseValidator):
 datetime_validator = DateTimeValidator()
 
 
-class DateTimeUTCValidator(DateTimeValidator):
+class DateTimeUTCValidator(BaseValidator):
     message = 'Not a valid UTC DateTime: %s'
 
     def __call__(self, value):
         super(DateTimeUTCValidator, self).__call__(value)
+        if value is None:
+            return
+        if not isinstance(value, datetime.datetime) and value is not None:
+            raise ValidationError(self.message % (value, ), code=self.code)
         if value and value.tzinfo != utc:
+            print_("Got value with timezone: %s - %s" % (value, value.tzinfo))
             try:
                 value = value.astimezone(tz=utc)
             except ValueError:  # last ditch effort
@@ -161,6 +166,7 @@ class DateTimeUTCValidator(DateTimeValidator):
             except AttributeError:  # pragma: no cover
                 # This should never happen, unless it isn't a datetime object
                 raise ValidationError(self.message % (value, ), code=self.code)
+        print_("Datetime passed validation: %s - %s" % (value, value.tzinfo))
         return value
 
 

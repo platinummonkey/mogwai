@@ -1,5 +1,6 @@
 import copy
 import datetime
+from calendar import timegm
 from decimal import Decimal as _D
 import re
 import time
@@ -77,7 +78,10 @@ class Integer(GraphProperty):
 
     def to_python(self, value):
         if value is not None:
-            return long(value)
+            try:
+                return int(value)
+            except:
+                return long(value)
 
     def to_database(self, value):
         value = super(Integer, self).to_database(value)
@@ -98,6 +102,40 @@ class PositiveInteger(Integer):
 
     def to_database(self, value):
         value = super(Integer, self).to_database(value)
+        if value is not None:
+            return long(value)
+
+
+class Long(GraphProperty):
+    """
+    Long Data property type
+    """
+    data_type = "Long"
+    validator = long_validator
+
+    def to_python(self, value):
+        if value is not None:
+            return long(value)
+
+    def to_database(self, value):
+        value = super(Long, self).to_database(value)
+        if value is not None:
+            return long(value)
+
+
+class PositiveLong(Long):
+    """
+    Positive Long Data property type
+    """
+    data_type = "Long"
+    validator = positive_integer_validator
+
+    def to_python(self, value):
+        if value is not None:
+            return long(value)
+
+    def to_database(self, value):
+        value = super(Long, self).to_database(value)
         if value is not None:
             return long(value)
 
@@ -137,38 +175,54 @@ class DateTimeNaive(GraphProperty):
 
         tmp = time.mktime(value.timetuple())  # gives us a float with .0
         # microtime is a 6 digit int, so we bring it down to .xxx and add it to the float TS
-        tmp += float(value.microsecond) / 1000000
+        tmp += float(value.microsecond) / 1000000.0
         return tmp
 
 
-class DateTime(DateTimeNaive):
+class DateTime(GraphProperty):
     """
     UTC DateTime Data property type
     """
+    data_type = "Double"
     validator = datetime_utc_validator
+
+    def __init__(self, strict=True, **kwargs):
+        """
+        Initialize date-time column with the given settings.
+
+        :param strict: Whether or not to attempt to automatically coerce types
+        :type strict: boolean
+
+        """
+        self.strict = strict
+        super(DateTime, self).__init__(**kwargs)
 
     def to_python(self, value):
         try:
             if isinstance(value, datetime.datetime):
-                return self.validator(value.astimezone(tz=utc))
+                if value.tzinfo == utc:
+                    return self.validator(value)  # .astimezone(tz=utc)
+                else:
+                    return self.validator(value).astimezone(tz=utc)
         except:  # pragma: no cover
             # this shouldn't happen unless the validator has changed
             pass
         return datetime.datetime.utcfromtimestamp(float(value)).replace(tzinfo=utc)
 
     def to_database(self, value):
-        value = super(DateTimeNaive, self).to_database(value)
+        value = super(DateTime, self).to_database(value)
         if value is None:
             return
         if not isinstance(value, datetime.datetime):
-            if not self.strict and isinstance(value, string_types + integer_types + float_types):
+            if isinstance(value, string_types + integer_types + float_types):
+                print_("Doing this the hard way... %s" % value)
                 value = datetime.datetime.utcfromtimestamp(float(value)).replace(tzinfo=utc)
             else:
                 raise ValidationError("'{}' is not a datetime object".format(value))
 
-        tmp = time.mktime(value.timetuple())  # gives us a float with .0
+        tmp = timegm(value.utctimetuple())  # gives us an integer of epoch seconds without microseconds
         # microtime is a 6 digit int, so we bring it down to .xxx and add it to the float TS
-        tmp += float(value.microsecond) / 1000000
+        tmp += float(value.microsecond) / 1000000.0
         return tmp
 
 

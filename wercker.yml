@@ -3,16 +3,20 @@ services:
   - platinummonkey/titan-stable
 build:
   steps:
-    - bundle-install
+    - virtualenv:
+        install_wheel: false
     - script:
-        name: setup virtualenv
-        code: virtualenv venv
+        name: test install mogwai
+        code: python setup.py -q install
+    - pip-install:
+        extra_args: "-q"
+        requirements_file: "requirements.pip"
     - script:
-        name: install mogwai
-        code: source venv/bin/activate && python setup.py -q install
+        name: test uninstall mogwai
+        code: pip uninstall -y mogwai
     - script:
-        name: install requirements
-        code: source venv/bin/activate && pip install -q -r requirements.pip
+        name: Test ping server
+        code: ping -c 3 $TITAN_HOST && ip addr && nc -q 10 -v -z $TITAN_HOST 8184
     - script:
         name: Run Coverage tests
-        code: source venv/bin/activate && ./run_coverage.sh
+        code: ./run_coverage.sh
