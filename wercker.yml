@@ -1,0 +1,15 @@
+box: wercker/python
+services:
+  - platinummonkey/titan-stable
+build:
+  steps:
+    - bundle-install
+    - script:
+        name: install mogwai
+        code: python setup.py -q install
+    - script:
+        name: install requirements
+        code: pip install -q -r requirements.pip
+    - script:
+        name: Run Coverage tests
+        code: ./run_coverage.sh
