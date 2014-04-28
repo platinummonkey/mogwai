@@ -42,7 +42,9 @@ setup(
                       'six>=1.5.2',
                       'argparse>=1.2.1',
                       'factory-boy>=2.3.1',
-                      'pyformance==0.2.4'],
+                      'pyformance==0.2.4',
+                      'Twisted>=13.2.0',
+                      'pytz>=2013.9'],
     extras_require={
         'develop': ['nose==1.3.0', 'coverage==3.7.1', 'tox==1.7.1'],
         'newrelic': ['newrelic>=2.18.1.15'],
