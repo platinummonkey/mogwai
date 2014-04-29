@@ -2,8 +2,7 @@ from __future__ import unicode_literals
 from _compat import string_types, array_types
 import logging
 from re import compile
-from random import shuffle
-from rexpro.connection import RexProConnection
+from rexpro.connection import RexProConnectionPool, RexProConnection
 from rexpro.exceptions import RexProConnectionException, RexProScriptException
 
 from mogwai.exceptions import MogwaiConnectionError, MogwaiQueryError
@@ -13,7 +12,7 @@ from mogwai._compat import print_
 logger = logging.getLogger(__name__)
 
 
-_connections = []
+_connection_pool = None
 _graph_name = None
 metric_manager = MetricManager()
 _loaded_models = []
@@ -33,31 +32,32 @@ def execute_query(query, params={}, transaction=True, isolate=True, *args, **kwa
     :rtype: dict
 
     """
-    if len(_connections) <= 0:  # pragma: no cover
+    global _connection_pool
+    """ :type _connection_pool: RexProConnectionPool | None """
+
+    if not _connection_pool:  # pragma: no cover
         raise MogwaiConnectionError('Must call mogwai.connection.setup before querying.')
 
-    conn = _connections[0]
-    """ @type conn: rexpro.RexProConnection """
-    try:
-        response = conn.execute(query, params=params, isolate=isolate, transaction=transaction)
-        #print_("Got raw response: %s" % response)
+    with _connection_pool.connection() as conn:
+        try:
+            response = conn.execute(query, params=params, isolate=isolate, transaction=transaction)
+            #print_("Got raw response: %s" % response)
 
-    except RexProConnectionException as ce:  # pragma: no cover
-        raise MogwaiConnectionError("Connection Error during query - {}".format(ce))
-    except RexProScriptException as se:  # pragma: no cover
-        raise MogwaiQueryError("Error during query - {}".format(se))
-    except:  # pragma: no cover
-        raise
+        except RexProConnectionException as ce:  # pragma: no cover
+            raise MogwaiConnectionError("Connection Error during query - {}".format(ce))
+        except RexProScriptException as se:  # pragma: no cover
+            raise MogwaiQueryError("Error during query - {}".format(se))
+        except:  # pragma: no cover
+            raise
 
-    logger.debug(response)
-
-    return response
+        logger.debug(response)
+        return response
 
 
 _host_re = compile(r'^((?P<user>.+?)(:(?P<password>.*?))?@)?(?P<host>.*?)(:(?P<port>\d+?))?(?P<graph_name>/.*?)?$')
 
 
-def _parse_host(host, username, password, graph_name):
+def _parse_host(host, username, password, graph_name, graph_obj_name='g'):
         m = _host_re.match(host)
         d = m.groupdict() if m is not None else {}
         host = d.get('host', None) or '127.0.0.1'
@@ -65,26 +65,26 @@ def _parse_host(host, username, password, graph_name):
         username = d.get('username', None) or username
         password = d.get('password', None) or password
         graph_name = d.get('graph_name', None) or graph_name
-        return {'host': host, 'port': port, 'username': username, 'password': password, 'graph_name': graph_name}
+        graph_obj_name = graph_obj_name or 'g'
+        return {'host': host, 'port': port,
+                'username': username, 'password': password,
+                'graph_name': graph_name, 'graph_obj_name': graph_obj_name}
 
 
-def setup(hosts, graph_name='graph', username='', password='', metric_reporters=None):
+def setup(host, graph_name='graph', graph_obj_name='g', username='', password='', metric_reporters=None, pool_size=10):
     """  Sets up the connection, and instantiates the models
 
     """
-    global _connections
+    global _connection_pool
     global metric_manager
 
     if metric_reporters:  # pragma: no cover
         metric_manager.setup_reporters(metric_reporters)
 
-    if isinstance(hosts, string_types):
-        _connections.append(RexProConnection(**_parse_host(hosts, username, password, graph_name)))
-    elif isinstance(hosts, array_types):  # pragma: no cover
-        for host in hosts:
-            _connections.append(RexProConnection(**_parse_host(host, username, password, graph_name)))
+    if isinstance(host, string_types):
+        _connection_pool = RexProConnectionPool(pool_size=pool_size,
+                                                **_parse_host(host, username, password, graph_name, graph_obj_name))
 
-        shuffle(_connections)
     else:  # pragma: no cover
         raise MogwaiConnectionError("Must Specify at least one host or list of hosts")
 
@@ -157,7 +157,7 @@ def generate_spec():
     return spec_list
 
 
-def sync_spec(filename, host, graph_name='graph', username='', password='', dry_run=False):  # pragma: no cover
+def sync_spec(filename, host, graph_name='graph', graph_obj_name='g', username='', password='', dry_run=False):  # pragma: no cover
     """
     Sync the given spec file to mogwai.
 
@@ -172,6 +172,6 @@ def sync_spec(filename, host, graph_name='graph', username='', password='', dry_
     :returns: None
 
     """
-    conn = RexProConnection(graph_name=graph_name, **_parse_host(host, username, password, graph_name))
+    conn = RexProConnection(graph_name=graph_name, **_parse_host(host, username, password, graph_name, graph_obj_name))
     #Spec(filename).sync(conn, dry_run=dry_run)
     pass
