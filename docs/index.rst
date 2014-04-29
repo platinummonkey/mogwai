@@ -35,7 +35,7 @@ Links
 * Official Repository: https://bitbucket.org/wellaware/mogwai.git
 * Package: https://pypi.python.org/pypi/mogwai/
 
-mogwai is known to support Python 2.7. Testing needs to be done on Python3 and PyPy.
+mogwai is known to support Python 2.7. Python 3.x is not compatible due to the use of pyparsing and gevent.
 
 
 .. _download:

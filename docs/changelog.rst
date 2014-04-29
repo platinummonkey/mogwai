@@ -5,6 +5,20 @@ ChangeLog
 
 Changes to the library are recorded here.
 
+v0.3.0
+------
+ * Utilize new rexpro.RexProConnectionPool
+ * Includes new rexpro green-thread friendly gevent.socket RexProSockets
+
+v0.2.13
+-------
+ * setup.py ``install_requires`` hot fix
+
+v0.2.12
+-------
+
+ * Public CI preview
+
 v0.2.11
 -------
 

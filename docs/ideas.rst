@@ -16,6 +16,7 @@ up-to-date with the issue tracker. Also these are in no-particular order.
     * Creation/Traversal enforcement
  * **Integrate additional common metric collectors**
  * **Python 3 compatibility**
+    * Currently not possible with gevent and pyparsing
  * **Filter lazy-evaluated gremlin query.**
     * Perhaps: MyVertexModel.query().filter(someval__lte=2)
  * **Database Export/Import functionality**
