@@ -24,3 +24,4 @@ up-to-date with the issue tracker. Also these are in no-particular order.
  * **Gremlin Query builder**
    * Optional groovy script generator based on query.
  * **Groovy script inspections tool for optimization hints, common algorithms, possible syntax errors.**
+ * **Eventlet Support** -- this trickles down to ``rexpro``

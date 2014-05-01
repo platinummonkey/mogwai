@@ -24,6 +24,8 @@ Features
  - Interactive shell available
  - Performance monitoring tools available.
  - Serialization support for Pickle
+ - Works well with Celery [#f1]_
+
 
 
 .. _links:
@@ -47,7 +49,7 @@ PyPI: https://pypi.python.org/pypi/mogwai/
 
 .. code-block:: sh
 
-    $ pip install mogwa
+    $ pip install mogwai
 
 Source: https://bitbucket.org/wellaware/mogwai.git
 
@@ -79,4 +81,13 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+
+Footnotes
+---------
+
+.. rubric::
+
+.. [#f1] Suggested to use gevent pool (``-P gevent`` flag on starting celery workers), eventlet pool is known to hang
+          workers indefinitely.
 
