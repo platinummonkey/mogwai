@@ -38,8 +38,8 @@ setup(
     ],
     keywords='cassandra,titan,ogm,mogwai,thunderdome',
     install_requires=['pyparsing>=1.5.7',
-                      'rexpro>=0.1.5',
-                      'six>=1.5.2',
+                      'rexpro>=0.1.8',
+                      'six>=1.6.1',
                       'argparse>=1.2.1',
                       'factory-boy>=2.3.1',
                       'pyformance==0.2.4',
@@ -48,12 +48,10 @@ setup(
     extras_require={
         'develop': ['nose==1.3.0', 'coverage==3.7.1', 'tox==1.7.1'],
         'newrelic': ['newrelic>=2.18.1.15'],
-        'docs': ['Sphinx>=1.2.2', 'sphinx-rtd-theme>=0.1.6', 'watchdog>=0.7.1', 'pytz>=2013.9', 'newrelic>=2.18.1.15']
+        'docs': ['Sphinx>=1.2.2', 'sphinx-rtd-theme>=0.1.6', 'watchdog>=0.7.1', 'newrelic>=2.18.1.15']
     },
     test_suite='nose.collector',
     tests_require=['nose==1.3.0', 'coverage==3.7.1', 'tox==1.7.1'],
-    #setup_requires=['nose==1.3.0', 'coverage==3.7.1', 'pyformance==0.2.4', 'tox==1.7.1'],
-    #scripts=['run_converage.sh', 'run_tests.sh'],
     author='Cody Lee',
     author_email='codylee@wellaware.us',
     maintainer='Cody Lee',
