@@ -7,6 +7,12 @@ Mogwai supports easily integrating Gremlin graph-traversals with vertex and edge
 already familiar with Blueprints (https://github.com/tinkerpop/blueprints/wiki) there is is a
 simple example.
 
+.. image:: https://app.wercker.com/status/767e3cb41d7c6866fd88712bda8fede2/m/master
+   :alt: Build Status
+   :align: center
+   :target: https://app.wercker.com/project/bykey/767e3cb41d7c6866fd88712bda8fede2
+
+
 Documentation
 =============
 

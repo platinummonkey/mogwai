@@ -5,6 +5,11 @@ mogwai
 
 mogwai is an object graph mapper (OGM) designed for Titan Graph Database.
 
+.. image:: https://app.wercker.com/status/767e3cb41d7c6866fd88712bda8fede2/m/master
+   :alt: Build Status
+   :align: center
+   :target: https://app.wercker.com/project/bykey/767e3cb41d7c6866fd88712bda8fede2
+
 
 .. _features:
 
