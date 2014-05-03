@@ -27,6 +27,11 @@ class DateTimeNaivePropertyTestCase(GraphPropertyBaseClassTestCase):
         with self.assertRaises(ValidationError):
             d.to_database(lambda x: x)
 
+    def test_input_output_equality(self):
+        now = datetime.datetime.now()
+        prop = self.klass()
+        self.assertEqual(now, prop.to_python(prop.to_database(now)))
+
 
 class DateTimeNaiveTestVertex(Vertex):
     element_type = 'test_datetime_naive_vertex'
