@@ -12,3 +12,5 @@ Common examples for using Mogwai
    /quickstart
    belongings
    gremlin
+   serialization
+

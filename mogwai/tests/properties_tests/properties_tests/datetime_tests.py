@@ -12,7 +12,7 @@ import datetime
 from pytz import utc
 
 
-@attr('unit', 'property', 'property_datetime')
+@attr('unit', 'property', 'property_datetime_utc')
 class DateTimePropertyTestCase(GraphPropertyBaseClassTestCase):
     klass = DateTime
     good_cases = (datetime.datetime.now(tz=utc), None)
@@ -27,6 +27,13 @@ class DateTimePropertyTestCase(GraphPropertyBaseClassTestCase):
         self.assertIsInstance(d.to_database(100000), float)
         with self.assertRaises(ValidationError):
             d.to_database(lambda x: x)
+
+    def test_input_output_equality(self):
+        d = datetime.datetime(2014, 1, 1, tzinfo=utc)
+        prop = self.klass()
+        result = prop.to_python(prop.to_database(d))
+        print_("Input: %s, Output: %s" % (d, result))
+        self.assertEqual(d, result)
 
 
 class DateTimeTestVertex(Vertex):
@@ -46,7 +53,7 @@ class DateTimeTestChoicesVertex(Vertex):
     test_val = DateTime(choices=CHOICES)
 
 
-@attr('unit', 'property', 'property_datetime')
+@attr('unit', 'property', 'property_datetime_utc')
 class DateTimeVertexTestCase(GraphPropertyBaseClassTestCase):
 
     def test_datetime_io(self):
@@ -60,22 +67,22 @@ class DateTimeVertexTestCase(GraphPropertyBaseClassTestCase):
         dt2.delete()
 
         dt = DateTimeTestVertex.create(test_val=datetime.datetime(2014, 1, 1, tzinfo=utc))
-        print_("\ncreated vertex: %s" % dt)
+        print_("\ncreated vertex: %s with time: %s" % (dt, dt.test_val))
         dt2 = DateTimeTestVertex.get(dt._id)
         print_("Got vertex: %s" % dt2)
-        self.assertEqual(dt2.test_val, datetime.datetime(2014, 1, 1, 6, tzinfo=utc))
+        self.assertEqual(dt2.test_val, datetime.datetime(2014, 1, 1, tzinfo=utc))
         print_("deleting vertex")
         dt2.delete()
 
 
-@attr('unit', 'property', 'property_datetime')
+@attr('unit', 'property', 'property_datetime_utc')
 class TestVertexChoicesTestCase(BaseMogwaiTestCase):
 
     def test_good_choices_key_io(self):
         print_("creating vertex")
         dt = DateTimeTestChoicesVertex.create(test_val=datetime.datetime(2014, 1, 1, tzinfo=utc))
         print_("validating input")
-        self.assertEqual(dt.test_val, datetime.datetime(2014, 1, 1, 6, tzinfo=utc))
+        self.assertEqual(dt.test_val, datetime.datetime(2014, 1, 1, tzinfo=utc))
         print_("deleting vertex")
         dt.delete()
 
