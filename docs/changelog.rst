@@ -8,6 +8,7 @@ Changes to the library are recorded here.
 v0.3.1
 ------
  * Better reconnect handling, fixed stale session bug on reconnect.
+ * DateTime UTC bugfix
 
 v0.3.0
 ------
