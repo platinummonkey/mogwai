@@ -5,6 +5,10 @@ ChangeLog
 
 Changes to the library are recorded here.
 
+v0.3.1
+------
+ * Better reconnect handling, fixed stale session bug on reconnect.
+
 v0.3.0
 ------
  * Utilize new rexpro.RexProConnectionPool
