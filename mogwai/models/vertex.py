@@ -126,7 +126,7 @@ class Vertex(Element):
         :type as_dict: boolean
         :rtype: [mogwai.models.Vertex]
         """
-        results = execute_query('g.V("element_type","%s").has("%s","%s").toList()' % (cls.get_element_type(), field, value)
+        results = execute_query('g.V("element_type","%s").has("%s","%s").toList()' % (cls.get_element_type(), field, value))
 
         objects = []
         for r in results:

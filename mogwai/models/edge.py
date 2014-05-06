@@ -92,7 +92,7 @@ class Edge(Element):
         :type as_dict: boolean
         :rtype: [mogwai.models.Edge]
         """
-        results = execute_query('g.E("label","%s").has("%s","%s").toList()' % (cls.get_element_type(), field, value)
+        results = execute_query('g.E("label","%s").has("%s","%s").toList()' % (cls.get_element_type(), field, value))
 
         objects = []
         for r in results:
