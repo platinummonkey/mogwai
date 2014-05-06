@@ -80,6 +80,34 @@ class Edge(Element):
         return self
 
     @classmethod
+    def find_by_value(cls, field, value):
+        """
+        Returns edges that match the given field/value pair.
+
+        :param field: The field to search
+        :type field: str
+        :param value: The value of the field
+        :type value: str
+        :param as_dict: Return results as a dictionary
+        :type as_dict: boolean
+        :rtype: [mogwai.models.Edge]
+        """
+        results = execute_query('g.E("label","%s").has("%s","%s").toList()' % (cls.get_element_type(), field, value)
+
+        objects = []
+        for r in results:
+            try:
+                objects += [Element.deserialize(r)]
+            except KeyError:  # pragma: no cover
+                raise MogwaiQueryError('Edge type "%s" is unknown' % r.get('label', ''))
+
+        if as_dict:  # pragma: no cover
+            return {v._id: v for v in objects}
+
+        return objects
+
+
+    @classmethod
     def all(cls, ids, as_dict=False):
         """
         Load all edges with the given edge_ids from the graph. By default this will return a list of edges but if
