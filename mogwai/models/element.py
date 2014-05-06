@@ -10,6 +10,10 @@ from mogwai.exceptions import MogwaiException, SaveStrategyException, \
 from mogwai.gremlin import BaseGremlinMethod
 from mogwai.connection import _add_model_to_space
 
+# import for backward compatibility
+from mogwai.constants import BOTH, EQUAL, GREATER_THAN, GREATER_THAN_EQUAL, \
+    IN, LESS_THAN, LESS_THAN_EQUAL, NOT_EQUAL, OUT
+
 
 import logging
 import warnings
@@ -18,20 +22,6 @@ logger = logging.getLogger(__name__)
 #dict of node and edge types for rehydrating results
 vertex_types = {}
 edge_types = {}
-
-# in blueprints this is part of the Query.compare
-# see http://www.tinkerpop.com/docs/javadocs/blueprints/2.2.0/
-EQUAL = "EQUAL"
-GREATER_THAN = "GREATER_THAN"
-GREATER_THAN_EQUAL = "GREATER_THAN_EQUAL"
-LESS_THAN = "LESS_THAN"
-LESS_THAN_EQUAL = "LESS_THAN_EQUAL"
-NOT_EQUAL = "NOT_EQUAL"
-
-# direction
-OUT = "OUT"
-IN = "IN"
-BOTH = "BOTH"
 
 
 class BaseElement(object):
