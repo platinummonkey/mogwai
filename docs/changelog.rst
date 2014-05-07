@@ -5,6 +5,18 @@ ChangeLog
 
 Changes to the library are recorded here.
 
+v0.3.2
+------
+ * Fixed Circular Import
+ * Fixed DateTime UTC bug
+ * Wercker Integration
+ * Documentation updates
+
+v0.3.1
+------
+ * Bug Fixes
+ * Documentation updates
+
 v0.3.0
 ------
  * Utilize new rexpro.RexProConnectionPool
