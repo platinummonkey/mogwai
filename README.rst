@@ -46,3 +46,14 @@ To get mogwai unit tests running you'll need a titan installation with rexster s
         </extensions>
     </graph>
 
+
+
+Pull Requests
+=============
+
+General Rules:
+  - All Tests must pass
+  - Coverage shouldn't decrease
+  - All Pull Requests should be rebased against master **before** submitting the PR.
+
+

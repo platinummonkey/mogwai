@@ -19,6 +19,11 @@ possible, a pull request should be included.
 Pull Requests
 -------------
 
+General Rules:
+  - All Tests must pass
+  - Coverage shouldn't decrease
+  - All Pull Requests should be rebased against master **before** submitting the PR.
+
 All pull requests should pass the test suite, which can be launched simply with:
 
 .. code-block:: sh
@@ -35,6 +40,8 @@ In order to test coverage, please use:
 
     $ pip install coverage
     $ coverage erase; make coverage
+
+
 
 Test Server
 -----------
