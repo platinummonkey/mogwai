@@ -3,7 +3,7 @@ from unittest import TestCase
 from nose.tools import nottest
 from mogwai.connection import setup, sync_spec
 from mogwai.models import Vertex, Edge
-from mogwai.properties import String, Integer
+from mogwai.properties import Double, Integer, String
 import os
 
 _val = 0
@@ -22,6 +22,13 @@ class TestVertexModel(Vertex):
     test_val = Integer(default=counter)
 
 
+class TestVertexModelDouble(Vertex):
+    element_type = 'test_vertex_model_double'
+
+    name = String(default='test_vertex_double')
+    test_val = Double(default=0.0)
+
+
 class TestEdgeModel(Edge):
     label = 'test_edge_model'
 
@@ -34,6 +41,13 @@ class TestEdgeModel2(Edge):
 
     name = String(default='test_edge')
     test_val = Integer(default=counter)
+
+
+class TestEdgeModelDouble(Edge):
+    label = 'test_edge_model_double'
+
+    name = String(default='test_edge_double')
+    test_val = Double(default=0.0)
 
 
 @nottest

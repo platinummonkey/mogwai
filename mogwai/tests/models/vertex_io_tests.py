@@ -5,7 +5,7 @@ from nose.tools import nottest
 
 from mogwai import connection
 from mogwai.exceptions import MogwaiException
-from mogwai.tests.base import BaseMogwaiTestCase, TestVertexModel, TestEdgeModel
+from mogwai.tests.base import BaseMogwaiTestCase, TestVertexModel, TestEdgeModel, TestVertexModelDouble
 
 from mogwai import gremlin
 from mogwai import models
@@ -139,6 +139,22 @@ class TestVertexIO(BaseMogwaiTestCase):
             TestVertexModel.all([v1.id, v2.id, 'invalid'])
         v1.delete()
         v2.delete()
+
+    def test_find_by_value_method(self):
+        v1 = TestVertexModel.create(name='v1', test_val=-99)
+        v2 = TestVertexModel.create(name='v2', test_val=-99)
+        v3 = TestVertexModelDouble.create(name='v3', test_val=-100.0)
+
+        self.assertEqual(len(TestVertexModel.find_by_value('name', 'v1')), 1)
+        self.assertEqual(len(TestVertexModel.find_by_value('test_val', -99)), 2)
+        self.assertEqual(len(TestVertexModel.find_by_value('name', 'bar')), 0)
+
+        self.assertEqual(TestVertexModel.find_by_value('name', 'v1')[0], v1)
+
+        self.assertEqual(len(TestVertexModelDouble.find_by_value('test_val', -100.0)), 1)
+        v1.delete()
+        v2.delete()
+        v3.delete()
 
     def test_get_by_id(self):
         v1 = TestVertexModel.create()

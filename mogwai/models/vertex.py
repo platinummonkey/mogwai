@@ -91,7 +91,6 @@ class Vertex(Element):
     _save_vertex = GremlinMethod()
     _traversal = GremlinMethod()
     _delete_related = GremlinMethod()
-    find_by_value = GremlinMethod(classmethod=True)
 
     element_type = None
 
@@ -113,6 +112,43 @@ class Vertex(Element):
     def __setstate__(self, state):
         self.__init__(**self.translate_db_fields(state))
         return self
+
+    @classmethod
+    def find_by_value(cls, field, value, as_dict=False):
+        """
+        Returns vertices that match the given field/value pair.
+
+        :param field: The field to search
+        :type field: str
+        :param value: The value of the field
+        :type value: str
+        :param as_dict: Return results as a dictionary
+        :type as_dict: boolean
+        :rtype: [mogwai.models.Vertex]
+        """
+        _field = cls.get_property_by_name(field)
+        _element_type = cls.get_element_type()
+
+        if isinstance(value, (int, long, float)):
+            search = 'filter{{it."{}" == {}}}'.format(_field, value)
+        else:
+            search  = 'has("{}", "{}")'.format(_field, value)
+
+        query = 'g.V("element_type","{}").{}.toList()'.format(_element_type, search)
+
+        results = execute_query(query)
+
+        objects = []
+        for r in results:
+            try:
+                objects += [Element.deserialize(r)]
+            except KeyError:  # pragma: no cover
+                raise MogwaiQueryError('Vertex type "%s" is unknown' % r.get('element_type', ''))
+
+        if as_dict:  # pragma: no cover
+            return {v._id: v for v in objects}
+
+        return objects
 
     @classmethod
     def get_element_type(cls):
