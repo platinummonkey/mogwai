@@ -95,14 +95,12 @@ class Edge(Element):
         _field = cls.get_property_by_name(field)
         _label = cls.get_label()
 
-        if isinstance(value, (int, long)):
-            search = '{}l'.format(value)
-        elif isinstance(value, (float)):
-            search = '{}f'.format(value)
+        if isinstance(value, (int, long, float)):
+            search = 'filter{{it."{}" == {}}}'.format(_field, value)
         else:
-            search  = '"{}"'.format(value)
+            search  = 'has("{}", "{}")'.format(_field, value)
 
-        query = 'g.E("label","{}").has("{}", {}).toList()'.format(_label, _field, search)
+        query = 'g.E("label","{}").{}.toList()'.format(_label, search)
 
         results = execute_query(query)
 

@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 from nose.plugins.attrib import attr
 
-from mogwai.tests.base import BaseMogwaiTestCase, TestVertexModel, TestEdgeModel, TestEdgeModel2
+from mogwai.tests.base import BaseMogwaiTestCase, TestVertexModel, TestEdgeModel, TestEdgeModel2, TestEdgeModelDouble
 from mogwai.exceptions import ValidationError, MogwaiQueryError
 
 
@@ -133,14 +133,21 @@ class TestEdgeIO(BaseMogwaiTestCase):
     def test_find_by_value_method(self):
         e1 = TestEdgeModel.create(self.v1, self.v2, test_val=-99, name='e1')
         e2 = TestEdgeModel.create(self.v1, self.v2, test_val=-100, name='e2')
+        e3 = TestEdgeModelDouble.create(self.v1, self.v2, test_val=-101.0, name='e3')
 
         self.assertEqual(len(TestEdgeModel.find_by_value('test_val', -99)), 1)
         self.assertEqual(len(TestEdgeModel.find_by_value('test_val', -100)), 1)
         self.assertEqual(len(TestEdgeModel.find_by_value('test_val', -102)), 0)
         self.assertEqual(len(TestEdgeModel.find_by_value('name', 'e2')), 1)
+        self.assertEqual(len(TestEdgeModelDouble.find_by_value('test_val', -101.0)), 1)
+
+        print e1
+        print e2
+        print e3
 
         e1.delete()
         e2.delete()
+        e3.delete()
 
     def test_get_by_id(self):
         e1 = TestEdgeModel.create(self.v1, self.v2, test_val=3)

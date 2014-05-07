@@ -129,14 +129,12 @@ class Vertex(Element):
         _field = cls.get_property_by_name(field)
         _element_type = cls.get_element_type()
 
-        if isinstance(value, (int, long)):
-            search = '{}l'.format(value)
-        elif isinstance(value, (float)):
-            search = '{}f'.format(value)
+        if isinstance(value, (int, long, float)):
+            search = 'filter{{it."{}" == {}}}'.format(_field, value)
         else:
-            search  = '"{}"'.format(value)
+            search  = 'has("{}", "{}")'.format(_field, value)
 
-        query = 'g.V("element_type","{}").has("{}",{}).toList()'.format(_element_type, _field, search)
+        query = 'g.V("element_type","{}").{}.toList()'.format(_element_type, search)
 
         results = execute_query(query)
 
