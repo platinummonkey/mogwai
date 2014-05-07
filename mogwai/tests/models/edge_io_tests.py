@@ -130,6 +130,21 @@ class TestEdgeIO(BaseMogwaiTestCase):
         e1.reload()
         e1.delete()
 
+    def test_find_by_value_method(self):
+        e1 = TestEdgeModel.create(self.v1, self.v2, test_val=-99, name='e1')
+        e2 = TestEdgeModel.create(self.v1, self.v2, test_val=-100, name='e2')
+        e3 = TestEdgeModel.create(self.v1, self.v2, test_float=float(-101), name='e2')
+
+        self.assertEqual(len(TestEdgeModel.find_by_value('test_val', -99)), 1)
+        self.assertEqual(len(TestEdgeModel.find_by_value('test_val', -100)), 1)
+        self.assertEqual(len(TestEdgeModel.find_by_value('test_float', float(-101))),1)
+        self.assertEqual(len(TestEdgeModel.find_by_value('test_val', -102)), 0)
+        self.assertEqual(len(TestEdgeModel.find_by_value('name', 'e2')), 1)
+
+        e1.delete()
+        e2.delete()
+        e3.delete()
+
     def test_get_by_id(self):
         e1 = TestEdgeModel.create(self.v1, self.v2, test_val=3)
         results = TestEdgeModel.get(e1.id)

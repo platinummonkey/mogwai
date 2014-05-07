@@ -80,7 +80,7 @@ class Edge(Element):
         return self
 
     @classmethod
-    def find_by_value(cls, field, value):
+    def find_by_value(cls, field, value, as_dict=False):
         """
         Returns edges that match the given field/value pair.
 
@@ -92,7 +92,19 @@ class Edge(Element):
         :type as_dict: boolean
         :rtype: [mogwai.models.Edge]
         """
-        results = execute_query('g.E("label","%s").has("%s","%s").toList()' % (cls.get_element_type(), field, value))
+        _field = cls.get_property_by_name(field)
+        _label = cls.get_label()
+
+        if isinstance(value, (int, long)):
+            search = '{}l'.format(value)
+        elif isinstance(value, (float)):
+            search = '{}f'.format(value)
+        else:
+            search  = '"{}"'.format(value)
+
+        query = 'g.E("label","{}").has("{}", {}).toList()'.format(_label, _field, search)
+
+        results = execute_query(query)
 
         objects = []
         for r in results:
@@ -105,7 +117,6 @@ class Edge(Element):
             return {v._id: v for v in objects}
 
         return objects
-
 
     @classmethod
     def all(cls, ids, as_dict=False):

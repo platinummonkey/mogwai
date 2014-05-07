@@ -126,7 +126,19 @@ class Vertex(Element):
         :type as_dict: boolean
         :rtype: [mogwai.models.Vertex]
         """
-        results = execute_query('g.V("element_type","%s").has("%s","%s").toList()' % (cls.get_element_type(), field, value))
+        _field = cls.get_property_by_name(field)
+        _element_type = cls.get_element_type()
+
+        if isinstance(value, (int, long)):
+            search = '{}l'.format(value)
+        elif isinstance(value, (float)):
+            search = '{}f'.format(value)
+        else:
+            search  = '"{}"'.format(value)
+
+        query = 'g.V("element_type","{}").has("{}",{}).toList()'.format(_element_type, _field, search)
+
+        results = execute_query(query)
 
         objects = []
         for r in results:
