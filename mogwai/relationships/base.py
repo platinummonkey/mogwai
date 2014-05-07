@@ -6,7 +6,8 @@ from functools import wraps
 from mogwai._compat import array_types, string_types
 from mogwai.tools import LazyImportClass
 from mogwai.exceptions import MogwaiRelationshipException
-from mogwai.models.element import IN, OUT, BOTH
+
+from mogwai.constants import IN, OUT, BOTH
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +23,7 @@ def requires_vertex(method):
 
 
 class Relationship(object):
+
     """  Define incoming and outgoing relationships that exist. Also enforce schema IN, OUT and BOTH directions
 
     Warn if queries return schema violations.
