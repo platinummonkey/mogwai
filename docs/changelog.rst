@@ -5,6 +5,10 @@ ChangeLog
 
 Changes to the library are recorded here.
 
+v0.3.3
+------
+ * Fixed and improved find_by_value for both Edge and Vertex
+
 v0.3.2
 ------
  * Fixed Circular Import
