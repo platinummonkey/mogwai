@@ -27,7 +27,10 @@ Mogwai will randomly pick a host to connect to. Sorry, connection pooling isn't 
    setup('localhost')
    # With authentication
    #setup('localhost', username='rexster', password='rexster')
-
+   # With gevent support
+   #setup('localhost', concurrency='gevent')  # default is Standard Synchronous Python Sockets
+   # With eventlet support
+   #setup('localhost', concurrency='eventlet')  # default is Standard Synchronous Python Sockets
 
 .. _quickstart_define_models:
 

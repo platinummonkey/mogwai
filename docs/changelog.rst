@@ -5,6 +5,12 @@ ChangeLog
 
 Changes to the library are recorded here.
 
+v0.4.0
+------
+ * Support concurrent connections via gevent and eventlet through rexpro support in the 0.2.0 release
+ * All Properties support None when not required. Be aware when developing, especially around the Boolean property,
+   since, when not required, it can actually be in 3 states (True, False and None) or (true, false and null in groovy)
+
 v0.3.3
 ------
  * Fixed and improved find_by_value for both Edge and Vertex

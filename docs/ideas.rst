@@ -8,6 +8,7 @@ up-to-date with the issue tracker. Also these are in no-particular order.
 
  * **Titan 0.5.x + support --> TinkerPop3 and Gremlin3 Support**
     * Websocket support for streaming results (generators)
+    * Build in pluggable gevent/eventlet support for streaming results -- mogwai operations should be asynchronous
  * **Improved Index/Constraint Specification System**
     * Create Faunus or runnable job against the database to enforce a specification
  * **Support Migrations - The `South` project lends inspiration here.**

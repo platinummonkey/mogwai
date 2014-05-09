@@ -19,7 +19,8 @@ Features
  - Straightforward syntax
  - Query Support
  - Vertex and Edge Support
- - Uses RexPro connection
+ - Uses RexPro Connection Pooling
+ - Gevent and Eventlet socket support via RexPro
  - Supports Relationship quick-modeling
  - Supports custom gremlin scripts and methods
  - Doesn't restrict the developer from using direct methods.

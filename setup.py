@@ -6,6 +6,7 @@ from setuptools import setup, find_packages
 #python setup.py sdist upload
 
 version = open('mogwai/VERSION', 'r').readline().strip()
+develop_requires = [dep.strip() for dep in open('requirements.pip', 'r').readlines()]
 
 long_desc = """
 mogwai is an Object-Graph Mapper (OGM) for Python
@@ -38,7 +39,7 @@ setup(
     ],
     keywords='cassandra,titan,ogm,mogwai,thunderdome',
     install_requires=['pyparsing>=1.5.7',
-                      'rexpro>=0.1.8',
+                      'rexpro>=0.2.0',
                       'six>=1.6.1',
                       'argparse>=1.2.1',
                       'factory-boy>=2.3.1',
@@ -46,12 +47,14 @@ setup(
                       'Twisted>=13.2.0',
                       'pytz>=2013.9'],
     extras_require={
-        'develop': ['nose==1.3.0', 'coverage==3.7.1', 'tox==1.7.1'],
+        'develop': develop_requires,
         'newrelic': ['newrelic>=2.18.1.15'],
-        'docs': ['Sphinx>=1.2.2', 'sphinx-rtd-theme>=0.1.6', 'watchdog>=0.7.1', 'newrelic>=2.18.1.15']
+        'docs': ['Sphinx>=1.2.2', 'sphinx-rtd-theme>=0.1.6', 'watchdog>=0.7.1', 'newrelic>=2.18.1.15'],
+        'gevent': ['rexpro[gevent]>=0.2.0'],
+        'eventlet': ['rexpro[eventlet]>=0.2.0'],
     },
     test_suite='nose.collector',
-    tests_require=['nose==1.3.0', 'coverage==3.7.1', 'tox==1.7.1'],
+    tests_require=develop_requires,
     author='Cody Lee',
     author_email='codylee@wellaware.us',
     maintainer='Cody Lee',
