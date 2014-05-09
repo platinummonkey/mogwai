@@ -2,7 +2,8 @@ from __future__ import unicode_literals
 from _compat import string_types, array_types
 import logging
 from re import compile
-from rexpro.connection import RexProConnectionPool, RexProConnection
+from rexpro.connection import RexProConnection
+from rexpro.utils import get_rexpro
 from rexpro.exceptions import RexProConnectionException, RexProScriptException
 
 from mogwai.exceptions import MogwaiConnectionError, MogwaiQueryError
@@ -12,6 +13,9 @@ from mogwai._compat import print_
 logger = logging.getLogger(__name__)
 
 
+SOCKET_TYPE = None
+CONNECTION_TYPE = None
+CONNECTION_POOL_TYPE = None
 _connection_pool = None
 _graph_name = None
 metric_manager = MetricManager()
@@ -71,19 +75,27 @@ def _parse_host(host, username, password, graph_name, graph_obj_name='g'):
                 'graph_name': graph_name, 'graph_obj_name': graph_obj_name}
 
 
-def setup(host, graph_name='graph', graph_obj_name='g', username='', password='', metric_reporters=None, pool_size=10):
+def setup(host, graph_name='graph', graph_obj_name='g', username='', password='',
+          metric_reporters=None, pool_size=10, concurrency='sync'):
     """  Sets up the connection, and instantiates the models
 
     """
     global _connection_pool
+    global SOCKET_TYPE, CONNECTION_TYPE, CONNECTION_POOL_TYPE
     global metric_manager
 
     if metric_reporters:  # pragma: no cover
         metric_manager.setup_reporters(metric_reporters)
 
+    sock, conn, pool = get_rexpro(stype=concurrency)
+    # store for reference
+    SOCKET_TYPE = sock
+    CONNECTION_TYPE = conn
+    CONNECTION_POOL_TYPE = pool
+
     if isinstance(host, string_types):
-        _connection_pool = RexProConnectionPool(pool_size=pool_size,
-                                                **_parse_host(host, username, password, graph_name, graph_obj_name))
+        _connection_pool = pool(pool_size=pool_size,
+                                **_parse_host(host, username, password, graph_name, graph_obj_name))
 
     else:  # pragma: no cover
         raise MogwaiConnectionError("Must Specify at least one host or list of hosts")
