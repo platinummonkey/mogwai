@@ -9,8 +9,8 @@ from mogwai._compat import print_
 @attr('unit', 'property', 'property_list')
 class ListPropertyTestCase(GraphPropertyBaseClassTestCase):
     klass = List
-    good_cases = ([], ['val'], (), tuple('val'))
-    bad_cases = (0, 1.1, None, 'val', {}, {'value': 1})
+    good_cases = ([], ['val'], (), tuple('val'), None)
+    bad_cases = (0, 1.1, 'val', {}, {'value': 1})
 
 
 class ListTestVertex(Vertex):

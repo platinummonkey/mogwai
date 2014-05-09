@@ -11,8 +11,8 @@ from mogwai._compat import print_
 @attr('unit', 'property', 'property_boolean')
 class BooleanPropertyTestCase(GraphPropertyBaseClassTestCase):
     klass = Boolean
-    good_cases = (True, False)
-    bad_cases = (0, 1.1, 'val', [], (), {}, None)
+    good_cases = (True, False, None)
+    bad_cases = (0, 1.1, 'val', [], (), {})
 
 
 class BooleanTestVertex(Vertex):

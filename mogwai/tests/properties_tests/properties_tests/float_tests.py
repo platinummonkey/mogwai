@@ -9,8 +9,8 @@ from mogwai._compat import print_
 @attr('unit', 'property', 'property_float')
 class FloatPropertyTestCase(GraphPropertyBaseClassTestCase):
     klass = Float
-    good_cases = (1.1, 0.0)
-    bad_cases = ('', 'a', 1, None, [], [1], {}, {'a': 1})
+    good_cases = (1.1, 0.0, None)
+    bad_cases = ('', 'a', 1, [], [1], {}, {'a': 1})
 
 
 class FloatTestVertex(Vertex):

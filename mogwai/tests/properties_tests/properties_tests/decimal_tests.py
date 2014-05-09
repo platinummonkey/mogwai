@@ -10,8 +10,8 @@ from mogwai._compat import print_
 @attr('unit', 'property', 'property_decimal')
 class DecimalPropertyTestCase(GraphPropertyBaseClassTestCase):
     klass = Decimal
-    good_cases = (1.1, 0.0, _D(1.1))
-    bad_cases = (0, 'val', ['val'], {'val': 1}, None)
+    good_cases = (1.1, 0.0, _D(1.1), None)
+    bad_cases = (0, 'val', ['val'], {'val': 1})
 
 
 class DecimalTestVertex(Vertex):

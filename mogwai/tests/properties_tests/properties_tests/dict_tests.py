@@ -9,8 +9,8 @@ from mogwai._compat import print_
 @attr('unit', 'property', 'property_dict')
 class DictionaryPropertyTestCase(GraphPropertyBaseClassTestCase):
     klass = Dictionary
-    good_cases = ({}, {'test': 1})
-    bad_cases = (0, 1.1, 'val', ['val'], None)
+    good_cases = ({}, {'test': 1}, None)
+    bad_cases = (0, 1.1, 'val', ['val'])
 
 
 class DictionaryTestVertex(Vertex):

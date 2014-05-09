@@ -215,6 +215,8 @@ class GraphProperty(object):
                 return self.validator(self.get_default())
             elif self.required:
                 raise ValidationError('%s - None values are not allowed' % self.db_field_name)
+            else:
+                return None
         return self.validator(value)
 
     def to_python(self, value):

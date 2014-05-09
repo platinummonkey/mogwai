@@ -38,7 +38,7 @@ class String(GraphProperty):
         value = super(String, self).validate(value)
 
         # this should never happen unless the Validator is changed
-        if value is None:  # pragma: no cover
+        if value is None:
             return None
 
         if self.max_length:

@@ -9,8 +9,8 @@ from mogwai._compat import print_
 @attr('unit', 'property', 'property_int')
 class IntegerPropertyTestCase(GraphPropertyBaseClassTestCase):
     klass = Integer
-    good_cases = (1, 0)
-    bad_cases = ('', 'a', 1.1, None, [], [1], {}, {'a': 1})
+    good_cases = (1, 0, None)
+    bad_cases = ('', 'a', 1.1, [], [1], {}, {'a': 1})
 
 
 class IntegerTestVertex(Vertex):
@@ -44,8 +44,8 @@ class IntegerVertexTestCase(GraphPropertyBaseClassTestCase):
 @attr('unit', 'property', 'property_long')
 class LongPropertyTestCase(GraphPropertyBaseClassTestCase):
     klass = Long
-    good_cases = (1L, 0L)
-    bad_cases = ('', 'a', 1.1, None, [], [1], {}, {'a': 1})
+    good_cases = (1L, 0L, None)
+    bad_cases = ('', 'a', 1.1, [], [1], {}, {'a': 1})
 
 
 class LongTestVertex(Vertex):

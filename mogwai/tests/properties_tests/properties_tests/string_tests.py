@@ -11,8 +11,8 @@ from mogwai._compat import print_
 @attr('unit', 'property', 'property_string')
 class StringPropertyTestCase(GraphPropertyBaseClassTestCase):
     klass = String
-    good_cases = ('test', )
-    bad_cases = (None, 0, 1.1, [], (), {})
+    good_cases = ('test', None)
+    bad_cases = (0, 1.1, [], (), {})
 
     def test_max_min_length_validation_error(self):
         s = self.klass(max_length=5, min_length=2)
