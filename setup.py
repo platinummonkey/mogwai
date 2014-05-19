@@ -6,7 +6,27 @@ from setuptools import setup, find_packages
 #python setup.py sdist upload
 
 version = open('mogwai/VERSION', 'r').readline().strip()
-develop_requires = [dep.strip() for dep in open('requirements.pip', 'r').readlines()]
+develop_requires = ['Sphinx==1.2.2',
+    'Twisted==13.2.0',
+    'blinker==1.2',
+    'coverage==3.7.1',
+    'detox==0.9.3',
+    'docutils==0.11',
+    'eventlet==0.14.0',
+    'factory-boy==2.3.1',
+    'gevent==1.0.1',
+    'msgpack-python==0.4.2',
+    'newrelic==2.18.1.15',
+    'nose==1.3.0',
+    'pyformance==0.2.4',
+    'pyparsing==1.5.7',
+    'pytz==2013.9',
+    'rexpro==0.2.0',
+    'six==1.6.1',
+    'sphinx-rtd-theme==0.1.6',
+    'tox==1.7.1',
+    'watchdog==0.7.1',
+    'wercker==0.8.3']
 
 long_desc = """
 mogwai is an Object-Graph Mapper (OGM) for Python
