@@ -53,7 +53,7 @@ PyPI: https://pypi.python.org/pypi/mogwai/
 
 .. code-block:: sh
 
-    $ pip install mogwa
+    $ pip install mogwai
 
 Source: https://bitbucket.org/wellaware/mogwai.git
 
