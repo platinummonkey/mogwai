@@ -42,6 +42,7 @@ Models declare a Vertex or Edge model and attributes it should possibly contain.
 .. code-block:: python
 
    from mogwai.models import Vertex, Edge
+   from mogwai.properties import String, Integer
 
    _val = 0
 
