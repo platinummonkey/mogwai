@@ -7,7 +7,7 @@ Usage
 -----
 
 .. note:: This section provides a quick summary of mogwai features.
-           A more detailed listing is available in the full documentations.
+           A more detailed listing is available in the full documentation.
 
 
 .. _quickstart_setup_connection:
@@ -15,9 +15,8 @@ Usage
 Setup Connection
 ----------------
 
-You'll need to setup the connection to the graph database. You can optionaly pass in a list of hosts to connect to.
-Mogwai will randomly pick a host to connect to. Sorry, connection pooling isn't currently available, feel free to
-:ref:`contribute`.
+You'll need to setup the connection to the graph database.  Mogwai handles connection pooling for you, but you
+should handle load balancing using dedicated equipment.
 
 .. code-block:: python
 

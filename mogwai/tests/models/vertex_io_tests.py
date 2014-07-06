@@ -524,3 +524,61 @@ class TestVertexTraversal(BaseMogwaiTestCase):
         e1.delete()
         e2.delete()
         e3.delete()
+
+    @attr('manual_properties')
+    def test_manual_properties(self):
+        v = TestVertexModel.create(test_val=1, name='Test 7', some_property=32)
+
+        print "Got Results:", v
+        print "Result dict:", v.as_dict()
+        print "\tResult properties:", v._properties.keys()
+        print "\tResult Manaul:", v._manual_values.items()
+
+        self.assertEqual(v['some_property'], 32)
+        self.assertIn('some_property', v)  # This also tests __contains__
+        self.assertIn('test_val', v)  # This also tests __contains__
+
+        # test len(Element()), should return len(element._properties) + len(element._manual_values)
+        self.assertEqual(len(v), 3)
+
+        # test __iter__
+        prop_keys = [key for key in v]
+        self.assertEqual(len(prop_keys), 3)
+        for prop_key in v:
+            self.assertIn(prop_key, ['test_val', 'name', 'some_property'])
+
+        # test keys()
+        self.assertEqual(len(prop_keys), len(v.keys()))
+        for prop_key in v.keys():
+            self.assertIn(prop_key, prop_keys)
+
+        # test values()
+        prop_values = v.values()
+        self.assertEqual(len(prop_values), 3)
+        for prop_value in prop_values:
+            self.assertIn(prop_value, [1, 'Test 7', 32])
+
+        # test items()
+        prop_items = v.items()
+        self.assertEqual(len(prop_items), 3)
+        for prop_key, prop_value in prop_items:
+            self.assertIn(prop_key, ['test_val', 'name', 'some_property'])
+            self.assertIn(prop_value, [1, 'Test 7', 32])
+
+        # test change
+        v['some_property'] = 42
+        self.assertEqual(v['some_property'], 42)
+        v.save()
+        self.assertEqual(v['some_property'], 42)
+
+        # test delete
+        del v['some_property']
+        # This should still exist, so the property can be removed from the database,
+        # but should raise an AttributeError if attempted to access normally
+        self.assertIn('some_property', v)
+        self.assertIsNone(v._manual_values.get('some_property'))
+        with self.assertRaises(AttributeError):
+            value = v['some_property']
+            print "Got value: {}".format(value)
+
+        v.delete()

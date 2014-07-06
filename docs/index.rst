@@ -30,6 +30,7 @@ Features
  - Interactive shell available
  - Performance monitoring tools available.
  - Serialization support for Pickle
+ - Support for un-modeled properties with dictionary-like access
 
 
 .. _links:

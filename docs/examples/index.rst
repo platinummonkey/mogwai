@@ -13,4 +13,5 @@ Common examples for using Mogwai
    belongings
    gremlin
    serialization
+   unknown_properties
 

@@ -5,6 +5,15 @@ ChangeLog
 
 Changes to the library are recorded here.
 
+v0.4.2
+------
+ * Added support for unknown properties and dictionary-like access (:ref:`See Example <example_unknown_properties>`)
+
+v0.4.1
+------
+ * Missing import fix
+ * setup.py typo fix
+
 v0.4.0
 ------
  * Support concurrent connections via gevent and eventlet through rexpro support in the 0.2.0 release

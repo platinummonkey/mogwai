@@ -60,6 +60,7 @@ class BaseElement(object):
         """
         self._id = values.get('_id')
         self._values = {}
+        self._manual_values = {}
         #print "Received values: %s" % values
         #print "Known Relationships: %s" % self._relationships
         for name, prop in self._properties.items():
@@ -75,6 +76,12 @@ class BaseElement(object):
             setattr(self, name, value)
         for name, relationship in self._relationships.items():
             relationship._setup_instantiated_vertex(self)
+
+        # unknown properties that are loaded manually
+        from mogwai.properties.base import BaseValueManager
+        for kwarg in set(values.keys()).difference(set(self._properties.keys())):  # set(self._properties.keys()) - set(values.keys()):
+            if kwarg not in ('_id', '_inV', '_outV', 'element_type'):
+                self._manual_values[kwarg] = BaseValueManager(None, values.get(kwarg))
 
     @property
     def id(self):
@@ -158,6 +165,7 @@ class BaseElement(object):
         values = {}
         for name, prop in self._properties.items():
             values[name] = prop.to_database(getattr(self, name, None))
+        values.update(self._manual_values)
         return values
 
     def as_save_params(self):
@@ -186,6 +194,21 @@ class BaseElement(object):
                 #print "Saving %s to database for name %s" % (prop.db_field_name or name, name)
                 values[prop.db_field_name or name] = prop.to_database(vm.value)
 
+        # manual values
+        for name, prop in self._manual_values.items():
+            if prop is None:
+                # Remove this property entirely
+                values[name] = None
+            else:
+                # Determine the save strategy
+                prop_strategy = prop.strategy
+                if prop_strategy.condition(previous_value=prop.previous_value,
+                                           value=prop.value,
+                                           has_changed=prop.changed,
+                                           first_save=was_saved,
+                                           graph_property=None):
+                    values[name] = prop.value
+
         return values
 
     @classmethod
@@ -201,9 +224,9 @@ class BaseElement(object):
         dst_data = data.copy().get('_properties', {})
         if data.get('_id', None):
             dst_data.update({'_id': data.copy().get('_id')})
-        #print "Raw incoming data: %s" % data
+        print "Raw incoming data: %s" % data
         for name, prop in cls._properties.items():
-            #print "trying db_field_name: %s and name: %s" % (prop.db_field_name, name)
+            print "trying db_field_name: %s and name: %s" % (prop.db_field_name, name)
             if prop.db_field_name in dst_data:
                 dst_data[name] = dst_data.pop(prop.db_field_name)
             elif name in dst_data:
@@ -296,6 +319,87 @@ class BaseElement(object):
             create_cls = cls.create
         
         return create_cls
+
+    def __getitem__(self, item):
+        logger.debug("Using __getitem__({})...".format(item))
+        print "Using __getitem__({})...: options: _properties({}), _manual_values({})".format(item, self._properties.items(), self._manual_values.items())
+        value = self._properties.get(item, None)
+        if value is not None:
+            # call the normal getattr method
+            return getattr(self, item)
+        else:
+            # manual entry
+            value_manager = self._manual_values.get(item, None)
+            """ :type value_manager: mogwai.properties.base.BaseValueManager | None """
+            if value_manager is None:
+                raise AttributeError(item)
+            return value_manager.value
+
+    def __setitem__(self, key, value):
+        logger.debug("Using __setitem__({}): {}...".format(key, value))
+        prop = self._properties.get(key, None)
+        if prop is not None:
+            # call the normal setattr method
+            setattr(self, key, value)
+        else:
+            # manual entry
+            if key in self._manual_values:
+                # manual entry already exists, update
+                self._manual_values[key].setval(value)
+            else:
+                # manual entry doesn't exist, create
+                from mogwai.properties.base import BaseValueManager
+                self._manual_values[key] = BaseValueManager(None, value)
+
+    def __delitem__(self, key):
+        logger.debug("Using __delitem__({})...".format(key))
+        prop = self._properties.get(key, None)
+        if prop is not None:
+            # call the normal delattr method
+            delattr(self, key)
+        else:
+            # manual entry
+            if key in self._manual_values:
+                # manual entry already exists, update for delete
+                self._manual_values[key] = None
+            else:
+                raise AttributeError(key)
+
+    def __contains__(self, item):
+        logger.debug("Checking contains...")
+        return item in set(self._properties.keys()).union(set(self._manual_values.keys()))
+
+    def __len__(self):
+        logger.debug("Getting len...")
+        return len(set(self._properties.keys()).union(set(self._manual_values.keys())))
+
+    def __iter__(self):
+        logger.debug("Iterating through __iter__...")
+        for item in set(self._properties.keys()).union(set(self._manual_values.keys())):
+            yield item
+
+    def items(self):
+        logger.debug("Iterating through items...")
+        items = []
+        for key in self._properties.keys():
+            items.append((key, getattr(self, key)))
+        items.extend([(pair[0], pair[1].value) for pair in self._manual_values.items() if pair[1] is not None])
+        return items
+
+    def keys(self):
+        logger.debug("Iterating through keys...")
+        items = []
+        items.extend(self._properties.keys())
+        items.extend([k for k in self._manual_values.keys() if self._manual_values.get(k) is not None])
+        return items
+
+    def values(self):
+        logger.debug("Iterating through values...")
+        items = []
+        for key in self._properties.keys():
+            items.append(getattr(self, key))
+        items.extend([v.value for v in self._manual_values.values() if v is not None])
+        return items
 
 
 class ElementMetaClass(type):
