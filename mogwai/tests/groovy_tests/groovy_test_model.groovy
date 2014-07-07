@@ -1,3 +1,5 @@
+import com.thinkaurelius.titan.core.util.*;
+
 def first_method(a1, a2) {
     return something()
 }

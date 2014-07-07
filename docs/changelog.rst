@@ -5,6 +5,10 @@ ChangeLog
 
 Changes to the library are recorded here.
 
+v0.4.3
+------
+ * Added support for groovy imports on file level, as well as through GremlinMethod/GremlinValue (:ref:`See Example <example_groovy_imports>`)
+
 v0.4.2
 ------
  * Added support for unknown properties and dictionary-like access (:ref:`See Example <example_unknown_properties>`)
