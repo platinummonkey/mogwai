@@ -14,7 +14,7 @@ docopt==0.6.1
 docutils==0.11
 dulwich==0.9.6
 eventlet==0.14.0
-factory-boy==2.3.1
+factory-boy==2.4.1
 gevent==1.0.1
 greenlet==0.4.2
 humanize==0.5
@@ -25,11 +25,11 @@ pathtools==0.1.2
 py==1.4.20
 pyformance==0.2.4
 pyparsing==1.5.7
-pytz==2013.9
+pytz==2014.4
 requests==2.2.1
-rexpro==0.2.0
+rexpro==0.2.1
 semantic-version==2.3.0
-six==1.7.3
+six==1.6.1
 sphinx-rtd-theme==0.1.6
 tox==1.7.1
 virtualenv==1.11.4
