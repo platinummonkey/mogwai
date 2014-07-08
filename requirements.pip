@@ -29,7 +29,7 @@ pytz==2013.9
 requests==2.2.1
 rexpro==0.2.0
 semantic-version==2.3.0
-six==1.6.1
+six==1.7.3
 sphinx-rtd-theme==0.1.6
 tox==1.7.1
 virtualenv==1.11.4
