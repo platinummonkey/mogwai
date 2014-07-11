@@ -14,4 +14,5 @@ Common examples for using Mogwai
    gremlin
    serialization
    unknown_properties
+   example_groovy_imports
 
