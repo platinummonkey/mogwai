@@ -5,6 +5,9 @@ import re
 
 # Cache of parsed files
 _parsed_file_cache = {}
+GroovyImport = collections.namedtuple('GroovyImport', ['comment_list', 'import_strings', 'import_list'])
+GroovyFunction = collections.namedtuple('GroovyFunction', ['name', 'args', 'body', 'defn'])
+GroovyFileDef = collections.namedtuple('GroovyFileDefinition', ['functions', 'imports', 'filename'])
 
 
 class GroovyFunctionParser(object):
@@ -19,16 +22,13 @@ class GroovyFunctionParser(object):
     FuncName = VarName
     FuncDefn = KeywordDef + FuncName + "(" + pyparsing.delimitedList(VarName) + ")" + "{"
 
-    # Result named tuple
-    GroovyFunction = collections.namedtuple('GroovyFunction', ['name', 'args', 'body', 'defn'])
-
     @classmethod
     def parse(cls, data):
         """
         Parse the given function definition and return information regarding the contained definition.
 
         :param data: The function definition in a string
-        :type data: str
+        :type data: str | basestring
         :rtype: dict
 
         """
@@ -41,35 +41,86 @@ class GroovyFunctionParser(object):
             fn_body = re.sub(r'[^\{]+\{', '', data, count=1)
             parts = fn_body.strip().split('\n')
             fn_body = '\n'.join(parts[0:-1])
-            return cls.GroovyFunction(result[1], args, fn_body, data)
+            return GroovyFunction(result[1], args, fn_body, data)
         except Exception as ex:
-            return {}
+            return None
 
 
-def parse(file):
+class GroovyImportParser(object):
+    """
+    Given a string containing a single import definition this class will parse the import definition and return
+    information regarding it.
+    """
+
+    # Simple Groovy sub-grammar definitions
+    ImportDef = pyparsing.Suppress(pyparsing.Keyword('import'))
+    ImportVarName = pyparsing.Regex(r'[A-Za-z_.\*]*')
+    CommentVar = pyparsing.Word(pyparsing.alphas, pyparsing.alphanums).setName('comment')
+    OptionalSpace = pyparsing.Optional(' ')
+    ImportDefn = ImportDef + \
+                 pyparsing.delimitedList(ImportVarName, delim='.').setResultsName('imports') + \
+                 pyparsing.Suppress(";") + \
+                 pyparsing.Optional(
+                     pyparsing.Suppress('//') +
+                     pyparsing.delimitedList(CommentVar, delim=pyparsing.Empty()).setResultsName('comment')
+                 )
+
+    @classmethod
+    def parse(cls, data):
+        """
+        Parse the given import and return information regarding the contained import statement.
+
+        :param data: The import statement in a string
+        :type data: str | basestring
+        :rtype: dict
+
+        """
+        try:
+            # Parse the function here
+            result = cls.ImportDefn.parseString(data)
+            package_list = []
+            if 'imports' in result:
+                package_list = result['imports'].asList()
+
+            comment_list = []
+            if 'comment' in result:
+                comment_list = result['comment'].asList()
+
+            return GroovyImport(comment_list,
+                                package_list,
+                                ['import {};'.format(package) for package in package_list])
+        except Exception as ex:
+            return None
+
+
+def parse(filename):
     """
     Parse Groovy code in the given file and return a list of information about each function necessary for usage in
     queries to database.
 
-    :param file: The file containing groovy code.
-    :type file: str
+    :param filename: The file containing groovy code.
+    :type filename: str
     :rtype: list
 
     """
     # Check cache before parsing file
     global _parsed_file_cache
-    if file in _parsed_file_cache:
-        return _parsed_file_cache[file]
+    if filename in _parsed_file_cache:
+        return _parsed_file_cache[filename]
 
+    ImportDefnRegexp = r'^import.*'
     FuncDefnRegexp = r'^def.*\{'
     FuncEndRegexp = r'^\}.*$'
-    with open(file, 'r') as f:
-        data = f.read()
-    file_lines = data.split("\n")
+    passedFirstFunction = False
+    with open(filename, 'r') as f:
+        file_lines = [line.rstrip('\n') for line in f.readlines()]
     all_fns = []
+    all_imports = []
     fn_lines = ''
     for line in file_lines:
-        if len(fn_lines) > 0:
+        if not passedFirstFunction and re.match(ImportDefnRegexp, line):
+            all_imports.append(line)
+        elif len(fn_lines) > 0:
             if re.match(FuncEndRegexp, line):
                 fn_lines += line + "\n"
                 all_fns.append(fn_lines)
@@ -78,10 +129,11 @@ def parse(file):
                 fn_lines += line + "\n"
         elif re.match(FuncDefnRegexp, line):
             fn_lines += line + "\n"
+            passedFirstFunction = True
 
-    func_results = []
-    for fn in all_fns:
-        func_results += [GroovyFunctionParser.parse(fn)]
+    import_results = [GroovyImportParser.parse(im) for im in all_imports]
+    func_results = [GroovyFunctionParser.parse(fn) for fn in all_fns]
 
-    _parsed_file_cache[file] = func_results
-    return func_results
+    result = GroovyFileDef(func_results, import_results, filename)
+    _parsed_file_cache[filename] = result
+    return result

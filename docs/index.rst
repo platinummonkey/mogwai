@@ -31,6 +31,7 @@ Features
  - Performance monitoring tools available.
  - Serialization support for Pickle
  - Support for un-modeled properties with dictionary-like access
+ - Support for imports via groovy and the groovy Script Engine. (:ref:`See Example <example_groovy_imports>`)
 
 
 .. _links:

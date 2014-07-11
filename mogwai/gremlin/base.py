@@ -6,7 +6,7 @@ from mogwai._compat import array_types, string_types, integer_types, float_types
 
 from mogwai.connection import execute_query
 from mogwai.exceptions import MogwaiQueryError, MogwaiGremlinException
-from groovy import parse
+from groovy import parse, GroovyImport
 
 
 logger = logging.getLogger(__name__)
@@ -21,7 +21,8 @@ class BaseGremlinMethod(object):
                  classmethod=False,
                  property=False,
                  defaults={},
-                 transaction=True):
+                 transaction=True,
+                 imports=None):
         """
         Initialize the gremlin method and define how it is attached to class.
 
@@ -38,6 +39,8 @@ class BaseGremlinMethod(object):
         :type defaults: dict
         :param transaction: Close previous transaction before executing (True by default)
         :type transaction: bool
+        :param imports: Additional imports to include when calling the GremlinMethod
+        :type imports: list | tuple | str
 
         """
         self.is_configured = False
@@ -49,10 +52,18 @@ class BaseGremlinMethod(object):
         self.defaults =defaults
         self.transaction = transaction
 
+        # function
         self.attr_name = None
         self.arg_list = []
         self.function_body = None
         self.function_def = None
+
+        # imports
+        self.imports = None
+        imports = imports or []
+        if isinstance(imports, (str, basestring)):
+            imports = [imports, ]
+        self.extra_imports = imports
 
         #configuring attributes
         self.parent_class = None
@@ -99,9 +110,12 @@ class BaseGremlinMethod(object):
 
             #TODO: make this less naive
             gremlin_obj = None
-            for grem_obj in parse(path):
-                if grem_obj.name == self.method_name:
-                    gremlin_obj = grem_obj
+            file_def = parse(path)
+
+            # Functions
+            for grem_func in file_def.functions:
+                if grem_func.name == self.method_name:
+                    gremlin_obj = grem_func
                     break
 
             if gremlin_obj is None:
@@ -114,6 +128,14 @@ class BaseGremlinMethod(object):
 
             self.function_body = gremlin_obj.body
             self.function_def = gremlin_obj.defn
+
+            # imports
+            self.imports = file_def.imports
+            extra_imports = []
+            for extra_import in self.extra_imports:
+                extra_imports.append(GroovyImport([], [extra_import], ['import {};'.format(extra_import)]))
+            self.extra_imports = extra_imports
+
             self.is_setup = True
 
     def __call__(self, instance, *args, **kwargs):
@@ -128,11 +150,10 @@ class BaseGremlinMethod(object):
 
         args = list(args)
         if not self.classmethod:
-            #print "Instance: ", instance
             args = [instance._id] + args
 
         params = self.defaults.copy()
-        if len(args + kwargs.values()) > len(self.arg_list):
+        if len(args + kwargs.values()) > len(self.arg_list):  # pragma: no cover
             raise TypeError('%s() takes %s args, %s given' % (self.attr_name, len(self.arg_list), len(args)))
 
         #check for and calculate callable defaults
@@ -147,19 +168,25 @@ class BaseGremlinMethod(object):
         for k, v in kwargs.items():
             if k not in arglist:
                 an = self.attr_name
-                if k in params:
+                if k in params:  # pragma: no cover
                     raise TypeError("%s() got multiple values for keyword argument '%s'" % (an, k))
-                else:
+                else:  # pragma: no cover
                     raise TypeError("%s() got an unexpected keyword argument '%s'" % (an, k))
             arglist.pop(arglist.index(k))
             params[k] = v
 
         params = self.transform_params_to_database(params)
 
-        try:
-            from mogwai.models import Vertex
-            from mogwai.models import Edge
+        import_list = []
+        for imp in self.imports + self.extra_imports:
+            if imp is not None:
+                for import_string in imp.import_list:
+                    import_list.append(import_string)
+        import_string = '\n'.join(import_list)
 
+        script = '\n'.join([import_string, self.function_body])
+
+        try:
             if hasattr(instance, 'get_element_type'):
                 context = "vertices.{}".format(instance.get_element_type())
             elif hasattr(instance, 'get_label'):
@@ -169,13 +196,14 @@ class BaseGremlinMethod(object):
 
             context = "{}.{}".format(context, self.method_name)
 
-            tmp = execute_query(self.function_body, params, transaction=self.transaction, context=context)
+            tmp = execute_query(script, params, transaction=self.transaction, context=context)
         except MogwaiQueryError as pqe:  # pragma: no cover
             import pprint
             msg = "Error while executing Gremlin method\n\n"
             msg += "[Method]\n{}\n\n".format(self.method_name)
             msg += "[Params]\n{}\n\n".format(pprint.pformat(params))
             msg += "[Function Body]\n{}\n".format(self.function_body)
+            msg += "[Imports]\n{}\n".format(import_string)
             msg += "\n[Error]\n{}\n".format(pqe)
             if hasattr(pqe, 'raw_response'):
                 msg += "\n[Raw Response]\n{}\n".format(pqe.raw_response)
@@ -268,8 +296,7 @@ class GremlinValue(GremlinMethod):
             return results
 
         if len(results) != 1:
-            raise MogwaiGremlinException('GremlinValue requires a single value is returned (%s returned)' %
-                                           len(results))
+            raise MogwaiGremlinException('GremlinValue requires a single value is returned (%s returned)' % len(results))
         return results[0]
 
 
