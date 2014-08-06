@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+from mogwai._compat import print_
 from nose.plugins.attrib import attr
 
 from mogwai.tests.base import BaseMogwaiTestCase, TestVertexModel, TestEdgeModel, TestEdgeModel2, TestEdgeModelDouble
@@ -66,10 +67,10 @@ class TestEdgeIO(BaseMogwaiTestCase):
         """
         e1 = TestEdgeModel.create(self.v1, self.v2, test_val=3)
         e2 = TestEdgeModel.get(e1.id)
-        print '\n', e1.id, e2.id, e1 == e2,
+        print_('\n{} {} {}'.format(e1.id, e2.id, e1 == e2))
         e2.test_val = 5
         e2.save()
-        print e2.id
+        print_(e2.id)
 
         # we're testing pre-0.5.x expect the reload to not match, must fetch again manually
         e1.reload()
@@ -141,9 +142,9 @@ class TestEdgeIO(BaseMogwaiTestCase):
         self.assertEqual(len(TestEdgeModel.find_by_value('name', 'e2')), 1)
         self.assertEqual(len(TestEdgeModelDouble.find_by_value('test_val', -101.0)), 1)
 
-        print e1
-        print e2
-        print e3
+        print_(e1)
+        print_(e2)
+        print_(e3)
 
         e1.delete()
         e2.delete()

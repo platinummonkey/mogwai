@@ -3,7 +3,7 @@ from nose.plugins.attrib import attr
 from nose.tools import nottest
 from mogwai.tests import BaseMogwaiTestCase
 from mogwai._compat import PY2
-from base_tests import GraphPropertyBaseClassTestCase
+from .base_tests import GraphPropertyBaseClassTestCase
 from mogwai.properties.properties import DateTimeNaive, GraphProperty
 from mogwai.models import Vertex
 from mogwai.exceptions import ValidationError
@@ -30,7 +30,7 @@ class DateTimeNaivePropertyTestCase(GraphPropertyBaseClassTestCase):
     def test_input_output_equality(self):
         now = datetime.datetime.now()
         prop = self.klass()
-        self.assertEqual(now, prop.to_python(prop.to_database(now)))
+        self.assertAlmostEqual(now, prop.to_python(prop.to_database(now)), delta=datetime.timedelta(milliseconds=1))
 
 
 class DateTimeNaiveTestVertex(Vertex):

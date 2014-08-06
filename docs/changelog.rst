@@ -5,6 +5,10 @@ ChangeLog
 
 Changes to the library are recorded here.
 
+v0.5.0
+------
+ * Python 3.3 and 3.4 compatibility - requires rexpro 0.3.0
+
 v0.4.3
 ------
  * Added support for groovy imports on file level, as well as through GremlinMethod/GremlinValue (:ref:`See Example <example_groovy_imports>`)

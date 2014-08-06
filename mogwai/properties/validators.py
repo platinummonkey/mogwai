@@ -99,12 +99,12 @@ positive_integer_validator = PositiveIntegerValidator()
 
 
 class StringValidator(BaseValidator):
-    message = 'Enter a valid string: bad(%s)'
+    message = 'Enter a valid string: {}'
     data_type = string_types
 
     def __call__(self, value):
         if not isinstance(value, self.data_type):
-            raise ValidationError(self.message % (value, ), code=self.code)
+            raise ValidationError(self.message.format(value), code=self.code)
         return value
 
 
@@ -135,38 +135,38 @@ dict_validator = DictValidator()
 
 
 class DateTimeValidator(BaseValidator):
-    message = 'Not a valid DateTime: %s'
+    message = 'Not a valid DateTime: {}'
 
     def __call__(self, value):
         if not isinstance(value, datetime.datetime) and value is not None:
-            raise ValidationError(self.message % (value, ), code=self.code)
+            raise ValidationError(self.message.format(value), code=self.code)
         return value
 
 datetime_validator = DateTimeValidator()
 
 
 class DateTimeUTCValidator(BaseValidator):
-    message = 'Not a valid UTC DateTime: %s'
+    message = 'Not a valid UTC DateTime: {}'
 
     def __call__(self, value):
         super(DateTimeUTCValidator, self).__call__(value)
         if value is None:
             return
         if not isinstance(value, datetime.datetime) and value is not None:
-            raise ValidationError(self.message % (value, ), code=self.code)
+            raise ValidationError(self.message.format(value), code=self.code)
         if value and value.tzinfo != utc:
-            print_("Got value with timezone: %s - %s" % (value, value.tzinfo))
+            #print_("Got value with timezone: {} - {}".format(value, value.tzinfo))
             try:
                 value = value.astimezone(tz=utc)
             except ValueError:  # last ditch effort
                 try:
                     value = value.replace(tz=utc)
                 except (AttributeError, TypeError):
-                    raise ValidationError(self.message % (value, ), code=self.code)
+                    raise ValidationError(self.message.format(value), code=self.code)
             except AttributeError:  # pragma: no cover
                 # This should never happen, unless it isn't a datetime object
                 raise ValidationError(self.message % (value, ), code=self.code)
-        print_("Datetime passed validation: %s - %s" % (value, value.tzinfo))
+        #print_("Datetime passed validation: {} - {}".format(value, value.tzinfo))
         return value
 
 
@@ -205,7 +205,7 @@ class URLValidator(RegexValidator):
         r'(?::\d+)?'  # optional port
         r'(?:/?|[/?]\S+)$', re.IGNORECASE)
 
-    message = 'Enter a valid URL address: %s'
+    message = 'Enter a valid URL address: {}'
     code = 'invalid'
 
     def __call__(self, value):
@@ -219,11 +219,11 @@ class URLValidator(RegexValidator):
                 try:
                     netloc = netloc.encode('idna').decode('ascii')  # IDN -> ACE
                 except UnicodeError:  # invalid domain part
-                    raise e
+                    raise ValidationError(self.message.format(value), code=self.code)
                 url = urlunsplit((scheme, netloc, path, query, fragment))
                 return super(URLValidator, self).__call__(url)
             else:
-                raise ValidationError(self.message % (value, ), code=self.code)
+                raise ValidationError(self.message.format(value), code=self.code)
         return value
 
 
@@ -237,7 +237,7 @@ class EmailValidator(RegexValidator):
         r'|\[(25[0-5]|2[0-4]\d|[0-1]?\d?\d)(\.(25[0-5]|2[0-4]\d|[0-1]?\d?\d)){3}\]$',  # literal form, ipv4 address (SMTP 4.1.3)
         re.IGNORECASE)
 
-    message = 'Enter a valid email address: %s'
+    message = 'Enter a valid email address: {}'
     code = 'invalid'
 
     def __call__(self, value):
@@ -250,10 +250,10 @@ class EmailValidator(RegexValidator):
                 try:
                     parts[-1] = parts[-1].encode('idna').decode('ascii')
                 except UnicodeError:
-                    raise e
+                    raise ValidationError(self.message.format(value), code=self.code)
                 super(EmailValidator, self).__call__('@'.join(parts))
             else:
-                raise ValidationError(self.message % (value, ), code=self.code)
+                raise ValidationError(self.message.format(value), code=self.code)
         return value
 
 validate_email = EmailValidator()

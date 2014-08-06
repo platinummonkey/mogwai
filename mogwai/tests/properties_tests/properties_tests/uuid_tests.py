@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 from nose.plugins.attrib import attr
-from base_tests import GraphPropertyBaseClassTestCase
+from .base_tests import GraphPropertyBaseClassTestCase
 from mogwai._compat import PY2
 from mogwai.properties.properties import UUID
 from mogwai.properties.base import GraphProperty, ValidationError

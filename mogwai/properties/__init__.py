@@ -1,3 +1,3 @@
 
-from properties import *
-from strategy import *
+from .properties import *
+from .strategy import *

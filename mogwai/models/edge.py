@@ -1,9 +1,9 @@
 import logging
-from mogwai._compat import array_types, integer_types, string_types
+from mogwai._compat import array_types, integer_types, float_types, string_types, add_metaclass
 from mogwai.connection import execute_query
 from mogwai.exceptions import ElementDefinitionException, MogwaiQueryError, ValidationError
 from mogwai.gremlin import GremlinMethod
-from element import Element, ElementMetaClass, edge_types
+from .element import Element, ElementMetaClass, edge_types
 
 logger = logging.getLogger(__name__)
 
@@ -27,10 +27,11 @@ class EdgeMetaClass(ElementMetaClass):
         return klass
 
 
+@add_metaclass(EdgeMetaClass)
 class Edge(Element):
     """Base class for all edges."""
 
-    __metaclass__ = EdgeMetaClass
+    #__metaclass__ = EdgeMetaClass
     __abstract__ = True
 
     # if set to True, no more than one edge will
@@ -95,10 +96,10 @@ class Edge(Element):
         _field = cls.get_property_by_name(field)
         _label = cls.get_label()
 
-        if isinstance(value, (int, long, float)):
+        if isinstance(value, integer_types + float_types):
             search = 'filter{{it."{}" == {}}}'.format(_field, value)
         else:
-            search  = 'has("{}", "{}")'.format(_field, value)
+            search = 'has("{}", "{}")'.format(_field, value)
 
         query = 'g.E("label","{}").{}.toList()'.format(_label, search)
 
@@ -135,7 +136,7 @@ class Edge(Element):
         qs = ['ids.collect{g.e(it)}']
 
         results = execute_query('\n'.join(qs), {'ids': strids})
-        results = filter(None, results)
+        results = list(filter(None, results))
 
         if len(results) != len(ids):
             raise MogwaiQueryError("the number of results don't match the number of edge ids requested")
@@ -297,7 +298,7 @@ class Edge(Element):
         :rtype: Vertex
 
         """
-        from vertex import Vertex
+        from mogwai.models.vertex import Vertex
 
         if self._inV is None:
             self._inV = self._simple_traversal('inV')[0]
@@ -312,7 +313,7 @@ class Edge(Element):
         :rtype: Vertex
 
         """
-        from vertex import Vertex
+        from mogwai.models.vertex import Vertex
 
         if self._outV is None:
             self._outV = self._simple_traversal('outV')[0]

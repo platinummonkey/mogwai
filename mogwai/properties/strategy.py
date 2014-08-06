@@ -72,7 +72,10 @@ class SaveOnIncrease(Strategy):
 
         :rtype: bool
         """
-        return value > previous_value
+        if previous_value is not None:
+            return value > previous_value
+        else:
+            return True
 
 
 class SaveOnDecrease(Strategy):
@@ -84,4 +87,7 @@ class SaveOnDecrease(Strategy):
 
         :rtype: bool
         """
-        return value < previous_value
+        if previous_value is not None:
+            return value < previous_value
+        else:
+            return True

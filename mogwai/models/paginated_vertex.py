@@ -1,4 +1,4 @@
-from vertex import Vertex
+from .vertex import Vertex
 
 
 def to_offset(page_num, per_page):

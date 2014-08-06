@@ -1,2 +1,2 @@
-from groovy import parse
-from base import *
+from .groovy import parse
+from .base import *

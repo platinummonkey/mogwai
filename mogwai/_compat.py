@@ -6,6 +6,10 @@ PY3 = six.PY3
 
 # conversions
 unichr = six.unichr
+if PY3:
+    long_ = int
+else:
+    long_ = long
 text_type = six.text_type
 string_types = six.string_types
 integer_types = six.integer_types
@@ -24,5 +28,8 @@ iterbytes = six.iterbytes
 reraise = six.reraise
 
 with_metaclass = six.with_metaclass
+add_metaclass = six.add_metaclass
 print_ = six.print_
 urllib = six.moves.urllib
+
+get_method_self = six.get_method_self

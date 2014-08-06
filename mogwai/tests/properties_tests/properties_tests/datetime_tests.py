@@ -3,7 +3,7 @@ from nose.plugins.attrib import attr
 from nose.tools import nottest
 from mogwai.tests import BaseMogwaiTestCase
 from mogwai._compat import PY2
-from base_tests import GraphPropertyBaseClassTestCase
+from .base_tests import GraphPropertyBaseClassTestCase
 from mogwai.properties.properties import DateTime, GraphProperty
 from mogwai.models import Vertex
 from mogwai.exceptions import ValidationError

@@ -2,11 +2,11 @@ from __future__ import unicode_literals
 import inspect
 import logging
 
-from mogwai._compat import array_types, string_types
+from mogwai._compat import array_types, string_types, add_metaclass, integer_types, float_types
 from mogwai.connection import execute_query
 from mogwai.exceptions import MogwaiException, ElementDefinitionException, MogwaiQueryError
 from mogwai.gremlin import GremlinMethod
-from element import Element, ElementMetaClass, vertex_types
+from .element import Element, ElementMetaClass, vertex_types
 
 logger = logging.getLogger(__name__)
 
@@ -78,12 +78,13 @@ class EnumVertexBaseMeta(VertexMetaClass):
             return super(EnumVertexBaseMeta, cls).__getattr__(key)
 
 
+@add_metaclass(VertexMetaClass)
 class Vertex(Element):
     """ The Vertex model base class.
 
     The element type is auto-generated from the subclass name, but can optionally be set manually
     """
-    __metaclass__ = VertexMetaClass
+    #__metaclass__ = VertexMetaClass
     __abstract__ = True
 
     gremlin_path = 'vertex.groovy'
@@ -129,10 +130,10 @@ class Vertex(Element):
         _field = cls.get_property_by_name(field)
         _element_type = cls.get_element_type()
 
-        if isinstance(value, (int, long, float)):
+        if isinstance(value, integer_types + float_types):
             search = 'filter{{it."{}" == {}}}'.format(_field, value)
         else:
-            search  = 'has("{}", "{}")'.format(_field, value)
+            search = 'has("{}", "{}")'.format(_field, value)
 
         query = 'g.V("element_type","{}").{}.toList()'.format(_element_type, search)
 
@@ -183,7 +184,7 @@ class Vertex(Element):
             strids = [str(i) for i in ids]
 
             results = execute_query('ids.collect{g.v(it)}', {'ids': strids})
-            results = filter(None, results)
+            results = list(filter(None, results))
 
             if len(results) != len(ids) and match_length:
                 raise MogwaiQueryError("the number of results don't match the number of ids requested")
@@ -288,7 +289,7 @@ class Vertex(Element):
         :type types: list
 
         """
-        from edge import Edge
+        from mogwai.models.edge import Edge
 
         label_strings = []
         for label in labels:
@@ -333,7 +334,7 @@ class Vertex(Element):
         :type labels: str or Edge
 
         """
-        from edge import Edge
+        from mogwai.models.edge import Edge
 
         label_strings = []
         for label in labels:
@@ -462,5 +463,5 @@ class Vertex(Element):
         self._simple_deletion('inV', labels)
 
     def query(self):
-        from query import Query
+        from mogwai.models.query import Query
         return Query(self)

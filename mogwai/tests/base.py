@@ -88,7 +88,7 @@ class BaseMogwaiTestCase(TestCase):
         try:
             callableObj(*args, **kwargs)
         except Exception as e:
-            raise AssertionError("Shouldn't raise and exception: %s" % e)
+            raise AssertionError("Shouldn't raise and exception: {}".format(e))
 
     def assertAnyRaise(self, callableObj, *args, **kwargs):
         try:
@@ -101,22 +101,22 @@ class BaseMogwaiTestCase(TestCase):
         if issubclass(C, B):
             return
         else:
-            raise AssertionError("%s is Not a Subclass of %s" % (B, C))
+            raise AssertionError("{} is Not a Subclass of {}".format(B, C))
 
     def assertDictContainsKey(self, obj, key):
         if key in obj:
             return
         else:
-            raise AssertionError("%s is not in dict: %s" % (key, obj))
+            raise AssertionError("{} is not in dict: {}".format(key, obj))
 
     def assertDictContainsKeyWithValueType(self, obj, key, B):
         if key in obj:
             if isinstance(obj[key], B):
                 return
             else:
-                raise AssertionError("dict[%s]=%s is not of type: %s" % (key, obj[key], B))
+                raise AssertionError("dict[{}]={} is not of type: {}".format(key, obj[key], B))
         else:
-            raise AssertionError("%s is not in dict: %s" % (key, obj))
+            raise AssertionError("{} is not in dict: {}".format(key, obj))
 
     def assertIsVertex(self, obj):
         self.assertIsSubclass(obj, Vertex)

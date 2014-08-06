@@ -3,8 +3,8 @@ import copy
 import warnings
 
 from mogwai.exceptions import ValidationError, MogwaiException
-from strategy import Strategy, SaveAlways, SaveOnce
-from validators import pass_all_validator
+from .strategy import Strategy, SaveAlways, SaveOnce
+from .validators import pass_all_validator
 
 DEBUG = False
 
@@ -176,11 +176,11 @@ class GraphProperty(object):
         GraphProperty.instance_counter += 1
 
     def __repr__(self):
-        return "%s(name=%s, pos=%s, default=%s, db_field_name=%s)" % (self.__class__.__name__,
-                                                                      self.property_name,
-                                                                      self.position,
-                                                                      self.default,
-                                                                      self.db_field_name)
+        return "{}(name={}, pos={}, default={}, db_field_name={})".format(self.__class__.__name__,
+                                                                          self.property_name,
+                                                                          self.position,
+                                                                          self.default,
+                                                                          self.db_field_name)
 
     @classmethod
     def get_value_from_choices(cls, value, choices):
@@ -209,12 +209,12 @@ class GraphProperty(object):
             orig_value = value
             value = GraphProperty.get_value_from_choices(value, self.choices)
             if value is None:
-                raise ValidationError('%s - Value `%s` is not in available choices' % (self.db_field_name, orig_value))
+                raise ValidationError('{} - Value `{}` is not in available choices'.format(self.db_field_name, orig_value))
         if value is None:
             if self.has_default:
                 return self.validator(self.get_default())
             elif self.required:
-                raise ValidationError('%s - None values are not allowed' % self.db_field_name)
+                raise ValidationError('{} - None values are not allowed'.format(self.db_field_name))
             else:
                 return None
         return self.validator(value)

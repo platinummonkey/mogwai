@@ -2,11 +2,11 @@ import inspect
 import os.path
 import time
 import logging
-from mogwai._compat import array_types, string_types, integer_types, float_types
+from mogwai._compat import array_types, string_types, integer_types, float_types, iteritems
 
 from mogwai.connection import execute_query
 from mogwai.exceptions import MogwaiQueryError, MogwaiGremlinException
-from groovy import parse, GroovyImport
+from .groovy import parse, GroovyImport
 
 
 logger = logging.getLogger(__name__)
@@ -61,7 +61,7 @@ class BaseGremlinMethod(object):
         # imports
         self.imports = None
         imports = imports or []
-        if isinstance(imports, (str, basestring)):
+        if isinstance(imports, (str, string_types)):
             imports = [imports, ]
         self.extra_imports = imports
 
@@ -153,7 +153,7 @@ class BaseGremlinMethod(object):
             args = [instance._id] + args
 
         params = self.defaults.copy()
-        if len(args + kwargs.values()) > len(self.arg_list):  # pragma: no cover
+        if len(args + list(kwargs.values())) > len(self.arg_list):  # pragma: no cover
             raise TypeError('%s() takes %s args, %s given' % (self.attr_name, len(self.arg_list), len(args)))
 
         #check for and calculate callable defaults
@@ -229,7 +229,7 @@ class BaseGremlinMethod(object):
         from mogwai.properties import DateTime, Decimal, UUID
 
         if isinstance(params, dict):
-            return {k: self.transform_params_to_database(v) for k, v in params.iteritems()}
+            return {k: self.transform_params_to_database(v) for k, v in iteritems(params)}
         if isinstance(params, array_types):
             return [self.transform_params_to_database(x) for x in params]
         if isinstance(params, BaseElement):
