@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 from nose.plugins.attrib import attr
-from base_tests import GraphPropertyBaseClassTestCase
+from .base_tests import GraphPropertyBaseClassTestCase
 from decimal import Decimal as _D
 from mogwai.properties.properties import Decimal
 from mogwai.models import Vertex

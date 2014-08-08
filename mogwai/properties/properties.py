@@ -5,13 +5,13 @@ from decimal import Decimal as _D
 import re
 import time
 import warnings
-from mogwai._compat import text_type, string_types, float_types, integer_types
+from mogwai._compat import text_type, string_types, float_types, integer_types, print_, long_, PY3
 
 from uuid import uuid1, uuid4
 from uuid import UUID as _UUID
 
-from base import GraphProperty
-from validators import *
+from .base import GraphProperty
+from .validators import *
 
 
 class String(GraphProperty):
@@ -27,12 +27,20 @@ class String(GraphProperty):
         self.max_length = kwargs.pop('max_length', None)
         self.encoding = kwargs.pop('encoding', 'utf-8')
         if 'default' in kwargs and isinstance(kwargs['default'], string_types):
-            kwargs['default'] = kwargs['default'].encode(self.encoding)
+            if not PY3:
+                kwargs['default'] = kwargs['default'].encode(self.encoding)
         super(String, self).__init__(*args, **kwargs)
+
+    def to_python(self, value):
+        if value is not None:
+            if isinstance(value, (bytes, bytearray)) and not isinstance(value, str):
+                return value.decode(self.encoding)
+            else:
+                return value
 
     def validate(self, value):
         # Make sure it gets encoded properly
-        if isinstance(value, text_type):
+        if isinstance(value, text_type) and not PY3:
             value = value.encode(self.encoding)
 
         value = super(String, self).validate(value)
@@ -81,12 +89,12 @@ class Integer(GraphProperty):
             try:
                 return int(value)
             except:
-                return long(value)
+                return long_(value)
 
     def to_database(self, value):
         value = super(Integer, self).to_database(value)
         if value is not None:
-            return long(value)
+            return long_(value)
 
 
 class PositiveInteger(Integer):
@@ -98,12 +106,12 @@ class PositiveInteger(Integer):
 
     def to_python(self, value):
         if value is not None:
-            return long(value)
+            return long_(value)
 
     def to_database(self, value):
         value = super(Integer, self).to_database(value)
         if value is not None:
-            return long(value)
+            return long_(value)
 
 
 class Long(GraphProperty):
@@ -115,12 +123,12 @@ class Long(GraphProperty):
 
     def to_python(self, value):
         if value is not None:
-            return long(value)
+            return long_(value)
 
     def to_database(self, value):
         value = super(Long, self).to_database(value)
         if value is not None:
-            return long(value)
+            return long_(value)
 
 
 class PositiveLong(Long):
@@ -132,12 +140,12 @@ class PositiveLong(Long):
 
     def to_python(self, value):
         if value is not None:
-            return long(value)
+            return long_(value)
 
     def to_database(self, value):
         value = super(Long, self).to_database(value)
         if value is not None:
-            return long(value)
+            return long_(value)
 
 
 class DateTimeNaive(GraphProperty):
@@ -215,7 +223,7 @@ class DateTime(GraphProperty):
             return
         if not isinstance(value, datetime.datetime):
             if isinstance(value, string_types + integer_types + float_types):
-                print_("Doing this the hard way... %s" % value)
+                #print_("Doing this the hard way... %s" % value)
                 value = datetime.datetime.utcfromtimestamp(float(value)).replace(tzinfo=utc)
             else:
                 raise ValidationError("'{}' is not a datetime object".format(value))
@@ -242,7 +250,11 @@ class UUID(GraphProperty):
 
     def to_python(self, value):
         val = super(UUID, self).to_python(value)
-        return str(val)
+        if value is not None:
+            if isinstance(value, (bytes, bytearray)) and not isinstance(value, str):
+                return value.decode('utf-8')
+            else:
+                return value
 
     def to_database(self, value):
         val = super(UUID, self).to_database(value)
@@ -342,12 +354,13 @@ class URL(GraphProperty):
         self.max_length = kwargs.pop('max_length', None)
         self.encoding = kwargs.pop('encoding', 'utf-8')
         if 'default' in kwargs and isinstance(kwargs['default'], string_types):
-            kwargs['default'] = kwargs['default'].encode(self.encoding)
+            if not PY3:
+                kwargs['default'] = kwargs['default'].encode(self.encoding)
         super(URL, self).__init__(*args, **kwargs)
 
     def validate(self, value):
         # Make sure it gets encoded correctly
-        if isinstance(value, text_type):
+        if isinstance(value, text_type) and not PY3:
             value = value.encode(self.encoding)
 
         value = super(URL, self).validate(value)
@@ -355,6 +368,10 @@ class URL(GraphProperty):
         # this should never happen unless the validator is customized
         if value in (None, [], (), {}):  # pragma: no cover
             return None
+
+        if value is not None:
+            if isinstance(value, (bytes, bytearray)) and not isinstance(value, str):
+                return value.decode(self.encoding)
 
         if self.max_length:
             if len(value) > self.max_length:
@@ -378,12 +395,13 @@ class Email(GraphProperty):
     def __init__(self, *args, **kwargs):
         self.encoding = kwargs.pop('encoding', 'utf-8')
         if 'default' in kwargs and isinstance(kwargs['default'], string_types):
-            kwargs['default'] = kwargs['default'].encode(self.encoding)
+            if not PY3:
+                kwargs['default'] = kwargs['default'].encode(self.encoding)
         super(Email, self).__init__(*args, **kwargs)
 
     def validate(self, value):
         # Make sure it gets encoded correctly
-        if isinstance(value, text_type):
+        if isinstance(value, text_type) and not PY3:
             value = value.encode(self.encoding)
 
         value = super(Email, self).validate(value)
@@ -391,6 +409,10 @@ class Email(GraphProperty):
         # This should never happen unless the validator is changed
         if value in (None, [], (), {}):  # pragma: no cover
             return None
+
+        if value is not None:
+            if isinstance(value, (bytes, bytearray)) and not isinstance(value, str):
+                return value.decode(self.encoding)
 
         # This should never happen unless the validator is changed
         if not isinstance(value, string_types):  # pragma: no cover
@@ -411,12 +433,13 @@ class IPV4(GraphProperty):
     def __init__(self, *args, **kwargs):
         self.encoding = kwargs.pop('encoding', 'utf-8')
         if 'default' in kwargs and isinstance(kwargs['default'], string_types):
-            kwargs['default'] = kwargs['default'].encode(self.encoding)
+            if not PY3:
+                kwargs['default'] = kwargs['default'].encode(self.encoding)
         super(IPV4, self).__init__(*args, **kwargs)
 
     def validate(self, value):
         # Make sure it gets encoded correctly
-        if isinstance(value, text_type):
+        if isinstance(value, text_type) and not PY3:
             value = value.encode(self.encoding)
 
         value = super(IPV4, self).validate(value)
@@ -424,6 +447,10 @@ class IPV4(GraphProperty):
         # This should never happen unless the validator is changed
         if value in (None, [], (), {}):  # pragma: no cover
             return None
+
+        if value is not None:
+            if isinstance(value, (bytes, bytearray)) and not isinstance(value, str):
+                return value.decode(self.encoding)
 
         # This should never happen unless the validator is changed
         if not isinstance(value, string_types):  # pragma: no cover
@@ -444,15 +471,20 @@ class IPV6(GraphProperty):
     def __init__(self, *args, **kwargs):
         self.encoding = kwargs.pop('encoding', 'utf-8')
         if 'default' in kwargs and isinstance(kwargs['default'], string_types):
-            kwargs['default'] = kwargs['default'].encode(self.encoding)
+            if not PY3:
+                kwargs['default'] = kwargs['default'].encode(self.encoding)
         super(IPV6, self).__init__(*args, **kwargs)
 
     def validate(self, value):
         # Make sure it gets encoded correctly
-        if isinstance(value, text_type):
+        if isinstance(value, text_type) and not PY3:
             value = value.encode(self.encoding)
 
         value = super(IPV6, self).validate(value)
+
+        if value is not None:
+            if isinstance(value, (bytes, bytearray)) and not isinstance(value, str):
+                return value.decode(self.encoding)
 
         # This shouldn't happend unless the validator is changed
         if value in (None, [], (), {}):  # pragma: no cover
@@ -477,12 +509,13 @@ class IPV6WithV4(GraphProperty):
     def __init__(self, *args, **kwargs):
         self.encoding = kwargs.pop('encoding', 'utf-8')
         if 'default' in kwargs and isinstance(kwargs['default'], string_types):
-            kwargs['default'] = kwargs['default'].encode(self.encoding)
+            if not PY3:
+                kwargs['default'] = kwargs['default'].encode(self.encoding)
         super(IPV6WithV4, self).__init__(*args, **kwargs)
 
     def validate(self, value):
         # Make sure it gets encoded correctly
-        if isinstance(value, text_type):
+        if isinstance(value, text_type) and not PY3:
             value = value.encode(self.encoding)
 
         value = super(IPV6WithV4, self).validate(value)
@@ -490,6 +523,10 @@ class IPV6WithV4(GraphProperty):
         # This shouldn't happend unless the validator is changed
         if value in (None, [], (), {}):  # pragma: no cover
             return None
+
+        if value is not None:
+            if isinstance(value, (bytes, bytearray)) and not isinstance(value, str):
+                return value.decode(self.encoding)
 
         # This shouldn't happend unless the validator is changed
         if not isinstance(value, string_types):  # pragma: no cover
@@ -510,18 +547,23 @@ class Slug(GraphProperty):
     def __init__(self, *args, **kwargs):
         self.encoding = kwargs.pop('encoding', 'utf-8')
         if 'default' in kwargs and isinstance(kwargs['default'], string_types):
-            kwargs['default'] = kwargs['default'].encode(self.encoding)
+            if not PY3:
+                kwargs['default'] = kwargs['default'].encode(self.encoding)
         super(Slug, self).__init__(*args, **kwargs)
 
     def validate(self, value):
         # Make sure it gets encoded correctly
-        if isinstance(value, text_type):
+        if isinstance(value, text_type) and not PY3:
             value = value.encode(self.encoding)
 
         value = super(Slug, self).validate(value)
 
         if value in (None, [], (), {}):
             return None
+
+        if value is not None:
+            if isinstance(value, (bytes, bytearray)) and not isinstance(value, str):
+                return value.decode(self.encoding)
 
         if not isinstance(value, string_types):
             raise ValidationError('%s is not a string' % type(value))

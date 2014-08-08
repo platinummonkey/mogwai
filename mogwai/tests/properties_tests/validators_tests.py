@@ -1,5 +1,5 @@
 from __future__ import unicode_literals
-from mogwai._compat import PY2
+from mogwai._compat import print_, PY2
 from mogwai.tests import BaseMogwaiTestCase, testcase_docstring_sub
 from mogwai.properties.validators import *
 from nose.plugins.attrib import attr
@@ -23,12 +23,12 @@ class ValidatorBaseClassTestCase(BaseMogwaiTestCase):
 
     def test_good_validation(self):
         for case in self.good_cases:
-            print "testing case: %s" % (case, )
+            print_("testing case: {}".format(case))
             self.assertNotRaise(self.klass, case)
 
     def test_bad_validation(self):
         for case in self.bad_cases:
-            print "testing case: %s" % (case, )
+            print_("testing case: {}".format(case))
             self.assertRaises(ValidationError, self.klass, case)
 
 

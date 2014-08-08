@@ -32,6 +32,7 @@ Features
  - Serialization support for Pickle
  - Support for un-modeled properties with dictionary-like access
  - Support for imports via groovy and the groovy Script Engine. (:ref:`See Example <example_groovy_imports>`)
+ - Tested with Python 2.7, 3.3 and 3.4
 
 
 .. _links:
@@ -43,7 +44,7 @@ Links
 * Official Repository: https://bitbucket.org/wellaware/mogwai.git
 * Package: https://pypi.python.org/pypi/mogwai/
 
-mogwai is known to support Python 2.7. Python 3.x is not compatible due to the use of pyparsing and gevent.
+mogwai is known to support Python 2.7, 3.3 and 3.4.
 
 
 .. _download:

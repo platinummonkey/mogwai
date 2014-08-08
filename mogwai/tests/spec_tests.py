@@ -1,10 +1,11 @@
 from __future__ import unicode_literals
+from mogwai._compat import print_
 from six import string_types
 from nose.plugins.attrib import attr
 from nose.tools import nottest
 
 
-from base import BaseMogwaiTestCase
+from .base import BaseMogwaiTestCase
 from mogwai.connection import generate_spec, execute_query
 from mogwai.models import Vertex, Edge
 from mogwai.properties import String
@@ -32,7 +33,7 @@ class TestSpecSystem(BaseMogwaiTestCase):
         self.assertIsInstance(spec, (list, tuple))
         self.assertGreater(len(spec), 0)
         for s in spec:
-            print s
+            print_(s)
             self.assertIsInstance(s, dict)
             self.assertDictContainsKeyWithValueType(s, 'model', string_types)
             self.assertDictContainsKeyWithValueType(s, 'element_type', string_types)

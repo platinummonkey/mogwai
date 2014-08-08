@@ -49,4 +49,4 @@ Test Server
 ``mogwai`` was designed for `Titan <http://thinkaurelius.github.io/titan/>`_, other graph databases that utilize `Blueprints <https://github.com/tinkerpop/blueprints/wiki>`_
 may be compatible, but further testing would be needed.
 
-Currently Titan 0.4.2 is known to work and can be downloaded: `Titan <http://s3.thinkaurelius.com/downloads/titan/titan-server-0.4.2.zip>`_.
+Currently Titan 0.4.4 is known to work and can be downloaded: `Titan <http://s3.thinkaurelius.com/downloads/titan/titan-server-0.4.4.zip>`_.

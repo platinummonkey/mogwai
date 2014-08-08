@@ -1,5 +1,5 @@
 from __future__ import unicode_literals
-from _compat import string_types, array_types
+from mogwai._compat import string_types, array_types
 import logging
 from re import compile
 from rexpro.connection import RexProConnection
@@ -8,7 +8,6 @@ from rexpro.exceptions import RexProConnectionException, RexProScriptException
 
 from mogwai.exceptions import MogwaiConnectionError, MogwaiQueryError
 from mogwai.metrics.manager import MetricManager
-from mogwai._compat import print_
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +44,6 @@ def execute_query(query, params={}, transaction=True, isolate=True, *args, **kwa
     with _connection_pool.connection() as conn:
         try:
             response = conn.execute(query, params=params, isolate=isolate, transaction=transaction)
-            #print_("Got raw response: %s" % response)
 
         except RexProConnectionException as ce:  # pragma: no cover
             raise MogwaiConnectionError("Connection Error during query - {}".format(ce))

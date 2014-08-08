@@ -1,10 +1,10 @@
 from __future__ import unicode_literals
+from mogwai._compat import print_
 import os
 from nose.plugins.attrib import attr
 from mogwai.tests.base import BaseMogwaiTestCase
 from mogwai.gremlin.groovy import parse, GroovyImportParser, GroovyFunctionParser,\
     GroovyImport, GroovyFunction, GroovyFileDef
-from nose.tools import nottest
 
 
 @attr('unit', 'groovy')
@@ -23,7 +23,7 @@ class GroovyScannerTest(BaseMogwaiTestCase):
         """ Groovy test parser functionality """
         groovy_file_def = parse(self.groovy_file)
         """ :type groovy_file_def: GroovyFileDef """
-        print groovy_file_def
+        print_(groovy_file_def)
         self.assertIsInstance(groovy_file_def, GroovyFileDef)
         self.assertEqual(groovy_file_def.filename, self.groovy_file)
         self.assertIsInstance(groovy_file_def.imports, (list, tuple))
@@ -32,12 +32,12 @@ class GroovyScannerTest(BaseMogwaiTestCase):
         for import_def in groovy_file_def.imports:
             if import_def is not None:
                 self.assertIsInstance(import_def, GroovyImport)
-            print "Import: ", import_def
+            print_("Import: {}".format(import_def))
 
         for func_def in groovy_file_def.functions:
             if func_def is not None:
                 self.assertIsInstance(func_def, GroovyFunction)
-            print "Function:", func_def
+            print_("Function: {}".format(func_def))
 
         groovy_funcs = groovy_file_def.functions
 

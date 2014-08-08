@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 from collections import OrderedDict
 import re
 
-from mogwai._compat import string_types
+from mogwai._compat import string_types, print_, add_metaclass
 from mogwai.tools import import_string
 from mogwai import properties
 from mogwai.exceptions import MogwaiException, SaveStrategyException, \
@@ -61,16 +61,16 @@ class BaseElement(object):
         self._id = values.get('_id')
         self._values = {}
         self._manual_values = {}
-        #print "Received values: %s" % values
-        #print "Known Relationships: %s" % self._relationships
+        #print_("Received values: %s" % values)
+        #print_("Known Relationships: %s" % self._relationships)
         for name, prop in self._properties.items():
-            #print "trying name: %s in values" % name,
+            #print_("trying name: %s in values" % name)
             value = values.get(name, None)
             if value is not None:
-                #print "Got value"
+                #print_("Got value")
                 value = prop.to_python(value)
             #else:
-                #print "no value found"
+                #print_("no value found")
             value_mngr = prop.value_manager(prop, value, prop.save_strategy)
             self._values[name] = value_mngr
             setattr(self, name, value)
@@ -147,12 +147,17 @@ class BaseElement(object):
     def validate(self):
         """Cleans and validates the field values"""
         for name in self._properties.keys():
+            #print_("Validating {}...".format(name))
             func_name = 'validate_{}'.format(name)
             val = getattr(self, name)
+            #print_("Got {}: func_name: {}, attr: {} ({})".format(name, func_name, val, type(val)))
             if hasattr(self, func_name):
+                #print_("Calling custom function: {}".format(func_name))
                 val = getattr(self, func_name)(val)
             else:
+                #print_("Calling standard function: {}".format(self._properties[name]))
                 val = self._properties[name].validate(val)  # self.validate_field(name, val)
+            #print_("Validated {}: val: {} ({}), func_name: {}".format(name, val, type(val), func_name))
             setattr(self, name, val)
 
     def as_dict(self):
@@ -191,7 +196,7 @@ class BaseElement(object):
                                                   graph_property=prop)
 
             if should_save:
-                #print "Saving %s to database for name %s" % (prop.db_field_name or name, name)
+                #print_("Saving %s to database for name %s" % (prop.db_field_name or name, name))
                 values[prop.db_field_name or name] = prop.to_database(vm.value)
 
         # manual values
@@ -224,9 +229,9 @@ class BaseElement(object):
         dst_data = data.copy().get('_properties', {})
         if data.get('_id', None):
             dst_data.update({'_id': data.copy().get('_id')})
-        print "Raw incoming data: %s" % data
+        #print_("Raw incoming data: %s" % data)
         for name, prop in cls._properties.items():
-            print "trying db_field_name: %s and name: %s" % (prop.db_field_name, name)
+            #print_("trying db_field_name: %s and name: %s" % (prop.db_field_name, name))
             if prop.db_field_name in dst_data:
                 dst_data[name] = dst_data.pop(prop.db_field_name)
             elif name in dst_data:
@@ -322,7 +327,7 @@ class BaseElement(object):
 
     def __getitem__(self, item):
         logger.debug("Using __getitem__({})...".format(item))
-        print "Using __getitem__({})...: options: _properties({}), _manual_values({})".format(item, self._properties.items(), self._manual_values.items())
+        #print_("Using __getitem__({})...: options: _properties({}), _manual_values({})".format(item, self._properties.items(), self._manual_values.items()))
         value = self._properties.get(item, None)
         if value is not None:
             # call the normal getattr method
@@ -422,7 +427,7 @@ class ElementMetaClass(type):
             for k, v in getattr(base, '_relationships', {}).items():
                 relationship_dict.setdefault(k, v)
 
-        #print "Name: %s\n\tBases: %s\n\tBody: %s" % (name, bases, body.keys())
+        #print_("Name: %s\n\tBases: %s\n\tBody: %s" % (name, bases, body.keys()))
 
         def _transform_property(prop_name, prop_obj):
             prop_dict[prop_name] = prop_obj
@@ -440,7 +445,8 @@ class ElementMetaClass(type):
                 body[prop_name] = property(_get, _set)
 
         property_definitions = [(k, v) for k, v in body.items() if isinstance(v, properties.GraphProperty)]
-        property_definitions = sorted(property_definitions, lambda x, y: cmp(x[1].position, y[1].position))
+        property_definitions = sorted(property_definitions, #cmp=lambda x, y: cmp(x[1].position, y[1].position),
+                                      key=lambda x: x[1].position)
 
         #TODO: check that the defined graph properties don't conflict with any of the
         #Model API's existing attributes/methods transform column definitions
@@ -514,8 +520,9 @@ class ElementMetaClass(type):
         return klass
 
 
+@add_metaclass(ElementMetaClass)
 class Element(BaseElement):
-    __metaclass__ = ElementMetaClass
+    #__metaclass__ = ElementMetaClass
 
     @classmethod
     def deserialize(cls, data):

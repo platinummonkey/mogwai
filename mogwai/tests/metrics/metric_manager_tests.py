@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+from mogwai._compat import integer_types, PY2, get_method_self
 from nose.plugins.attrib import attr
 from mogwai.metrics.manager import MetricManager
 from mogwai.tests.base import BaseMogwaiTestCase
@@ -70,7 +71,7 @@ class MetricManagerTestCase(BaseMogwaiTestCase):
             counter.inc()
 
         timestamp, metrics = mr.get_metrics()
-        self.assertIsInstance(timestamp, (int, long))
+        self.assertIsInstance(timestamp, integer_types)
         self.assertIsInstance(metrics, dict)
         self.assertEqual(len(metrics), 1)
         self.assertIn('test', metrics)
@@ -100,7 +101,7 @@ class MetricManagerTestCase(BaseMogwaiTestCase):
         # check metrics collected
         for reporter in mm.metric_reporters:
             timestamp, metrics = reporter.get_metrics()
-            self.assertIsInstance(timestamp, (int, long))
+            self.assertIsInstance(timestamp, integer_types)
             self.assertIsInstance(metrics, dict)
             self.assertEqual(len(metrics), 5)
 
@@ -139,7 +140,7 @@ class MetricManagerTestCase(BaseMogwaiTestCase):
         for reporter in mm.metric_reporters:
             timestamp, metrics = reporter.get_metrics()
 
-            self.assertIsInstance(timestamp, (int, long))
+            self.assertIsInstance(timestamp, integer_types)
             self.assertIsInstance(metrics, dict)
             self.assertEqual(len(metrics), 5)
 
@@ -177,7 +178,7 @@ class MetricManagerTestCase(BaseMogwaiTestCase):
         # check metrics collected
         for reporter in mm.metric_reporters:
             timestamp, metrics = reporter.get_metrics()
-            self.assertIsInstance(timestamp, (int, long))
+            self.assertIsInstance(timestamp, integer_types)
             self.assertIsInstance(metrics, dict)
             self.assertEqual(len(metrics), 5)
 
@@ -215,7 +216,7 @@ class MetricManagerTestCase(BaseMogwaiTestCase):
         # check metrics collected
         for reporter in mm.metric_reporters:
             timestamp, metrics = reporter.get_metrics()
-            self.assertIsInstance(timestamp, (int, long))
+            self.assertIsInstance(timestamp, integer_types)
             self.assertIsInstance(metrics, dict)
             self.assertEqual(len(metrics), 4)
 
@@ -250,7 +251,7 @@ class MetricManagerTestCase(BaseMogwaiTestCase):
         # check metrics collected
         for reporter in mm.metric_reporters:
             timestamp, metrics = reporter.get_metrics()
-            self.assertIsInstance(timestamp, (int, long))
+            self.assertIsInstance(timestamp, integer_types)
             self.assertIsInstance(metrics, dict)
             self.assertEqual(len(metrics), 3)
 
@@ -273,8 +274,8 @@ class MetricManagerTestCase(BaseMogwaiTestCase):
 
         # test default implementation
         for timer in mm.timers():
-            self.assertIsNotNone(timer.im_self)
-            self.assertIsInstance(timer.im_self, MetricsRegistry)
+            self.assertIsNotNone(get_method_self(timer))
+            self.assertIsInstance(get_method_self(timer), MetricsRegistry)
 
         # test context aware
         for timer in mm.timers('test'):
@@ -288,8 +289,8 @@ class MetricManagerTestCase(BaseMogwaiTestCase):
 
         # test default implementation
         for hist in mm.histograms():
-            self.assertIsNotNone(hist.im_self)
-            self.assertIsInstance(hist.im_self, MetricsRegistry)
+            self.assertIsNotNone(get_method_self(hist))
+            self.assertIsInstance(get_method_self(hist), MetricsRegistry)
 
         # test context aware
         for hist in mm.histograms('test'):
@@ -303,8 +304,8 @@ class MetricManagerTestCase(BaseMogwaiTestCase):
 
         # test default implementation
         for meter in mm.meters():
-            self.assertIsNotNone(meter.im_self)
-            self.assertIsInstance(meter.im_self, MetricsRegistry)
+            self.assertIsNotNone(get_method_self(meter))
+            self.assertIsInstance(get_method_self(meter), MetricsRegistry)
 
         # test context aware
         for meter in mm.meters('test'):
@@ -318,8 +319,8 @@ class MetricManagerTestCase(BaseMogwaiTestCase):
 
         # test default implementation
         for counter in mm.counters():
-            self.assertIsNotNone(counter.im_self)
-            self.assertIsInstance(counter.im_self, MetricsRegistry)
+            self.assertIsNotNone(get_method_self(counter))
+            self.assertIsInstance(get_method_self(counter), MetricsRegistry)
 
         # test context aware
         for counter in mm.counters('test'):

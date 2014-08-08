@@ -1,10 +1,10 @@
 from __future__ import unicode_literals
 import logging
 
-from mogwai._compat import float_types
+from mogwai._compat import float_types, print_
 from mogwai.connection import execute_query
 from mogwai.exceptions import MogwaiQueryError
-from element import Element, EQUAL, NOT_EQUAL, GREATER_THAN, GREATER_THAN_EQUAL, LESS_THAN, LESS_THAN_EQUAL,\
+from .element import Element, EQUAL, NOT_EQUAL, GREATER_THAN, GREATER_THAN_EQUAL, LESS_THAN, LESS_THAN_EQUAL,\
     OUT, IN, BOTH
 import copy
 from mogwai.properties.base import GraphProperty
@@ -65,7 +65,7 @@ class Query(object):
         compare = "Query.Compare.{}".format(compare)
 
         q = copy.copy(self)
-        print "Trying for key: %s with value: %s" % (key, value)
+        #print_("Trying for key: %s with value: %s" % (key, value))
         if issubclass(type(key), property):
             logger.error("Use %s.get_property_by_name instead, this won't work" % self.__class__.__name__)
             raise MogwaiQueryError("Use %s.get_property_by_name instead, this won't work" % self.__class__.__name__)

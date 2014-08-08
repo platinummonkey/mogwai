@@ -102,7 +102,7 @@ class SaveOnDecreaseStrategyTestCase(StrategyBaseClassTestCase):
 
     def test_strategy(self):
         """ Test SaveOnChange Strategy """
-        self.assertFalse(self.klass.condition(previous_value=None,
+        self.assertTrue(self.klass.condition(previous_value=None,
                                               value=1,
                                               has_changed=True,
                                               first_save=True))

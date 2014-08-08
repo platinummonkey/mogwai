@@ -1,4 +1,5 @@
-from base import BaseMetricsReporter
+from mogwai._compat import print_
+from .base import BaseMetricsReporter
 from mogwai.exceptions import MogwaiMetricsException
 from pyformance import call_too_long
 import time
@@ -245,7 +246,7 @@ class MetricManager(object):
                     reg.counter(fn_name).inc()
                     if context_name:
                         reg.counter(context_name).inc()
-            print "Trying function: %s" % fn_name
+            #print_("Trying function: %s" % fn_name)
             try:
                 return fn(*args, **kwargs)
             except:

@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 from nose.plugins.attrib import attr
 from mogwai.tests import BaseMogwaiTestCase
-from base_tests import GraphPropertyBaseClassTestCase
+from .base_tests import GraphPropertyBaseClassTestCase
 from mogwai.properties.properties import String, Text, GraphProperty
 from mogwai.models import Vertex
 from mogwai.exceptions import ValidationError

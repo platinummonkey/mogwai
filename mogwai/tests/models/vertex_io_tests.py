@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+from mogwai._compat import print_
 from nose.plugins.attrib import attr
-from nose.tools import nottest
 
 from mogwai import connection
 from mogwai.exceptions import MogwaiException
@@ -529,10 +529,10 @@ class TestVertexTraversal(BaseMogwaiTestCase):
     def test_manual_properties(self):
         v = TestVertexModel.create(test_val=1, name='Test 7', some_property=32)
 
-        print "Got Results:", v
-        print "Result dict:", v.as_dict()
-        print "\tResult properties:", v._properties.keys()
-        print "\tResult Manaul:", v._manual_values.items()
+        print_("Got Results: {}".format(v))
+        print_("Result dict: {}".format(v.as_dict()))
+        print_("\tResult properties: {}".format(v._properties.keys()))
+        print_("\tResult Manaul: {}".format(v._manual_values.items()))
 
         self.assertEqual(v['some_property'], 32)
         self.assertIn('some_property', v)  # This also tests __contains__
@@ -579,6 +579,6 @@ class TestVertexTraversal(BaseMogwaiTestCase):
         self.assertIsNone(v._manual_values.get('some_property'))
         with self.assertRaises(AttributeError):
             value = v['some_property']
-            print "Got value: {}".format(value)
+            print_("Got value: {}".format(value))
 
         v.delete()

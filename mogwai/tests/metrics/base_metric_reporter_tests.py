@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+from mogwai._compat import integer_types
 from nose.plugins.attrib import attr
 from mogwai.tests.base import BaseMogwaiTestCase
 from mogwai.metrics.base import get_time, BaseMetricsReporter, MetricsRegistry
@@ -59,7 +60,7 @@ class BaseMetricReporterTestCase(BaseMogwaiTestCase):
         # increment a counter
         mr.registry[0].counter('test').inc()
         timestamp, metrics = mr.get_metrics()
-        self.assertIsInstance(timestamp, (int, long))
+        self.assertIsInstance(timestamp, integer_types)
         self.assertIsInstance(metrics, dict)
         self.assertEqual(len(metrics), 1)
         self.assertIn('test', metrics)
