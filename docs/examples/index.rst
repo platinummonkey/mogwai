@@ -15,4 +15,5 @@ Common examples for using Mogwai
    serialization
    unknown_properties
    example_groovy_imports
+   migrations
 

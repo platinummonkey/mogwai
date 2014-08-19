@@ -5,6 +5,10 @@ ChangeLog
 
 Changes to the library are recorded here.
 
+v0.6.1
+------
+ * South-like migrations (:ref:`See Example <example_migrations>`)
+
 v0.6.0
 ------
  * Titan 0.5.0 support confirmed
