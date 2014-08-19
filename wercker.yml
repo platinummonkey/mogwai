@@ -1,6 +1,6 @@
 box: wercker/python
 services:
-  - platinummonkey/titan-stable
+  - platinummonkey/titan-stable@1.0.0
 build:
   steps:
     - virtualenv:

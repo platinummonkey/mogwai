@@ -67,14 +67,14 @@ class TestEdgeIO(BaseMogwaiTestCase):
         """
         e1 = TestEdgeModel.create(self.v1, self.v2, test_val=3)
         e2 = TestEdgeModel.get(e1.id)
-        print_('\n{} {} {}'.format(e1.id, e2.id, e1 == e2))
+        print_('\n{} {} {}: {} {}'.format(e1.id, e2.id, e1 == e2, e1.test_val, e2.test_val))
         e2.test_val = 5
         e2.save()
-        print_(e2.id)
+        print_("{} {} {}: {} {}".format(e1.id, e2.id, e1 == e2, e1.test_val, e2.test_val))
 
-        # we're testing pre-0.5.x expect the reload to not match, must fetch again manually
+        self.assertEqual(e1.test_val, 3)
         e1.reload()
-        self.assertEqual(e1.test_val, None)
+        self.assertEqual(e1.test_val, 5)
         e1 = self.v1.outE()[0]
         self.assertEqual(e1.test_val, 5)
 
