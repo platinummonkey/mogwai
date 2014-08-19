@@ -5,6 +5,11 @@ ChangeLog
 
 Changes to the library are recorded here.
 
+v0.6.0
+------
+ * Titan 0.5.0 support confirmed
+ * Tests updated to reflect changes, do note running tests against this requires titan 0.5.0
+
 v0.5.0
 ------
  * Python 3.3 and 3.4 compatibility - requires rexpro 0.3.0

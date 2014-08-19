@@ -5,7 +5,7 @@ from decimal import Decimal as _D
 import re
 import time
 import warnings
-from mogwai._compat import text_type, string_types, float_types, integer_types, print_, long_, PY3
+from mogwai._compat import text_type, string_types, float_types, integer_types, long_, PY3
 
 from uuid import uuid1, uuid4
 from uuid import UUID as _UUID
@@ -223,7 +223,6 @@ class DateTime(GraphProperty):
             return
         if not isinstance(value, datetime.datetime):
             if isinstance(value, string_types + integer_types + float_types):
-                #print_("Doing this the hard way... %s" % value)
                 value = datetime.datetime.utcfromtimestamp(float(value)).replace(tzinfo=utc)
             else:
                 raise ValidationError("'{}' is not a datetime object".format(value))
