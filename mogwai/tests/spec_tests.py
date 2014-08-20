@@ -1,15 +1,15 @@
 from __future__ import unicode_literals
-from mogwai._compat import print_
+
 from six import string_types
 from nose.plugins.attrib import attr
 from nose.tools import nottest
 
-
+from mogwai._compat import print_
 from .base import BaseMogwaiTestCase
 from mogwai.connection import generate_spec, execute_query
 from mogwai.models import Vertex, Edge
 from mogwai.properties import String
-from mogwai.spec import get_existing_indices
+from mogwai.migrations.spec import get_existing_indices
 
 
 class TestIndexSpecVertex(Vertex):
