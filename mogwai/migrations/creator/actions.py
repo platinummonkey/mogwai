@@ -89,10 +89,10 @@ class AddModel(Action):
         self.model = model
         self.model_def = model_def
         self.model_class_name = self.model.__name__
-        if isinstance(self.model, Vertex):
+        if issubclass(self.model, Vertex):
             self.model_type = 'vertex'
             self.model_name = self.model.get_element_type()
-        elif isinstance(self.model, Edge):
+        elif issubclass(self.model, Edge):
             self.model_type = 'edge'
             self.model_name = self.model.get_label()
         else:
@@ -116,6 +116,7 @@ class AddModel(Action):
             "model_type": self.model_type,
             "model_class_name": self.model_class_name,
             "model_name": self.model_name,
+            "model_type": self.model_type,
             "app_label": self.app_name,
             "field_defs": field_defs,
         }
@@ -125,6 +126,7 @@ class AddModel(Action):
         return self.BACKWARDS_TEMPLATE % {
             "model_class_name": self.model_class_name,
             "model_name": self.model_name,
+            "model_type": self.model_type
         }
 
 
@@ -216,6 +218,7 @@ class _NullIssuesField(object):
         return self.IRREVERSIBLE_TEMPLATE % {
             "model_class_name": self.model_class_name,
             "model_name": self.model_name,
+            "model_type": self.model_type,
             "field_name": field.name,
             "field_column": field.column,
         }
@@ -244,10 +247,10 @@ class AddField(Action, _NullIssuesField):
         self.field = field
         self.field_def = field_def
         self.model_class_name = self.model.__name__
-        if isinstance(self.model, Vertex):
+        if issubclass(self.model, Vertex):
             self.model_type = 'vertex'
             self.model_name = self.model.get_element_type()
-        elif isinstance(self.model, Edge):
+        elif issubclass(self.model, Edge):
             self.model_type = 'edge'
             self.model_name = self.model.get_label()
         else:
@@ -273,6 +276,7 @@ class AddField(Action, _NullIssuesField):
         return self.FORWARDS_TEMPLATE % {
             "model_class_name": self.model_class_name,
             "model_name": self.model_name,
+            "model_type": self.model_type,
             "field_name": self.field.name,
             "field_column": self.field.column,
             "field_def": self.triple_to_def(self.field_def),
@@ -282,6 +286,7 @@ class AddField(Action, _NullIssuesField):
         return self.BACKWARDS_TEMPLATE % {
             "model_class_name": self.model_class_name,
             "model_name": self.model_name,
+            "model_type": self.model_type,
             "field_name": self.field.name,
             "field_column": self.field.column,
         }
@@ -336,10 +341,10 @@ class ChangeField(Action, _NullIssuesField):
         self.old_def = old_def
         self.new_def = new_def
         self.model_class_name = self.model.__name__
-        if isinstance(self.model, Vertex):
+        if issubclass(self.model, Vertex):
             self.model_type = 'vertex'
             self.model_name = self.model.get_element_type()
-        elif isinstance(self.model, Edge):
+        elif issubclass(self.model, Edge):
             self.model_type = 'edge'
             self.model_name = self.model.get_label()
         else:
@@ -371,6 +376,7 @@ class ChangeField(Action, _NullIssuesField):
             output += self.RENAME_TEMPLATE % {
                 "model_class_name": self.model_class_name,
                 "model_name": self.model_name,
+                "model_type": self.model_type,
                 "field_name": new_field.name,
                 "old_column": old_field.column,
                 "new_column": new_field.column,
@@ -379,6 +385,7 @@ class ChangeField(Action, _NullIssuesField):
         output += self.FORWARDS_TEMPLATE % {
             "model_class_name": self.model_class_name,
             "model_name": self.model_name,
+            "model_type": self.model_type,
             "field_name": new_field.name,
             "field_column": new_field.column,
             "field_def": self.triple_to_def(new_def),
@@ -417,10 +424,10 @@ class AddUnique(Action):
         self.model = model
         self.fields = fields
         self.model_class_name = self.model.__name__
-        if isinstance(self.model, Vertex):
+        if issubclass(self.model, Vertex):
             self.model_type = 'vertex'
             self.model_name = self.model.get_element_type()
-        elif isinstance(self.model, Edge):
+        elif issubclass(self.model, Edge):
             self.model_type = 'edge'
             self.model_name = self.model.get_label()
         else:
@@ -439,6 +446,7 @@ class AddUnique(Action):
         return self.FORWARDS_TEMPLATE % {
             "model_class_name": self.model_class_name,
             "model_name": self.model_name,
+            "model_type": self.model_type,
             "fields":  [field.column for field in self.fields],
             "field_names":  [field.name for field in self.fields],
         }
@@ -447,6 +455,7 @@ class AddUnique(Action):
         return self.BACKWARDS_TEMPLATE % {
             "model_class_name": self.model_class_name,
             "model_name": self.model_name,
+            "model_type": self.model_type,
             "fields": [field.column for field in self.fields],
             "field_names":  [field.name for field in self.fields],
         }
