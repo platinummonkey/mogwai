@@ -57,3 +57,8 @@ class MogwaiRelationshipException(MogwaiException):
 class MogwaiMetricsException(MogwaiException):
     """ Exception thrown when a metric system error occurs """
     pass
+
+
+class MogwaiMigrationException(MogwaiException):
+    """ Generic Migration Exception thrown """
+    pass
