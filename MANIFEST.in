@@ -2,3 +2,4 @@ include AUTHORS
 include LICENSE
 include README.rst
 recursive-include mogwai *.py *.groovy VERSION
+recursive-exclude mogwai/tests
