@@ -5,6 +5,10 @@ ChangeLog
 
 Changes to the library are recorded here.
 
+v0.6.1
+------
+ * Save Strategy bugfix - thanks to Nick Vollmar
+
 v0.6.0
 ------
  * Titan 0.5.0 support confirmed
