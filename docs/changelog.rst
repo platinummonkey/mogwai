@@ -5,6 +5,10 @@ ChangeLog
 
 Changes to the library are recorded here.
 
+v0.6.2
+------
+ * Sane default __repr__ for Edges, feature parity to Vertex
+
 v0.6.1
 ------
  * Save Strategy bugfix - thanks to Nick Vollmar
