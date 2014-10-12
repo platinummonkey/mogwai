@@ -84,7 +84,6 @@ class Vertex(Element):
 
     The element type is auto-generated from the subclass name, but can optionally be set manually
     """
-    #__metaclass__ = VertexMetaClass
     __abstract__ = True
 
     gremlin_path = 'vertex.groovy'

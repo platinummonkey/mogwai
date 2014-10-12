@@ -31,7 +31,6 @@ class EdgeMetaClass(ElementMetaClass):
 class Edge(Element):
     """Base class for all edges."""
 
-    #__metaclass__ = EdgeMetaClass
     __abstract__ = True
 
     # if set to True, no more than one edge will

@@ -522,7 +522,6 @@ class ElementMetaClass(type):
 
 @add_metaclass(ElementMetaClass)
 class Element(BaseElement):
-    #__metaclass__ = ElementMetaClass
 
     @classmethod
     def deserialize(cls, data):
