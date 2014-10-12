@@ -484,7 +484,7 @@ class DeleteUnique(AddUnique):
         return AddUnique.forwards_code(self)
 
 
-class AddIndex(AddUnique):
+class AddIndex(Action):
     """
     Adds an index to a model field[s]. Takes a Model class and the field names.
     """
@@ -497,6 +497,26 @@ class AddIndex(AddUnique):
         # Removing index on '%(model_class_name)s', fields %(field_names)s
         db.delete_index(%(model_name)r, %(fields)r)'''[1:] + "\n"
 
+    UPDATE_TEMPLATE = '''
+        # Updating index on '%(model_class_name)s', fields %(field_names)s
+        db.update_index(%(model_name)r, %(fields)r)'''[1:] + "\n"
+
+    prepend_backwards = True
+
+    def __init__(self, model, fields, app_name=''):
+        self.app_name = app_name
+        self.model = model
+        self.fields = fields
+        self.model_class_name = self.model.__name__
+        if issubclass(self.model, Vertex):
+            self.model_type = 'vertex'
+            self.model_name = self.model.get_element_type()
+        elif issubclass(self.model, Edge):
+            self.model_type = 'edge'
+            self.model_name = self.model.get_label()
+        else:
+            raise MogwaiMigrationException("{} is Not a Vertex or Edge".format(self.model))
+
     def console_line(self):
         """Returns the string to print on the console, e.g. ' + Added field foo'"""
         return " + Added index for %s on %s.%s" % (
@@ -504,6 +524,25 @@ class AddIndex(AddUnique):
             self.app_name,
             self.model_class_name,
         )
+
+    def forwards_code(self):
+
+        return self.FORWARDS_TEMPLATE % {
+            "model_class_name": self.model_class_name,
+            "model_name": self.model_name,
+            "model_type": self.model_type,
+            "fields":  [field.column for field in self.fields],
+            "field_names":  [field.name for field in self.fields],
+        }
+
+    def backwards_code(self):
+        return self.BACKWARDS_TEMPLATE % {
+            "model_class_name": self.model_class_name,
+            "model_name": self.model_name,
+            "model_type": self.model_type,
+            "fields": [field.column for field in self.fields],
+            "field_names":  [field.name for field in self.fields],
+        }
 
 
 class DeleteIndex(AddIndex):
@@ -524,3 +563,36 @@ class DeleteIndex(AddIndex):
 
     def backwards_code(self):
         return AddIndex.forwards_code(self)
+
+
+class UpdateIndex(AddIndex):
+    """
+    Updates an index off a model field[s]. Takes a model class and the field names.
+    """
+
+    def console_line(self):
+        """  Returns the string to print on the console, e.g. ' + Added field foo'"""
+        return " + Updated index for %s on %s.%s" % (
+            [x.name for x in self.fields],
+            self.app_name,
+            self.model_class_name,
+        )
+
+    def forwards_code(self):
+
+        return self.UPDATE_TEMPLATE % {
+            "model_class_name": self.model_class_name,
+            "model_name": self.model_name,
+            "model_type": self.model_type,
+            "fields":  [field.column for field in self.fields],
+            "field_names":  [field.name for field in self.fields],
+        }
+
+    def backwards_code(self):
+        return self.UPDATE_TEMPLATE % {
+            "model_class_name": self.model_class_name,
+            "model_name": self.model_name,
+            "model_type": self.model_type,
+            "fields": [field.column for field in self.fields],
+            "field_names":  [field.name for field in self.fields],
+        }

@@ -17,7 +17,7 @@ from mogwai.exceptions import MogwaiQueryError
 
 
 class TestVertexModel2(Vertex):
-    name = properties.String(default='test_text')
+    name = properties.String(default='test_text', index=True)
     test_val = properties.Integer()
 
 

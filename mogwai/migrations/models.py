@@ -1,14 +1,15 @@
-from mogwai.models import Vertex
+from mogwai.models import Vertex, Edge
 from mogwai.properties import String, DateTime
+from mogwai.relationships import Relationship
 import datetime
 from pytz import utc
 from functools import partial
 
 
-class MigrationHistory(Vertex):
-    app_name = String(max_length=255)
-    migration = String(max_length=255)
-    applied = DateTime(partial(datetime.datetime.now, tz=utc))
+class Migration(Vertex):
+    app_name = String(max_length=255, required=True)
+    migration = String(max_length=255, required=True)
+    applied = DateTime(partial(datetime.datetime.now, tz=utc), required=True)
 
     @classmethod
     def for_app(cls, app_name):
@@ -33,8 +34,22 @@ class MigrationHistory(Vertex):
 
         :return:
         """
+        pass
 
     def __repr__(self):
         return '{}(app_name={}, migration={}, applied={})'.format(
             self.__class__.__name__, self.app_name, self.migration, self.applied
         )
+
+
+class PerformedMigration(Edge):
+
+    label = 'performed_migration'
+
+
+class MigrationRoot(Vertex):
+    element_type = 'migration_root'
+
+    graph_name = String(required=True, default='graph')
+
+    migrations = Relationship(PerformedMigration, Migration)

@@ -34,7 +34,7 @@ class BaseValueManager(object):
         self._previous_value = copy.copy(value)
         self.value = value
         self.strategy = strategy
-        if not issubclass(self.strategy.__class__, Strategy):
+        if not issubclass(self.strategy, Strategy):
             warnings.warn("Condition is not derived from mogwai.properties.strategy.Strategy and will be ignored!",
                           category=SyntaxWarning)
 

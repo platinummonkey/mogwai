@@ -66,6 +66,12 @@ class Edge(Element):
         self._inV = inV
         super(Edge, self).__init__(**values)
 
+    def __repr__(self):
+        return "{}(label={}, id={}, values={})".format(self.__class__.__name__,
+                                                       self.__class__.get_label(),
+                                                       getattr(self, '_id', None),
+                                                       getattr(self, '_values', {}))
+
     def __getstate__(self):
         state = {u'_id': self.id,
                  u'_type': u'edge',
