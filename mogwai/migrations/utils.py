@@ -1,6 +1,11 @@
 from mogwai.exceptions import MogwaiMigrationException
 
 
+def get_loaded_models():
+    from mogwai.connection import _loaded_models
+    return [model for model in _loaded_models if model.__name__ not in ('Element', 'Vertex', 'Edge')]
+
+
 def _ask_for_it_by_name(name):
     """ Returns an object referenced by absolute path.
 

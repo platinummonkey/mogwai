@@ -1,14 +1,16 @@
+from mogwai.migrations.utils import get_loaded_models
 
-def freeze_apps(models):
+
+def freeze_apps(models=None):
     """ Take the loaded list of models and returns a string of their frozen form
 
     :return: str
     """
     if not models:
-        from mogwai.connection import _loaded_models
+        _loaded_models = get_loaded_models()
     else:
         _loaded_models = models
-    
+
     frozen_models = set()
 
     # for all models iterate through and only add non-abstract models
@@ -23,6 +25,7 @@ def freeze_apps(models):
     for model in frozen_models:
         model_defs[model_key(model)] = prep_model_for_freeze(model)
         model_classes[model_key(model)] = model
+    return model_defs
 
 
 def model_key(model):

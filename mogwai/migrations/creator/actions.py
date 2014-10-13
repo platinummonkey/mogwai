@@ -1,5 +1,5 @@
 """
-Actions - things like 'a model was removed' or 'a field was changed'.
+Actions - things like 'a model was removed' or 'a property was changed'.
 Each one has a class, which can take the action description and insert code
 blocks into the forwards() and backwards() methods, in the right place.
 """
@@ -8,17 +8,12 @@ from __future__ import print_function
 
 import sys
 import datetime
-import pytz
 from pytz import timezone, utc
 
 from mogwai.properties import String, Text
 from mogwai.models import Vertex, Edge
 from mogwai.exceptions import MogwaiMigrationException
-
-#from south.modelsinspector import value_clean
-#from south.creator.freezer import remove_useless_attributes, model_key
-#from south.utils import datetime_utils
-#from south.utils.py3 import raw_input
+from mogwai.migrations.creator.freezer import model_key
 
 
 class Action(object):
@@ -53,18 +48,23 @@ class Action(object):
         raise NotImplementedError
 
     @classmethod
-    def triples_to_defs(cls, fields):
+    def triples_to_defs(cls, props):
         """Turn the (class, args, kwargs) format into a string"""
-        for field, triple in fields.items():
-            fields[field] = cls.triple_to_def(triple)
-        return fields
+        for pname, prop in props.items():
+            print("triples_to_defs: {}, {}".format(pname, prop))
+            props[pname] = cls.triple_to_def(prop)
+        return props
 
     @classmethod
-    def triple_to_def(cls, triple):
-        """Turns a single triple into a definition."""
+    def triple_to_def(cls, prop):
+        """Turns a single property into a definition.
+
+        :type prop: mogwai.properties.base.GraphProperty
+        """
+        print(prop)
         return "self.gf(%r)(%s)" % (
-            triple[0],  # Field full path
-            ", ".join(triple[1] + ["%s=%s" % (kwd, val) for kwd, val in triple[2].items()]),  # args and kwds
+            prop.db_field_name,  # Field full path
+            ", ".join([]) # prop + ["%s=%s" % (kwd, val) for kwd, val in triple[2].items()]),  # args and kwds
         )
 
 
