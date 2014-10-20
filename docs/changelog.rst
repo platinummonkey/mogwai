@@ -5,6 +5,10 @@ ChangeLog
 
 Changes to the library are recorded here.
 
+v0.6.3
+------
+ * as_dict() method now includes element id
+
 v0.6.2
 ------
  * Sane default __repr__ for Edges, feature parity to Vertex
