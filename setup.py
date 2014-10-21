@@ -26,7 +26,10 @@ develop_requires = ['Sphinx==1.2.2',
     'sphinx-rtd-theme==0.1.6',
     'tox==1.7.1',
     'watchdog==0.7.1',
-    'wercker==0.8.3']
+    'wercker==0.8.3',
+    'wheel>=0.24.0',
+    'pyxdg>=0.25',
+    'keyring>=4.0']
 
 long_desc = """
 mogwai is an Object-Graph Mapper (OGM) for Python
@@ -52,6 +55,8 @@ setup(
         "Operating System :: OS Independent",
         "Natural Language :: English",
         "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3.3",
+        "Programming Language :: Python :: 3.4",
         "Programming Language :: Python :: Implementation",
         "Topic :: Database",
         "Topic :: Internet :: WWW/HTTP",
@@ -59,7 +64,7 @@ setup(
     ],
     keywords='cassandra,titan,ogm,mogwai,thunderdome',
     install_requires=['pyparsing>=2.0.2,<3.0.0',
-                      'rexpro>=0.3.0,<1.0.0',
+                      'rexpro>=0.3.3,<1.0.0',
                       'six==1.6.1',
                       'argparse>=1.2.1',
                       'factory-boy>=2.4.1',
@@ -70,8 +75,8 @@ setup(
         'develop': develop_requires,
         'newrelic': ['newrelic>=2.18.1.15'],
         'docs': ['Sphinx>=1.2.2', 'sphinx-rtd-theme>=0.1.6', 'watchdog>=0.7.1', 'newrelic>=2.18.1.15'],
-        'gevent': ['rexpro[gevent]>=0.3.0'],
-        'eventlet': ['rexpro[eventlet]>=0.3.0'],
+        'gevent': ['rexpro[gevent]>=0.3.3'],
+        'eventlet': ['rexpro[eventlet]>=0.3.3'],
     },
     test_suite='nose.collector',
     tests_require=develop_requires,

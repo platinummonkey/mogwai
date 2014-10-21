@@ -5,6 +5,10 @@ ChangeLog
 
 Changes to the library are recorded here.
 
+v0.6.4
+------
+ * Use blueprints element.setProperty method instead of deprecated addProperty - thanks to Kaisen Lin
+
 v0.6.3
 ------
  * as_dict() method now includes element id
