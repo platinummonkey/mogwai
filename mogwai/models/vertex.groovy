@@ -13,7 +13,7 @@ def _save_vertex(id, attrs) {
             if (item.value == null) {
                 v.removeProperty(item.key)
             } else {
-                v.addProperty(item.key, item.value)
+                v.setProperty(item.key, item.value)
             }
         }
         g.stopTransaction(SUCCESS)
@@ -40,7 +40,7 @@ def _create_relationship(id, in_direction, edge_label, edge_attrs, vertex_attrs)
         def e
 
         for (item in vertex_attrs.entrySet()) {
-                v2.addProperty(item.key, item.value)
+                v2.setProperty(item.key, item.value)
         }
         v2 = g.getVertex(v2.id)
         if(in_direction) {
