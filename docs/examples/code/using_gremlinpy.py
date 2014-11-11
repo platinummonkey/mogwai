@@ -55,3 +55,8 @@ def global_query_deserialize(global_query):
     params = global_query.bound_params
     script = str(global_query)
     return Element.deserialize(execute_query(script, params))
+
+g = GlobalQuery()
+query = g.V('element_type', Person.element_type).out(IsFriendsWith.label)
+
+results = global_query_deserialize(query)
