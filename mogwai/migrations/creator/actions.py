@@ -64,7 +64,7 @@ class Action(object):
         print(prop)
         return "self.gf(%r)(%s)" % (
             prop.db_field_name,  # Field full path
-            ", ".join([]) # prop + ["%s=%s" % (kwd, val) for kwd, val in triple[2].items()]),  # args and kwds
+            ", ".join([])  # prop + ["%s=%s" % (kwd, val) for kwd, val in triple[2].items()]),  # args and kwds
         )
 
 
