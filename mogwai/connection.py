@@ -51,6 +51,8 @@ def execute_query(query, params={}, transaction=True, isolate=True, *args, **kwa
             raise MogwaiQueryError("Error during query - {}".format(se))
         except:  # pragma: no cover
             raise
+        finally:
+            _connection_pool.close_connection(conn, soft=True)
 
         logger.debug(response)
         return response
