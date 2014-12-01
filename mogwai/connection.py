@@ -46,13 +46,14 @@ def execute_query(query, params={}, transaction=True, isolate=True, *args, **kwa
             response = conn.execute(query, params=params, isolate=isolate, transaction=transaction)
 
         except RexProConnectionException as ce:  # pragma: no cover
+            _connection_pool.close_connection(conn, soft=True)
             raise MogwaiConnectionError("Connection Error during query - {}".format(ce))
         except RexProScriptException as se:  # pragma: no cover
+            _connection_pool.close_connection(conn, soft=True)
             raise MogwaiQueryError("Error during query - {}".format(se))
         except:  # pragma: no cover
-            raise
-        finally:
             _connection_pool.close_connection(conn, soft=True)
+            raise
 
         logger.debug(response)
         return response
