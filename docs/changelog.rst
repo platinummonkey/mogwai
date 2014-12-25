@@ -9,6 +9,22 @@ v0.7.0
 ------
  * South-like migrations (:ref:`See Example <example_migrations>`)
 
+v0.6.6
+------
+ * find_by_value bugfix - thanks to Justin Hohner for identifying this bug.
+
+v0.6.5
+------
+ * Proper connection closing bugfix - thanks to Elizabeth Ramirez
+
+v0.6.4
+------
+ * Use blueprints element.setProperty method instead of deprecated addProperty - thanks to Kaisen Lin
+
+v0.6.3
+------
+ * as_dict() method now includes element id
+
 v0.6.2
 ------
  * Sane default __repr__ for Edges, feature parity to Vertex

@@ -52,3 +52,16 @@ def _get_edges_between(out_v, in_v, label, page_num, per_page) {
         throw(err)
     }
 }
+
+def _find_edge_by_value(value_type, label, field, value) {
+    try {
+       if (value_type) {
+           return g.E("label", label).filter{it[field] == value}.toList()
+       } else {
+           return g.E("label", label).has(field, value).toList()
+       }
+    } catch (err) {
+        g.stopTransaction(FAILURE)
+        raise(err)
+    }
+}

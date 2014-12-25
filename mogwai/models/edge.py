@@ -43,6 +43,7 @@ class Edge(Element):
 
     _save_edge = GremlinMethod()
     _get_edges_between = GremlinMethod(classmethod=True)
+    _find_edge_by_value = GremlinMethod(classmethod=True)
 
 
     FACTORY_CLASS = None
@@ -101,26 +102,21 @@ class Edge(Element):
         _field = cls.get_property_by_name(field)
         _label = cls.get_label()
 
+        value_type = False
         if isinstance(value, integer_types + float_types):
-            search = 'filter{{it."{}" == {}}}'.format(_field, value)
-        else:
-            search = 'has("{}", "{}")'.format(_field, value)
+            value_type = True
 
-        query = 'g.E("label","{}").{}.toList()'.format(_label, search)
-
-        results = execute_query(query)
-
-        objects = []
-        for r in results:
-            try:
-                objects += [Element.deserialize(r)]
-            except KeyError:  # pragma: no cover
-                raise MogwaiQueryError('Edge type "%s" is unknown' % r.get('label', ''))
+        results = cls._find_edge_by_value(
+            value_type=value_type,
+            label=_label,
+            field=_field,
+            value=value
+        )
 
         if as_dict:  # pragma: no cover
-            return {v._id: v for v in objects}
+            return {v._id: v for v in results}
 
-        return objects
+        return results
 
     @classmethod
     def all(cls, ids, as_dict=False):

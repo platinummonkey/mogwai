@@ -98,7 +98,7 @@ class BaseElement(object):
         """
         if not isinstance(other, BaseElement):  # pragma: no cover
             return False
-        return self.as_dict() == other.as_dict() and self._id == other._id
+        return self.as_dict() == other.as_dict()
 
     def __ne__(self, other):
         """
@@ -171,6 +171,7 @@ class BaseElement(object):
         for name, prop in self._properties.items():
             values[name] = prop.to_database(getattr(self, name, None))
         values.update(self._manual_values)
+        values['id'] = self.id
         return values
 
     def as_save_params(self):

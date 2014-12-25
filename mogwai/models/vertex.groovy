@@ -13,7 +13,7 @@ def _save_vertex(id, attrs) {
             if (item.value == null) {
                 v.removeProperty(item.key)
             } else {
-                v.addProperty(item.key, item.value)
+                v.setProperty(item.key, item.value)
             }
         }
         g.stopTransaction(SUCCESS)
@@ -40,7 +40,7 @@ def _create_relationship(id, in_direction, edge_label, edge_attrs, vertex_attrs)
         def e
 
         for (item in vertex_attrs.entrySet()) {
-                v2.addProperty(item.key, item.value)
+                v2.setProperty(item.key, item.value)
         }
         v2 = g.getVertex(v2.id)
         if(in_direction) {
@@ -133,6 +133,19 @@ def _delete_related(id, operation, labels) {
             results.each{g.removeEdge(it)}
         }
         g.stopTransaction(SUCCESS)
+    } catch (err) {
+        g.stopTransaction(FAILURE)
+        raise(err)
+    }
+}
+
+def _find_vertex_by_value(value_type, element_type, field, value) {
+    try {
+       if (value_type) {
+           return g.V("element_type", element_type).filter{it[field] == value}.toList()
+       } else {
+           return g.V("element_type", element_type).has(field, value).toList()
+       }
     } catch (err) {
         g.stopTransaction(FAILURE)
         raise(err)

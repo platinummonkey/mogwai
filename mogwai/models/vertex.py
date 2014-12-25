@@ -91,6 +91,7 @@ class Vertex(Element):
     _save_vertex = GremlinMethod()
     _traversal = GremlinMethod()
     _delete_related = GremlinMethod()
+    _find_vertex_by_value = GremlinMethod(classmethod=True)
 
     element_type = None
 
@@ -129,26 +130,21 @@ class Vertex(Element):
         _field = cls.get_property_by_name(field)
         _element_type = cls.get_element_type()
 
+        value_type = False
         if isinstance(value, integer_types + float_types):
-            search = 'filter{{it."{}" == {}}}'.format(_field, value)
-        else:
-            search = 'has("{}", "{}")'.format(_field, value)
+            value_type = True
 
-        query = 'g.V("element_type","{}").{}.toList()'.format(_element_type, search)
-
-        results = execute_query(query)
-
-        objects = []
-        for r in results:
-            try:
-                objects += [Element.deserialize(r)]
-            except KeyError:  # pragma: no cover
-                raise MogwaiQueryError('Vertex type "%s" is unknown' % r.get('element_type', ''))
+        results = cls._find_vertex_by_value(
+            value_type=value_type,
+            element_type=_element_type,
+            field=_field,
+            value=value
+        )
 
         if as_dict:  # pragma: no cover
-            return {v._id: v for v in objects}
+            return {v._id: v for v in results}
 
-        return objects
+        return results
 
     @classmethod
     def get_element_type(cls):

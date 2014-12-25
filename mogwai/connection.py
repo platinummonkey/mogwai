@@ -46,10 +46,13 @@ def execute_query(query, params={}, transaction=True, isolate=True, *args, **kwa
             response = conn.execute(query, params=params, isolate=isolate, transaction=transaction)
 
         except RexProConnectionException as ce:  # pragma: no cover
+            _connection_pool.close_connection(conn, soft=True)
             raise MogwaiConnectionError("Connection Error during query - {}".format(ce))
         except RexProScriptException as se:  # pragma: no cover
+            _connection_pool.close_connection(conn, soft=True)
             raise MogwaiQueryError("Error during query - {}".format(se))
         except:  # pragma: no cover
+            _connection_pool.close_connection(conn, soft=True)
             raise
 
         logger.debug(response)
@@ -96,7 +99,9 @@ def setup(host, graph_name='graph', graph_obj_name='g', username='', password=''
                                 **_parse_host(host, username, password, graph_name, graph_obj_name))
 
     else:  # pragma: no cover
-        raise MogwaiConnectionError("Must Specify at least one host or list of hosts")
+        raise MogwaiConnectionError("Must Specify at least one host or list of hosts: host: {}, graph_name: {}".format(
+            host, graph_name)
+        )
 
 
 def _add_model_to_space(model):
@@ -142,11 +147,6 @@ def generate_spec():
                     else:
                         index_ext = ".indexed(%s)" % property.index_ext
 
-                    #compiled_index = {"script": "g.createKeyIndex(name, {}.class).dataType({}.class){}{}.make(); g.commit()".format(
-                    #    element_type,
-                    #    property.data_type,
-                    #    index_ext,
-                    #    uniqueness),
                     compiled_index = {"script": "g.{}(name).dataType({}.class).indexed({}{}.class){}.make(); g.commit()".format(
                         makeType,
                         property.data_type,
