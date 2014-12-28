@@ -178,7 +178,8 @@ class GraphProperty(object):
             'default': self.get_default(),
             'required': self.required,
             'property_name': self.property_name,
-            'data_type': self.data_type
+            'data_type': self.data_type,
+            'property_class': "{}.{}".format(self.__class__.__module__, self.__class__.__name__),
         }
 
         if self.index is not None:

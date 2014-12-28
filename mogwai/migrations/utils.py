@@ -41,33 +41,6 @@ def ask_for_it_by_name(name):
 ask_for_it_by_name.cache = {}
 
 
-def value_clean(model, property):
-    """
-
-    :param model: mogwai.models.element.Element
-    :param property: mogwai.properties.base.GraphProperty
-    :return: Return quadruple representing state of the model property
-    :rtype: None | tuple(mogwai.models.element.Element, mogwai.properties.base.GraphProperty,
-                         object|None, callable | None)
-    """
-
-    if model.__abstract__:
-        return None
-    if property.default is None and property.required:
-        raise MogwaiMigrationException("Required Value specified and no default specified: {} -> {}".format(
-            model, property.db_field_name))
-    if property.default is not None:
-        if callable(property.default):
-            value = None
-            func = property.default
-        else:
-            value = property.default
-            func = None
-        return model, property, value, func
-    else:
-        return model, property, None, None
-
-
 class BaseMigration(object):
 
     def gf(self, model_name, property_name):
@@ -82,8 +55,3 @@ class BaseMigration(object):
 
 class SchemaMigration(BaseMigration):
     pass
-
-
-class DataMigration(BaseMigration):
-    """ Data Migrations shouldn't be dry-run """
-    no_dry_run = True

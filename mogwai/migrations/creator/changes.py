@@ -131,8 +131,8 @@ class AutoChanges(BaseChanges):
                     for fieldname in new_m2ms:
                         # Only create its stuff if it wasn't a through=.
                         field = self.current_field_from_key(key, fieldname)
-                        if auto_through(field):
-                            yield ("AddM2M", {"model": self.current_model_from_key(key), "field": field})
+                        #if auto_through(field):
+                        #    yield ("AddM2M", {"model": self.current_model_from_key(key), "field": field})
                     # And any index/uniqueness constraints it has
                     for attr, operation in (("unique_together", "AddUnique"), ("index_together", "AddIndex")):
                         together = eval(new_meta.get(attr, "[]"))
@@ -197,30 +197,30 @@ class AutoChanges(BaseChanges):
                     if fieldname not in new_m2ms:
                         # Only delete its stuff if it wasn't a through=.
                         field = self.old_orm[key + ":" + fieldname]
-                        if auto_through(field):
-                            yield ("DeleteM2M", {"model": self.old_orm[key], "field": field})
+                        #if auto_through(field):
+                        #    yield ("DeleteM2M", {"model": self.old_orm[key], "field": field})
 
                 # Find M2Ms that have appeared
                 for fieldname in new_m2ms:
                     if fieldname not in old_m2ms:
                         # Only create its stuff if it wasn't a through=.
                         field = self.current_field_from_key(key, fieldname)
-                        if auto_through(field):
-                            yield ("AddM2M", {"model": self.current_model_from_key(key), "field": field})
+                        #if auto_through(field):
+                        #    yield ("AddM2M", {"model": self.current_model_from_key(key), "field": field})
 
                 # For the ones that exist in both models, see if they were changed
                 for fieldname in set(old_fields).intersection(set(new_fields)):
                     # Non-index changes
-                    if self.different_attributes(
-                     remove_useless_attributes(old_fields[fieldname], True, True),
-                     remove_useless_attributes(new_fields[fieldname], True, True)):
-                        yield ("ChangeField", {
-                            "model": self.current_model_from_key(key),
-                            "old_field": self.old_orm[key + ":" + fieldname],
-                            "new_field": self.current_field_from_key(key, fieldname),
-                            "old_def": old_fields[fieldname],
-                            "new_def": new_fields[fieldname],
-                        })
+                    #if self.different_attributes(
+                    # remove_useless_attributes(old_fields[fieldname], True, True),
+                    # remove_useless_attributes(new_fields[fieldname], True, True)):
+                    #    yield ("ChangeField", {
+                    #        "model": self.current_model_from_key(key),
+                    #        "old_field": self.old_orm[key + ":" + fieldname],
+                    #        "new_field": self.current_field_from_key(key, fieldname),
+                    #        "old_def": old_fields[fieldname],
+                    #        "new_def": new_fields[fieldname],
+                    #    })
                     # Index changes
                     old_field = self.old_orm[key + ":" + fieldname]
                     new_field = self.current_field_from_key(key, fieldname)
@@ -255,11 +255,11 @@ class AutoChanges(BaseChanges):
                     old_field = self.old_orm[key + ":" + fieldname]
                     new_field = self.current_field_from_key(key, fieldname)
                     # Have they _added_ a through= ?
-                    if auto_through(old_field) and not auto_through(new_field):
-                        yield ("DeleteM2M", {"model": self.old_orm[key], "field": old_field})
+                    #if auto_through(old_field) and not auto_through(new_field):
+                    #    yield ("DeleteM2M", {"model": self.old_orm[key], "field": old_field})
                     # Have they _removed_ a through= ?
-                    if not auto_through(old_field) and auto_through(new_field):
-                        yield ("AddM2M", {"model": self.current_model_from_key(key), "field": new_field})
+                    #if not auto_through(old_field) and auto_through(new_field):
+                    #    yield ("AddM2M", {"model": self.current_model_from_key(key), "field": new_field})
 
                 ## See if the {index,unique}_togethers have changed
                 for attr, add_operation, del_operation in (("unique_together", "AddUnique", "DeleteUnique"), ("index_together", "AddIndex", "DeleteIndex")):
@@ -374,36 +374,37 @@ class ManualChanges(BaseChanges):
         model_defs = freeze_apps([self.migrations.app_label()])
         # Make the model changes
         for model_name in self.added_models:
-            model = models.get_model(self.migrations.app_label(), model_name)
-            real_fields, meta, m2m_fields = self.split_model_def(model, model_defs[model_key(model)])
-            yield ("AddModel", {
-                "model": model,
-                "model_def": real_fields,
-            })
+            pass
+            #model = models.get_model(self.migrations.app_label(), model_name)
+            #real_fields, meta, m2m_fields = self.split_model_def(model, model_defs[model_key(model)])
+            #yield ("AddModel", {
+            #    "model": model,
+            #    "model_def": real_fields,
+            #})
         # And the field changes
         for field_desc in self.added_fields:
             try:
                 model_name, field_name = field_desc.split(".")
             except (TypeError, ValueError):
                 raise ValueError("%r is not a valid field description." % field_desc)
-            model = models.get_model(self.migrations.app_label(), model_name)
-            real_fields, meta, m2m_fields = self.split_model_def(model, model_defs[model_key(model)])
-            yield ("AddField", {
-                "model": model,
-                "field": model._meta.get_field_by_name(field_name)[0],
-                "field_def": real_fields[field_name],
-            })
+            #model = models.get_model(self.migrations.app_label(), model_name)
+            #real_fields, meta, m2m_fields = self.split_model_def(model, model_defs[model_key(model)])
+            #yield ("AddField", {
+            #    "model": model,
+            #    "field": model._meta.get_field_by_name(field_name)[0],
+            #    "field_def": real_fields[field_name],
+            #})
         # And the indexes
         for field_desc in self.added_indexes:
             try:
                 model_name, field_name = field_desc.split(".")
             except (TypeError, ValueError):
                 print("%r is not a valid field description." % field_desc)
-            model = models.get_model(self.migrations.app_label(), model_name)
-            yield ("AddIndex", {
-                "model": model,
-                "fields": [model._meta.get_field_by_name(field_name)[0]],
-            })
+            #model = models.get_model(self.migrations.app_label(), model_name)
+            #yield ("AddIndex", {
+            #    "model": model,
+            #    "fields": [model._meta.get_field_by_name(field_name)[0]],
+            #})
 
 
 class InitialChanges(BaseChanges):

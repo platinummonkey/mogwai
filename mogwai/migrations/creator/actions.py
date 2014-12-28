@@ -212,7 +212,7 @@ class _NullIssuesField(object):
                 else:
                     break
         # Right, add the default in.
-        field_def[2]['default'] = value_clean(result)  # FIXME: need to create comparable function
+        #field_def[2]['default'] = value_clean(result)  # FIXME: need to create comparable function
 
     def irreversable_code(self, field):
         return self.IRREVERSIBLE_TEMPLATE % {
