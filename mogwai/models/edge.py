@@ -47,8 +47,6 @@ class Edge(Element):
 
 
     FACTORY_CLASS = None
-    ## edge id
-    ##edge_id = columns.UUID(save_strategy=columns.SAVE_ONCE)
 
     def __init__(self, outV, inV, **values):
         """

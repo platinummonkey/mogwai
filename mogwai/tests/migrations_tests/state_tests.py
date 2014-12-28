@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 from nose.plugins.attrib import attr
 import copy
 
-from mogwai.properties.properties import String
 from mogwai.tests.base import BaseMogwaiTestCase, TestVertexModel, TestEdgeModel
 from mogwai.migrations.state import MockVertex, MockEdge, MigrationCalculation, MigrationChanges
 
@@ -61,8 +60,6 @@ class TestMigrationStateCalculation(BaseMogwaiTestCase):
         name_prop.required = not name_prop.required
         current_vertex._properties['name'] = name_prop
         previous_vertex = TestVertexModel
-        print previous_vertex._properties
-        print current_vertex._properties
 
         migration = MigrationCalculation.property_migrations(previous_vertex, current_vertex)
         self.assertIsInstance(migration, MigrationChanges)
@@ -83,8 +80,6 @@ class TestMigrationStateCalculation(BaseMogwaiTestCase):
         name_prop.required = not name_prop.required
         current_edge._properties['name'] = name_prop
         previous_edge = TestEdgeModel
-        print previous_edge._properties
-        print current_edge._properties
 
         migration = MigrationCalculation.property_migrations(previous_edge, current_edge)
         self.assertIsInstance(migration, MigrationChanges)

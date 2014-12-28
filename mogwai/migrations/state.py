@@ -86,16 +86,12 @@ class MigrationCalculation(object):
 
         # Changes
         changes = {}
-        print "Added properties: {}".format(additions)
-        print "Deleted properties: {}".format(deletions)
-        print "Changed properties: {}".format(changed_properties)
         for k, v in changed_properties.items():
             migration = MigrationCalculation.property_migration(v[0], v[1])
             if not migration.null:
                 if k not in changes:
                     changes[k] = []
                 changes[k].append(migration)
-        print "Final Changes: {}".format(changes)
         return MigrationChanges(additions, deletions, changes, current_element)
 
     @classmethod

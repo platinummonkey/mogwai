@@ -29,7 +29,7 @@ class BaseElement(object):
     The base model class, don't inherit from this, inherit from Model, defined
     below
     """
-    #__enum_id_only__ = True
+
     FACTORY_CLASS = None
 
     class DoesNotExist(MogwaiException):
