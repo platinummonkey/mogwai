@@ -9,6 +9,7 @@ def get_existing_indices():
     """ Find all Vertex and Edge types available in the database """
     vertex_indices = execute_query('g.getIndexedKeys(Vertex.class)')
     edge_indices = execute_query('g.getIndexedKeys(Edge.class)')
+
     return vertex_indices, edge_indices
 
 

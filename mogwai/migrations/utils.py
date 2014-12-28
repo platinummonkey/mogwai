@@ -3,7 +3,8 @@ from mogwai.exceptions import MogwaiMigrationException
 
 def get_loaded_models():
     from mogwai.connection import _loaded_models
-    return [model for model in _loaded_models if model.__name__ not in ('Element', 'Vertex', 'Edge')]
+    return [model for model in _loaded_models
+            if (not model.__abstract__ and model.__name__ not in ('Element', 'Vertex', 'Edge'))]
 
 
 def _ask_for_it_by_name(name):

@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 from unittest import TestCase
 from nose.tools import nottest
-from mogwai.connection import setup, sync_spec
+from mogwai.connection import setup
 from mogwai.models import Vertex, Edge
 from mogwai.properties import Double, Integer, String
 import os

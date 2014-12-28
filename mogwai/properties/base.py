@@ -126,17 +126,16 @@ class GraphProperty(object):
     validator = pass_all_validator
     instance_counter = 0
 
-    def __init__(self, description=None, primary_key=False, index=False, index_ext=None, db_field=None, choices=None,
-                 default=None, required=False, save_strategy=SaveAlways, unique=None, db_field_prefix=''):
+    def __init__(self, description=None, index=None, db_field=None, choices=None, default=None, required=False,
+                 save_strategy=SaveAlways, db_field_prefix=''):
         """
         Initialize this graph property with the given information.
 
         :param description: description of this field
         :type description: basestring | str
-        :param primary_key: Indicates whether or not this is primary key
-        :type primary_key: bool
-        :param index: Indicates whether or not this field is indexed
-        :type index: bool
+        :param index: Index specification for the given property if indexed, otherwise default of None,
+                        means do not index.
+        :type index: mogwai.index.base.BaseIndexSpecification
         :param db_field: The property this field will map to in the database
         :type db_field: basestring | str
         :param choices: A dict of possible choices where the key is the value to store, and the value is the
@@ -148,39 +147,51 @@ class GraphProperty(object):
         :type required: bool
         :param save_strategy: Strategy used when saving the value of the column
         :type save_strategy: strategy.Strategy
-        :param unique: Uniqueness constraint left in for backwards compatibility -- used by Spec system.
-        :type unique: bool
         :param db_field_prefix: The property prefix associated with the Model.
         :type db_field_prefix: basestring | None
 
         """
         self.description = description
-        self.primary_key = primary_key
         self.index = index
-        self.index_ext = index_ext
         self.db_field = db_field
         self.db_field_prefix = db_field_prefix
         self.default = default
         self.required = required
         self.save_strategy = save_strategy
-        self.unique = unique
         self.choices = choices
 
         #the graph property name in the model definition
         self.property_name = None
 
-        #self.value = None
-
         #keep track of instantiation order
         self.position = GraphProperty.instance_counter
         GraphProperty.instance_counter += 1
 
+    def _definition(self):
+        """ returns a property
+
+        :return: property definition dictionary for migrations
+        """
+
+        spec = {
+            'db_field': self.db_field_name,
+            'default': self.get_default(),
+            'required': self.required,
+            'property_name': self.property_name,
+            'data_type': self.data_type
+        }
+
+        if self.index is not None:
+            spec.update(self.index.get_specification())
+        return spec
+
     def __repr__(self):
-        return "{}(name={}, pos={}, default={}, db_field_name={})".format(self.__class__.__name__,
-                                                                          self.property_name,
-                                                                          self.position,
-                                                                          self.default,
-                                                                          self.db_field_name)
+        return "{}(name={}, pos={}, definition={})".format(
+            self.__class__.__name__,
+            self.property_name,
+            self.position,
+            self._definition()
+        )
 
     @classmethod
     def get_value_from_choices(cls, value, choices):
@@ -248,7 +259,7 @@ class GraphProperty(object):
 
     @property
     def can_delete(self):
-        return not self.primary_key
+        return True
 
     def should_save(self, first_save=False):
         """
@@ -320,3 +331,23 @@ class GraphProperty(object):
         :rtype: basestring | str
         """
         return (self.db_field_prefix or '') + (self.db_field or self.property_name or '')
+
+    def __eq__(self, other):
+        """
+        :param other: other graph property to compare against
+        :type other: GraphProperty
+        :return: equality bool
+        :rtype: bool
+        """
+        if not issubclass(other.__class__, GraphProperty):
+            return False
+
+        # do not compare defaults as these are often in-situ dependent
+        this_filtered_dict = self._definition()
+        this_filtered_dict.pop('default')
+
+        other_filtered_dict = other._definition()
+        other_filtered_dict.pop('default')
+
+        #return cmp(this_filtered_dict, other_filtered_dict) == 0
+        return len(set(this_filtered_dict.items()) ^ set(other_filtered_dict.items())) == 0
