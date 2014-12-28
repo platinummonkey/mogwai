@@ -38,9 +38,14 @@ class Configuration(object):
         HADOOP1 = 'hbase'
         BERKELEY = None
 
+    class MigrationMethod(object):
+        RUN_BACKEND_REPAIR = 'repair'
+        OUTPUT_JOB = 'job'
+
     delete_method = DeleteMethods.REMOVE_ON_DELETE  # currently unused
     backend_database = BackendDatabases.CASSANDRA  # used to determine the method for index job repair
     __database_properties_file = None
+    migration_method = MigrationMethod.RUN_BACKEND_REPAIR
 
     @property
     def database_properties_file(self):
