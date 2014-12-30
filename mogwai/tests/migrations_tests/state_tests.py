@@ -11,7 +11,7 @@ class TestMigrationStateCalculation(BaseMogwaiTestCase):
     """ Test the state module in migrations """
 
     def test_property_addition_state_calculation_vertex(self):
-        previous_vertex = MockVertex({})
+        previous_vertex = MockVertex(TestVertexModel.element_type, {})
         current_vertex = TestVertexModel
         migration = MigrationCalculation.property_migrations(previous_vertex, current_vertex)
         self.assertIsInstance(migration, MigrationChanges)
@@ -22,7 +22,7 @@ class TestMigrationStateCalculation(BaseMogwaiTestCase):
         self.assertEqual(migration.current, TestVertexModel)
 
     def test_property_addition_state_calculation_edge(self):
-        previous_edge = MockEdge({})
+        previous_edge = MockEdge(TestEdgeModel.label, {})
         current_edge = TestEdgeModel
         migration = MigrationCalculation.property_migrations(previous_edge, current_edge)
         self.assertIsInstance(migration, MigrationChanges)
@@ -33,7 +33,7 @@ class TestMigrationStateCalculation(BaseMogwaiTestCase):
         self.assertEqual(migration.current, TestEdgeModel)
 
     def test_property_deletion_state_calculation_vertex(self):
-        current_vertex = MockVertex({})
+        current_vertex = MockVertex(TestVertexModel.element_type, {})
         previous_vertex = TestVertexModel
         migration = MigrationCalculation.property_migrations(previous_vertex, current_vertex)
         self.assertIsInstance(migration, MigrationChanges)
@@ -44,7 +44,7 @@ class TestMigrationStateCalculation(BaseMogwaiTestCase):
         self.assertEqual(migration.current, current_vertex)
 
     def test_property_deletion_state_calculation_edge(self):
-        current_edge = MockEdge({})
+        current_edge = MockEdge(TestEdgeModel.label, {})
         previous_edge = TestEdgeModel
         migration = MigrationCalculation.property_migrations(previous_edge, current_edge)
         self.assertIsInstance(migration, MigrationChanges)
@@ -55,7 +55,7 @@ class TestMigrationStateCalculation(BaseMogwaiTestCase):
         self.assertEqual(migration.current, current_edge)
 
     def test_property_changes_state_calculation_vertex(self):
-        current_vertex = MockVertex(copy.deepcopy(TestVertexModel._properties))
+        current_vertex = MockVertex(TestVertexModel.element_type, copy.deepcopy(TestVertexModel._properties))
         name_prop = copy.copy(current_vertex._properties.get('name'))
         name_prop.required = not name_prop.required
         current_vertex._properties['name'] = name_prop
@@ -75,7 +75,7 @@ class TestMigrationStateCalculation(BaseMogwaiTestCase):
         self.assertEqual(migration.current, current_vertex)
 
     def test_property_changes_state_calculation_edge(self):
-        current_edge = MockEdge(copy.deepcopy(TestEdgeModel._properties))
+        current_edge = MockEdge(TestEdgeModel.label, copy.deepcopy(TestEdgeModel._properties))
         name_prop = copy.copy(current_edge._properties.get('name'))
         name_prop.required = not name_prop.required
         current_edge._properties['name'] = name_prop

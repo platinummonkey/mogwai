@@ -3,13 +3,17 @@ from __future__ import unicode_literals
 
 class MockVertex(object):
 
-    def __init__(self, props):
+    def __init__(self, element_type, props):
+        self.element_type = element_type
+        self.composite_indices = {}
         self._properties = props or {}
 
 
 class MockEdge(object):
 
-    def __init__(self, props):
+    def __init__(self, label, props):
+        self.label = label
+        self.composite_indices = {}
         self._properties = props or {}
 
 

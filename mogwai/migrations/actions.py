@@ -4,7 +4,7 @@ Each one has a class, which can take the action description and insert code
 blocks into the forwards() and backwards() methods, in the right place.
 """
 
-from __future__ import print_function
+from __future__ import unicode_literals, print_function
 
 import sys
 import datetime
@@ -13,7 +13,6 @@ from pytz import timezone, utc
 from mogwai.properties import String, Text
 from mogwai.models import Vertex, Edge
 from mogwai.exceptions import MogwaiMigrationException
-from mogwai.migrations.creator.freezer import model_key
 
 
 class Action(object):
