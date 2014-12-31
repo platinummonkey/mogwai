@@ -77,7 +77,7 @@ duration = System.currentTimeMillis() - before
 '''
 
     # job index repair
-    _index_repair = "TitanIndexRepair.{}Repair({}, {}, {}{})"
+    _index_repair = "TitanIndexRepair.{backend_database}Repair({properties_file}, {index_key}, {edge_key}{algorithm})"
     _default_cassandra_partitioner = '"org.apache.cassandra.dht.Murmur3Partitioner"'
     _default_hbase_partitioner = ""
 
@@ -119,6 +119,7 @@ duration = System.currentTimeMillis() - before
         self.model_name = model_name
         self.dry_run = dry_run
         self.cached_commands = []
+        self.deferred_cached_commands = []
         self.cached_vars = OrderedDict()
 
         self.partitioner = ""
@@ -145,6 +146,7 @@ duration = System.currentTimeMillis() - before
         return self.cached_vars[var_key]
 
     def execute(self, script, print_all_errors=True):
+        script = "\n".join([s[0] for s in self.cached_commands])
         script = '''
 try {
     mgmt = g.getManagementSystem();
@@ -156,11 +158,7 @@ try {
 }'''.format(script)
         return execute_query(script, {}, True, True)
 
-    def execute_all_cached(self, print_all_errors=True):
-        script = "\n".join([s[0] for s in self.cached_commands])
-        return self.execute(script, print_all_errors=print_all_errors)
-
-    def run_repair(self, index_key, edge_key=""):
+    def repair_index(self, index_key, edge_key=""):
         c = Configuration()
         backend_database = c.backend_database
         properties_file = c.database_properties_file
@@ -171,25 +169,15 @@ try {
         if backend_database == c.BackendDatabases.CASSANDRA:
             algorithm = ', "org.apache.cassandra.dht.Murmur3Partitioner"'
 
-        script = '''
-try {
-    TitanIndexRepair.{}Repair(properties_file, index_key, edge_key{})
-} catch (err) {
-    g.stopTransaction(FAILURE)
-    throw(err)
-}'''.format(backend_database, algorithm)
+        script = self._index_repair.format(
+            backend_database=backend_database,
+            algorithm=algorithm,
+            properties_file=properties_file,
+            index_key=index_key,
+            edge_key=edge_key
+        )
 
-        return execute_query(script,
-                             {'index_key': index_key, 'edge_key': edge_key, 'properties_file': properties_file},
-                             True,
-                             True)
-
-    def run_all_cached_index_repairs(self):
-        results = []
-        for index_key, cmd_pair in self.cached_commands.items():
-            edge_key = cmd_pair[1]
-            results.append(self.run_repair(index_key, edge_key))
-        return results
+        self.deferred_cached_commands.append(script)
 
     def _command(self, cmd, index_key, edge_key, var_assignment=True):
         if var_assignment:
