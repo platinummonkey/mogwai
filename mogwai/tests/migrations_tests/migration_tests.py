@@ -27,6 +27,7 @@ class TestMigrationDatabaseOperations(BaseMogwaiTestCase):
                          '    mgmt.setTTL(testmodel_myvertex, 1, TimeUnit.HOURS).make()\n'
                          '\n    mgmt.commit()\n'
                          '} catch (err) {\n'
+                         '    mgmt.rollback()\n'
                          '    g.stopTransaction(FAILURE)\n'
                          '    throw(err)\n'
                          '}\n', self.db._generate_script())
@@ -45,6 +46,7 @@ class TestMigrationDatabaseOperations(BaseMogwaiTestCase):
                          '    mgmt.setTTL(testmodel_myedge, 1, TimeUnit.HOURS).make()\n'
                          '\n    mgmt.commit()\n'
                          '} catch (err) {\n'
+                         '    mgmt.rollback()\n'
                          '    g.stopTransaction(FAILURE)\n'
                          '    throw(err)\n'
                          '}\n', self.db._generate_script())
@@ -62,6 +64,7 @@ class TestMigrationDatabaseOperations(BaseMogwaiTestCase):
                          '    testmodel_myproperty = mgmt.makePropertyKey("myproperty").dataType(String.class).cardinality(Cardinality.SINGLE).make()\n'
                          '\n    mgmt.commit()\n'
                          '} catch (err) {\n'
+                         '    mgmt.rollback()\n'
                          '    g.stopTransaction(FAILURE)\n'
                          '    throw(err)\n'
                          '}\n', self.db._generate_script())
@@ -83,6 +86,7 @@ class TestMigrationDatabaseOperations(BaseMogwaiTestCase):
                          '    testmodel_myvertex.remove()\n'
                          '\n    mgmt.commit()\n'
                          '} catch (err) {\n'
+                         '    mgmt.rollback()\n'
                          '    g.stopTransaction(FAILURE)\n'
                          '    throw(err)\n'
                          '}\n', self.db._generate_script())
@@ -98,6 +102,7 @@ class TestMigrationDatabaseOperations(BaseMogwaiTestCase):
                          '    testmodel_myedge.remove()\n'
                          '\n    mgmt.commit()\n'
                          '} catch (err) {\n'
+                         '    mgmt.rollback()\n'
                          '    g.stopTransaction(FAILURE)\n'
                          '    throw(err)\n'
                          '}\n', self.db._generate_script())
@@ -113,12 +118,27 @@ class TestMigrationDatabaseOperations(BaseMogwaiTestCase):
                          '    testmodel_myproperty.remove()\n'
                          '\n    mgmt.commit()\n'
                          '} catch (err) {\n'
+                         '    mgmt.rollback()\n'
                          '    g.stopTransaction(FAILURE)\n'
                          '    throw(err)\n'
                          '}\n', self.db._generate_script())
 
     def test_delete_composite_index(self):
-        pass
+        self.db.delete_composite_index("mykey", "myedge")
+        self.assertEqual('testmodel_mykey_myedge = mgmt.getGraphIndex("testmodel_mykey_myedge")',
+                         self.db.cached_commands[0])
+        self.assertEqual('testmodel_mykey_myedge.remove()', self.db.cached_commands[1])
+        self.assertEqual(('testmodel_mykey_myedge', ('testmodel', 'mykey', 'myedge')), self.db.cached_vars.items()[0])
+        self.assertEqual('try {\n'
+                         '    mgmt = g.getManagementSystem();\n\n'
+                         '    testmodel_mykey_myedge = mgmt.getGraphIndex("testmodel_mykey_myedge")\n'
+                         '    testmodel_mykey_myedge.remove()\n'
+                         '\n    mgmt.commit()\n'
+                         '} catch (err) {\n'
+                         '    mgmt.rollback()\n'
+                         '    g.stopTransaction(FAILURE)\n'
+                         '    throw(err)\n'
+                         '}\n', self.db._generate_script())
 
     def test_send_delete_signal(self):
         pass

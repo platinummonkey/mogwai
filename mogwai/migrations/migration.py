@@ -3,6 +3,7 @@ from __future__ import unicode_literals, print_function
 import sys
 import datetime
 from pytz import timezone, utc
+from blinker import signal
 from collections import OrderedDict
 from string import Template
 from mogwai.connection import execute_query
@@ -15,7 +16,6 @@ from models import MigrationRoot, Migration, PerformedMigration
 from state import MigrationCalculation
 from utils import get_loaded_models, ask_for_it_by_name
 from actions import *
-
 
 def _str(value):
         """ Formats a value with escaped strings """
@@ -161,6 +161,7 @@ $script
 
     mgmt.commit()
 } catch (err) {
+    mgmt.rollback()
     g.stopTransaction(FAILURE)
     throw(err)
 }
@@ -280,10 +281,11 @@ $script
         remove_property_cmd = "$var.remove()"
         self._command(remove_property_cmd, property_key, "", var_assignment=False)
 
-    def delete_composite_index(self, index_key, **kwargs):
-        self._command(self._get_graph_index.format(key=index_key), index_key, "")
+    def delete_composite_index(self, index_key, edge_key, **kwargs):
+        composite_key = self._get_or_create_var(index_key, edge_key)
+        self._command(self._get_graph_index.format(key=_str(composite_key)), index_key, edge_key)
         remove_property_cmd = "$var.remove()"
-        self._command(remove_property_cmd, index_key, "", var_assignment=False)
+        self._command(remove_property_cmd, index_key, edge_key, var_assignment=False)
 
     def send_delete_signal(self, etype, name, **kwargs):
         pass
