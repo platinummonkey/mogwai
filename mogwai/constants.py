@@ -48,6 +48,9 @@ class Configuration(object):
     migration_method = MigrationMethod.RUN_BACKEND_REPAIR
     __loaded_models = []
 
+    def _get_loaded_models(self):
+        return self.__loaded_models
+
     def add_model_to_space(self, model):
         self.__loaded_models.append(model)
 

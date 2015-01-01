@@ -5,12 +5,6 @@ from collections import OrderedDict
 from string import Template
 from mogwai.connection import execute_query
 from mogwai.constants import Configuration
-from mogwai.models import Vertex, Edge
-from mogwai.exceptions import MogwaiMigrationException
-from models import MigrationRoot, Migration, PerformedMigration
-from state import MigrationCalculation
-from utils import get_loaded_models, ask_for_it_by_name
-from actions import *
 
 
 def _str(value):
