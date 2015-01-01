@@ -5,18 +5,21 @@ import argparse
 
 class BaseCommand(object):
 
-    parser = argparse.ArgumentParser()
     help = ''
     usage_str = ''
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--dry_run', action='store_true', help='Do not perform migration, onlyl print out to STDOUT')
+
     def __init__(self, *args, **kwargs):
         self.current_directory = os.getcwd()
+        self.args = None
 
     def setup_args(self):
         pass
 
     def parse_args(self):
-        self.parser.parse_args()
+        self.args = self.parser.parse_args()
 
     def get_file_path(self, klass):
         """ Get the file path of a class
@@ -38,5 +41,9 @@ class BaseCommand(object):
         """
         return os.path.join(self.get_file_path(klass), 'migrations')
 
-    def __call__(self, *args, **kwargs):
-        raise NotImplementedError("Call method must be overridden")
+    def handle(self, *args, **kwargs):
+        raise NotImplementedError("Method must be overridden")
+
+    def __call__(self, forwards=True, *args, **kwargs):
+        self.parse_args()
+        self.handle(**vars(self.args))

@@ -130,3 +130,7 @@ class MigrationCalculation(object):
         changed_dict = dict([(k, (prev_dict[k], cur_dict[k])) for k in changed])
 
         return added_dict, removed_dict, changed_dict
+
+
+class ActionCalculations(object):
+    pass

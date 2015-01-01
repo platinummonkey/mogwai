@@ -1,2 +1,2 @@
 from migrate import MigrateCommand
-from schemamigration import SchemaMirationCommand
+from schemamigration import SchemaMigrationCommand

@@ -1,9 +1,11 @@
 from __future__ import unicode_literals
+from functools import partial
+
 from nose.plugins.attrib import attr
 from blinker import signal
-from functools import partial
+
 from mogwai.tests.base import BaseMogwaiTestCase
-from mogwai.migrations.operation import DatabaseOperation
+from mogwai.migrations.migrations.operation import DatabaseOperation
 from mogwai.index.index import CompositeIndex
 
 

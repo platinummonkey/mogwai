@@ -1,9 +1,10 @@
 from __future__ import unicode_literals
-from nose.plugins.attrib import attr
 import copy
 
+from nose.plugins.attrib import attr
+
 from mogwai.tests.base import BaseMogwaiTestCase, TestVertexModel, TestEdgeModel
-from mogwai.migrations.state import MockVertex, MockEdge, MigrationCalculation, MigrationChanges
+from mogwai.migrations.migrations.state import MockVertex, MockEdge, MigrationCalculation, MigrationChanges
 
 
 @attr('unit', 'migration_tests', 'migration_tests_state')

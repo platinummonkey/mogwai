@@ -1,10 +1,11 @@
 from __future__ import unicode_literals
+
 from nose.plugins.attrib import attr
 
 from mogwai.tests.base import BaseMogwaiTestCase, TestVertexModel, TestEdgeModel
 from mogwai.models import Vertex, Edge
 from mogwai.models.element import Element
-from mogwai.migrations.utils import get_loaded_models
+from mogwai.migrations.migrations.utils import get_loaded_models
 from mogwai.tests.models.class_construction_tests import BaseAbstractVertex
 
 
