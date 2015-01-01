@@ -4,6 +4,7 @@ import sys
 import datetime
 from pytz import timezone, utc
 from collections import OrderedDict
+from string import Template
 from mogwai.connection import execute_query
 from mogwai.constants import Configuration
 from mogwai.gremlin import GremlinMethod
@@ -23,7 +24,7 @@ def _str(value):
 
 class DatabaseOperation(object):
 
-    _var_assignment = "{var} = "
+    _var_assignment = "$var = "
     _make = ".make()"
     _get_management_system = "mgmt = g.getManagementSystem()"
     _commit_management_system = "mgmt.commit()"
@@ -135,7 +136,9 @@ duration = System.currentTimeMillis() - before
         :type edge_key: basestring
         :return: composite variable name
         """
-        composite_key = "{}.{}".format(index_key, edge_key)
+        if edge_key not in (None, ""):
+            edge_key = "_" + edge_key
+        composite_key = "{}_{}{}".format(self.model_name, index_key, edge_key)
         if composite_key not in self.cached_vars:
             self.cached_vars[composite_key] = (self.model_name, index_key, edge_key)
         return composite_key
@@ -145,17 +148,24 @@ duration = System.currentTimeMillis() - before
             return None
         return self.cached_vars[var_key]
 
-    def execute(self, script, print_all_errors=True):
-        script = "\n".join([s[0] for s in self.cached_commands])
-        script = '''
-try {
+    def _generate_script(self):
+        script = "\n".join(['    ' + s for s in self.cached_commands])
+        print(self.cached_commands)
+        print(script)
+        return Template('''try {
     mgmt = g.getManagementSystem();
-    {}
+
+$script
+
     mgmt.commit()
 } catch (err) {
     g.stopTransaction(FAILURE)
     throw(err)
-}'''.format(script)
+}
+''').safe_substitute(script=script)
+
+    def execute(self, script, print_all_errors=True):
+        script = self._generate_script()
         return execute_query(script, {}, True, True)
 
     def repair_index(self, index_key, edge_key=""):
@@ -181,38 +191,42 @@ try {
 
     def _command(self, cmd, index_key, edge_key, var_assignment=True):
         if var_assignment:
-            cmd = (self._var_assignment + cmd).format(var=self._get_or_create_var(index_key=index_key,
-                                                                                  edge_key=edge_key))
-        else:
-            try:
-                # try to assign, variables to existing commands
-                cmd = cmd.format(var=self._get_or_create_var(index_key=index_key, edge_key=edge_key))
-            except KeyError as e:
-                # no variable assignment needed
-                pass
+            cmd = self._var_assignment + cmd
+
+        cmd = Template(cmd).safe_substitute(var=self._get_or_create_var(
+            index_key=index_key, edge_key=edge_key)
+        )
         self.cached_commands.append(cmd)
 
     # Create
-    def create_vertex_type(self, vertex_label, **kwargs):
+    def create_vertex_type(self, vertex_label, set_ttl=False, ttl_time_value=1, ttl_time_unit=None, **kwargs):
         label = self._make_vertex_label.format(key=_str(vertex_label))
         cmd = "{label}{make}".format(label=label, make=self._make)
         self._command(cmd, vertex_label, "")
-        if 'set_ttl' in kwargs:
-            self._set_ttl(vertex_label,
-                          kwargs.get('ttl_time_value', 1),
-                          kwargs.get('ttl_time_unit', DatabaseOperation.TimeUnit.DAYS))
+        if set_ttl:
+            if ttl_time_unit is None:
+                ttl_time_unit = DatabaseOperation.TimeUnit.DAYS
+            self._set_ttl(vertex_label, ttl_time_value, ttl_time_unit)
 
-    def create_edge_type(self, edge_label, **kwargs):
+    def create_edge_type(self, edge_label, set_ttl=False, ttl_time_value=1, ttl_time_unit=None, multiplicity=None,
+                         unidirected=False, **kwargs):
+        if multiplicity in (None, ""):
+            multiplicity = DatabaseOperation.Multiplicity.MULTI
+
+        if unidirected:
+            unidirected = self._set_unidirected
+        else:
+            unidirected = ""
+
         label = self._make_edge_label.format(key=_str(edge_label))
-        multiplicty = self._set_multiplicity.format(multiplicity=self.Multiplicity.MULTI)
-        unidirected = self._set_unidirected
-        cmd = "{label}{multiplicity}{unidirected}{make}".format(label=label, multiplicty=multiplicty,
+        multiplicity = self._set_multiplicity.format(multiplicity=multiplicity)
+        cmd = "{label}{multiplicity}{unidirected}{make}".format(label=label, multiplicity=multiplicity,
                                                                 unidirected=unidirected, make=self._make)
         self._command(cmd, edge_label, "")
-        if 'set_ttl' in kwargs:
-            self._set_ttl(edge_label,
-                          kwargs.get('ttl_time_value', 1),
-                          kwargs.get('ttl_time_unit', DatabaseOperation.TimeUnit.DAYS))
+        if set_ttl:
+            if ttl_time_unit is None:
+                ttl_time_unit = DatabaseOperation.TimeUnit.DAYS
+            self._set_ttl(edge_label, ttl_time_value, ttl_time_unit)
 
     def create_property_key(self, property_name, data_type=None, cardinality=None, **kwargs):
         if data_type is None:
@@ -250,29 +264,29 @@ try {
     # Delete
     def delete_vertex_type(self, vertex_label, **kwargs):
         self._command(self._get_graph_index.format(key=vertex_label), vertex_label, "")
-        remove_property_cmd = "{var}.remove()"
+        remove_property_cmd = "$var.remove()"
         self._command(remove_property_cmd, vertex_label, "", var_assignment=False)
 
     def delete_edge_type(self, edge_label, **kwargs):
         self._command(self._get_relation_type.format(key=edge_label), edge_label, "")
-        remove_property_cmd = "{var}.remove()"
+        remove_property_cmd = "$var.remove()"
         self._command(remove_property_cmd, edge_label, "", var_assignment=False)
 
     def delete_property_key(self, property_key, **kwargs):
         self._command(self._get_property_key.format(key=property_key), property_key, "")
-        remove_property_cmd = "{var}.remove()"
+        remove_property_cmd = "$var.remove()"
         self._command(remove_property_cmd, property_key, "", var_assignment=False)
 
     def delete_composite_index(self, index_key, **kwargs):
         self._command(self._get_graph_index.format(key=index_key), index_key, "")
-        remove_property_cmd = "{var}.remove()"
+        remove_property_cmd = "$var.remove()"
         self._command(remove_property_cmd, index_key, "", var_assignment=False)
 
     def send_delete_signal(self, etype, name, **kwargs):
         pass
 
     def _set_ttl(self, var_key, time_value, time_unit):
-        cmd = "mgmt.setTTL({var}, {time_value}, {time_unit}){make}".format(
+        cmd = "mgmt.setTTL($var, {time_value}, {time_unit}){make}".format(
             time_value=time_value,
             time_unit=time_unit,
             make=self._make
