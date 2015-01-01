@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 from nose.plugins.attrib import attr
-
+from blinker import signal
+from functools import partial
 from mogwai.tests.base import BaseMogwaiTestCase, TestVertexModel, TestEdgeModel
 from mogwai.migrations.migration import DatabaseOperation
 
@@ -25,7 +26,7 @@ class TestMigrationDatabaseOperations(BaseMogwaiTestCase):
                          '    mgmt = g.getManagementSystem();\n\n'
                          '    testmodel_myvertex = mgmt.makeVertexLabel("myvertex").make()\n'
                          '    mgmt.setTTL(testmodel_myvertex, 1, TimeUnit.HOURS).make()\n'
-                         '\n    mgmt.commit()\n'
+                         '\n    mgmt.commit()\n\n'
                          '} catch (err) {\n'
                          '    mgmt.rollback()\n'
                          '    g.stopTransaction(FAILURE)\n'
@@ -44,7 +45,7 @@ class TestMigrationDatabaseOperations(BaseMogwaiTestCase):
                          '    mgmt = g.getManagementSystem();\n\n'
                          '    testmodel_myedge = mgmt.makeEdgeLabel("myedge").multiplicity(Multiplicity.MULTI).make()\n'
                          '    mgmt.setTTL(testmodel_myedge, 1, TimeUnit.HOURS).make()\n'
-                         '\n    mgmt.commit()\n'
+                         '\n    mgmt.commit()\n\n'
                          '} catch (err) {\n'
                          '    mgmt.rollback()\n'
                          '    g.stopTransaction(FAILURE)\n'
@@ -62,7 +63,7 @@ class TestMigrationDatabaseOperations(BaseMogwaiTestCase):
         self.assertEqual('try {\n'
                          '    mgmt = g.getManagementSystem();\n\n'
                          '    testmodel_myproperty = mgmt.makePropertyKey("myproperty").dataType(String.class).cardinality(Cardinality.SINGLE).make()\n'
-                         '\n    mgmt.commit()\n'
+                         '\n    mgmt.commit()\n\n'
                          '} catch (err) {\n'
                          '    mgmt.rollback()\n'
                          '    g.stopTransaction(FAILURE)\n'
@@ -72,8 +73,24 @@ class TestMigrationDatabaseOperations(BaseMogwaiTestCase):
     def test_create_composite_index(self):
         pass
 
+    def _subscriber(self, catcher, sender, **kwargs):
+        catcher.caught_signal = True
+        catcher.sender = sender
+        catcher.kwargs = kwargs
+
     def test_send_create_signal(self):
-        pass
+        class SignalCatcher(object):
+            caught_signal = False
+            sender = None
+            kwargs = None
+
+        sc = SignalCatcher()
+        sig = signal('mogwai.migration.create_vertex_testsignal')
+        sig.connect(partial(self._subscriber, sc), weak=False)
+
+        self.db.send_create_signal('vertex', 'testsignal', mykwarg='test')
+        self.assertTrue(sc.caught_signal)
+        self.assertDictContainsKey(sc.kwargs, 'mykwarg')
 
     def test_delete_vertex_type(self):
         self.db.delete_vertex_type("myvertex")
@@ -84,7 +101,7 @@ class TestMigrationDatabaseOperations(BaseMogwaiTestCase):
                          '    mgmt = g.getManagementSystem();\n\n'
                          '    testmodel_myvertex = mgmt.getVertexLabel("myvertex")\n'
                          '    testmodel_myvertex.remove()\n'
-                         '\n    mgmt.commit()\n'
+                         '\n    mgmt.commit()\n\n'
                          '} catch (err) {\n'
                          '    mgmt.rollback()\n'
                          '    g.stopTransaction(FAILURE)\n'
@@ -100,7 +117,7 @@ class TestMigrationDatabaseOperations(BaseMogwaiTestCase):
                          '    mgmt = g.getManagementSystem();\n\n'
                          '    testmodel_myedge = mgmt.getEdgeLabel("myedge")\n'
                          '    testmodel_myedge.remove()\n'
-                         '\n    mgmt.commit()\n'
+                         '\n    mgmt.commit()\n\n'
                          '} catch (err) {\n'
                          '    mgmt.rollback()\n'
                          '    g.stopTransaction(FAILURE)\n'
@@ -116,7 +133,7 @@ class TestMigrationDatabaseOperations(BaseMogwaiTestCase):
                          '    mgmt = g.getManagementSystem();\n\n'
                          '    testmodel_myproperty = mgmt.getPropertyKey("myproperty")\n'
                          '    testmodel_myproperty.remove()\n'
-                         '\n    mgmt.commit()\n'
+                         '\n    mgmt.commit()\n\n'
                          '} catch (err) {\n'
                          '    mgmt.rollback()\n'
                          '    g.stopTransaction(FAILURE)\n'
@@ -133,7 +150,7 @@ class TestMigrationDatabaseOperations(BaseMogwaiTestCase):
                          '    mgmt = g.getManagementSystem();\n\n'
                          '    testmodel_mykey_myedge = mgmt.getGraphIndex("testmodel_mykey_myedge")\n'
                          '    testmodel_mykey_myedge.remove()\n'
-                         '\n    mgmt.commit()\n'
+                         '\n    mgmt.commit()\n\n'
                          '} catch (err) {\n'
                          '    mgmt.rollback()\n'
                          '    g.stopTransaction(FAILURE)\n'
@@ -141,4 +158,15 @@ class TestMigrationDatabaseOperations(BaseMogwaiTestCase):
                          '}\n', self.db._generate_script())
 
     def test_send_delete_signal(self):
-        pass
+        class SignalCatcher(object):
+            caught_signal = False
+            sender = None
+            kwargs = None
+
+        sc = SignalCatcher()
+        sig = signal('mogwai.migration.delete_vertex_testsignal')
+        sig.connect(partial(self._subscriber, sc), weak=False)
+
+        self.db.send_delete_signal('vertex', 'testsignal', mykwarg='test')
+        self.assertTrue(sc.caught_signal)
+        self.assertDictContainsKey(sc.kwargs, 'mykwarg')

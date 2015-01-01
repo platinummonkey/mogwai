@@ -148,20 +148,20 @@ duration = System.currentTimeMillis() - before
 
     def _generate_script(self):
         script = "\n".join(['    ' + s for s in self.cached_commands])
-        print(self.cached_commands)
-        print(script)
+        deferred_script = "\n".join(['    ' + s for s in self.deferred_cached_commands])
         return Template('''try {
     mgmt = g.getManagementSystem();
 
 $script
 
     mgmt.commit()
+$deferred_script
 } catch (err) {
     mgmt.rollback()
     g.stopTransaction(FAILURE)
     throw(err)
 }
-''').safe_substitute(script=script)
+''').safe_substitute(script=script, deferred_script=deferred_script)
 
     def execute(self, script, print_all_errors=True):
         script = self._generate_script()
