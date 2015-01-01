@@ -6,7 +6,7 @@ from mogwai.tests.base import BaseMogwaiTestCase, TestVertexModel, TestEdgeModel
 from mogwai.migrations.operation import DatabaseOperation
 
 
-@attr('unit', 'migration_tests', 'migration_tests_migration')
+@attr('unit', 'migration_tests', 'migration_tests_operation')
 class TestMigrationDatabaseOperations(BaseMogwaiTestCase):
     """ Test the state module in migrations """
 
