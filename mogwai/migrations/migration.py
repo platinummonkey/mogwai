@@ -1,21 +1,17 @@
 from __future__ import unicode_literals, print_function
 
-import sys
-import datetime
-from pytz import timezone, utc
 from blinker import signal
 from collections import OrderedDict
 from string import Template
 from mogwai.connection import execute_query
 from mogwai.constants import Configuration
-from mogwai.gremlin import GremlinMethod
-from mogwai.properties import String, Text
 from mogwai.models import Vertex, Edge
 from mogwai.exceptions import MogwaiMigrationException
 from models import MigrationRoot, Migration, PerformedMigration
 from state import MigrationCalculation
 from utils import get_loaded_models, ask_for_it_by_name
 from actions import *
+
 
 def _str(value):
         """ Formats a value with escaped strings """
@@ -263,7 +259,7 @@ $script
         self._command(cmd, index_key, "")
 
     def send_create_signal(self, etype, name, **kwargs):
-        pass
+        signal('mogwai.migration.create_{etype}_{name}'.format(etype=etype, name=name)).send(self, **kwargs)
 
     # Delete
     def delete_vertex_type(self, vertex_label, **kwargs):
@@ -288,7 +284,7 @@ $script
         self._command(remove_property_cmd, index_key, edge_key, var_assignment=False)
 
     def send_delete_signal(self, etype, name, **kwargs):
-        pass
+        signal('mogwai.migration.delete_{etype}_{name}'.format(etype=etype, name=name)).send(self, **kwargs)
 
     def _set_ttl(self, var_key, time_value, time_unit):
         cmd = "mgmt.setTTL($var, {time_value}, {time_unit}){make}".format(
