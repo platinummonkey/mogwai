@@ -55,7 +55,7 @@ class SchemaFileGeneratorMigration(BaseMigration):
         """ Writes the generated migration script to a file
 
         :param db: database operation instance
-        :type db: mogwai.migrations.migration.DatabaseOperation
+        :type db: mogwai.migrations.operation.DatabaseOperation
         """
         if not self.dry_run:
             with open(self.output_file, mode='wb') as f:

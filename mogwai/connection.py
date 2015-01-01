@@ -16,7 +16,6 @@ SOCKET_TYPE = None
 CONNECTION_TYPE = None
 CONNECTION_POOL_TYPE = None
 _connection_pool = None
-_graph_name = None
 metric_manager = MetricManager()
 __cached_spec = None
 Configuration = __Configuration()

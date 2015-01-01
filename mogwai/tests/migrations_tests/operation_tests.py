@@ -3,7 +3,7 @@ from nose.plugins.attrib import attr
 from blinker import signal
 from functools import partial
 from mogwai.tests.base import BaseMogwaiTestCase, TestVertexModel, TestEdgeModel
-from mogwai.migrations.migration import DatabaseOperation
+from mogwai.migrations.operation import DatabaseOperation
 
 
 @attr('unit', 'migration_tests', 'migration_tests_migration')
