@@ -9,13 +9,18 @@ from mogwai.migrations.migration import DatabaseOperation
 class TestMigrationDatabaseOperations(BaseMogwaiTestCase):
     """ Test the state module in migrations """
 
+    db = None
+
+    def setUp(self):
+        self.db = DatabaseOperation("testmodel", dry_run=True)
+
     def test_create_vertex_type(self):
-        db = DatabaseOperation("testmodel", dry_run=True)
-        db.create_vertex_type('myvertex', set_ttl=True, ttl_time_value=1, ttl_time_unit=db.TimeUnit.HOURS)
-        self.assertEqual(2, len(db.cached_commands))
-        self.assertEqual('testmodel_myvertex = mgmt.makeVertexLabel("myvertex").make()', db.cached_commands[0])
-        self.assertEqual('mgmt.setTTL(testmodel_myvertex, 1, TimeUnit.HOURS).make()', db.cached_commands[1])
-        self.assertEqual(('testmodel_myvertex', ('testmodel', 'myvertex', '')), db.cached_vars.items()[0])
+        self.db.create_vertex_type('myvertex', set_ttl=True, ttl_time_value=1,
+                                   ttl_time_unit=DatabaseOperation.TimeUnit.HOURS)
+        self.assertEqual(2, len(self.db.cached_commands))
+        self.assertEqual('testmodel_myvertex = mgmt.makeVertexLabel("myvertex").make()', self.db.cached_commands[0])
+        self.assertEqual('mgmt.setTTL(testmodel_myvertex, 1, TimeUnit.HOURS).make()', self.db.cached_commands[1])
+        self.assertEqual(('testmodel_myvertex', ('testmodel', 'myvertex', '')), self.db.cached_vars.items()[0])
         self.assertEqual('try {\n'
                          '    mgmt = g.getManagementSystem();\n\n'
                          '    testmodel_myvertex = mgmt.makeVertexLabel("myvertex").make()\n'
@@ -24,15 +29,16 @@ class TestMigrationDatabaseOperations(BaseMogwaiTestCase):
                          '} catch (err) {\n'
                          '    g.stopTransaction(FAILURE)\n'
                          '    throw(err)\n'
-                         '}\n', db._generate_script())
+                         '}\n', self.db._generate_script())
 
     def test_create_edge_type(self):
-        db = DatabaseOperation("testmodel", dry_run=True)
-        db.create_edge_type('myedge', set_ttl=True, ttl_time_value=1, ttl_time_unit=db.TimeUnit.HOURS)
-        self.assertEqual(2, len(db.cached_commands))
-        self.assertEqual('testmodel_myedge = mgmt.makeEdgeLabel("myedge").multiplicity(Multiplicity.MULTI).make()', db.cached_commands[0])
-        self.assertEqual('mgmt.setTTL(testmodel_myedge, 1, TimeUnit.HOURS).make()', db.cached_commands[1])
-        self.assertEqual(('testmodel_myedge', ('testmodel', 'myedge', '')), db.cached_vars.items()[0])
+        self.db.create_edge_type('myedge', set_ttl=True, ttl_time_value=1,
+                                 ttl_time_unit=DatabaseOperation.TimeUnit.HOURS)
+        self.assertEqual(2, len(self.db.cached_commands))
+        self.assertEqual('testmodel_myedge = mgmt.makeEdgeLabel("myedge").multiplicity(Multiplicity.MULTI).make()',
+                         self.db.cached_commands[0])
+        self.assertEqual('mgmt.setTTL(testmodel_myedge, 1, TimeUnit.HOURS).make()', self.db.cached_commands[1])
+        self.assertEqual(('testmodel_myedge', ('testmodel', 'myedge', '')), self.db.cached_vars.items()[0])
         self.assertEqual('try {\n'
                          '    mgmt = g.getManagementSystem();\n\n'
                          '    testmodel_myedge = mgmt.makeEdgeLabel("myedge").multiplicity(Multiplicity.MULTI).make()\n'
@@ -41,4 +47,78 @@ class TestMigrationDatabaseOperations(BaseMogwaiTestCase):
                          '} catch (err) {\n'
                          '    g.stopTransaction(FAILURE)\n'
                          '    throw(err)\n'
-                         '}\n', db._generate_script())
+                         '}\n', self.db._generate_script())
+
+    def test_create_property_key(self):
+        self.db.create_property_key("myproperty", data_type="String")
+        self.assertEqual(1, len(self.db.cached_commands))
+        self.assertEqual('testmodel_myproperty = mgmt.makePropertyKey("myproperty").'
+                         'dataType(String.class).cardinality(Cardinality.SINGLE).make()',
+                         self.db.cached_commands[0])
+        self.assertEqual(('testmodel_myproperty', ('testmodel', 'myproperty', '')),
+                         self.db.cached_vars.items()[0])
+        self.assertEqual('try {\n'
+                         '    mgmt = g.getManagementSystem();\n\n'
+                         '    testmodel_myproperty = mgmt.makePropertyKey("myproperty").dataType(String.class).cardinality(Cardinality.SINGLE).make()\n'
+                         '\n    mgmt.commit()\n'
+                         '} catch (err) {\n'
+                         '    g.stopTransaction(FAILURE)\n'
+                         '    throw(err)\n'
+                         '}\n', self.db._generate_script())
+
+    def test_create_composite_index(self):
+        pass
+
+    def test_send_create_signal(self):
+        pass
+
+    def test_delete_vertex_type(self):
+        self.db.delete_vertex_type("myvertex")
+        self.assertEqual('testmodel_myvertex = mgmt.getVertexLabel("myvertex")', self.db.cached_commands[0])
+        self.assertEqual('testmodel_myvertex.remove()', self.db.cached_commands[1])
+        self.assertEqual(('testmodel_myvertex', ('testmodel', 'myvertex', '')), self.db.cached_vars.items()[0])
+        self.assertEqual('try {\n'
+                         '    mgmt = g.getManagementSystem();\n\n'
+                         '    testmodel_myvertex = mgmt.getVertexLabel("myvertex")\n'
+                         '    testmodel_myvertex.remove()\n'
+                         '\n    mgmt.commit()\n'
+                         '} catch (err) {\n'
+                         '    g.stopTransaction(FAILURE)\n'
+                         '    throw(err)\n'
+                         '}\n', self.db._generate_script())
+
+    def test_delete_edge_type(self):
+        self.db.delete_edge_type("myedge")
+        self.assertEqual('testmodel_myedge = mgmt.getEdgeLabel("myedge")', self.db.cached_commands[0])
+        self.assertEqual('testmodel_myedge.remove()', self.db.cached_commands[1])
+        self.assertEqual(('testmodel_myedge', ('testmodel', 'myedge', '')), self.db.cached_vars.items()[0])
+        self.assertEqual('try {\n'
+                         '    mgmt = g.getManagementSystem();\n\n'
+                         '    testmodel_myedge = mgmt.getEdgeLabel("myedge")\n'
+                         '    testmodel_myedge.remove()\n'
+                         '\n    mgmt.commit()\n'
+                         '} catch (err) {\n'
+                         '    g.stopTransaction(FAILURE)\n'
+                         '    throw(err)\n'
+                         '}\n', self.db._generate_script())
+
+    def test_delete_property_key(self):
+        self.db.delete_property_key("myproperty")
+        self.assertEqual('testmodel_myproperty = mgmt.getPropertyKey("myproperty")', self.db.cached_commands[0])
+        self.assertEqual('testmodel_myproperty.remove()', self.db.cached_commands[1])
+        self.assertEqual(('testmodel_myproperty', ('testmodel', 'myproperty', '')), self.db.cached_vars.items()[0])
+        self.assertEqual('try {\n'
+                         '    mgmt = g.getManagementSystem();\n\n'
+                         '    testmodel_myproperty = mgmt.getPropertyKey("myproperty")\n'
+                         '    testmodel_myproperty.remove()\n'
+                         '\n    mgmt.commit()\n'
+                         '} catch (err) {\n'
+                         '    g.stopTransaction(FAILURE)\n'
+                         '    throw(err)\n'
+                         '}\n', self.db._generate_script())
+
+    def test_delete_composite_index(self):
+        pass
+
+    def test_send_delete_signal(self):
+        pass

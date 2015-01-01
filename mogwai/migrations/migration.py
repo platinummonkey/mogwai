@@ -31,6 +31,8 @@ class DatabaseOperation(object):
     _rollback_management_system = "mgmt.rollback()"
 
     _get_property_key = "mgmt.getPropertyKey({key})"
+    _get_vertex_label = "mgmt.getVertexLabel({key})"
+    _get_edge_label = "mgmt.getEdgeLabel({key})"
     _get_relation_type = "mgmt.getRelationType({key})"
     _get_relation_types = "mgmt.getRelationTypes({element_label_type}.class)"
     _get_relation_index = "mgmt.getRelationIndex({key}, {edge_key})"
@@ -140,7 +142,7 @@ duration = System.currentTimeMillis() - before
             edge_key = "_" + edge_key
         composite_key = "{}_{}{}".format(self.model_name, index_key, edge_key)
         if composite_key not in self.cached_vars:
-            self.cached_vars[composite_key] = (self.model_name, index_key, edge_key)
+            self.cached_vars[composite_key] = (self.model_name, index_key, edge_key.lstrip('_'))
         return composite_key
 
     def _get_info_for_var(self, var_key):
@@ -233,13 +235,14 @@ $script
             data_type = DatabaseOperation.DataTypes.OBJECT
         if cardinality is None:
             cardinality = DatabaseOperation.Cardinality.SINGLE
-        prop = self._make_property_key.format(key=property_name)
-        datatype = self._set_dataType.format(data_type=data_type)
+        prop = self._make_property_key.format(key=_str(property_name))
+        data_type = self._set_dataType.format(data_type=data_type)
         cardinality = self._set_cardinality.format(cardinality=cardinality)
-        cmd = "{prop}{data_type}{cardinality}".format(
+        cmd = "{prop}{data_type}{cardinality}{make}".format(
             prop=prop,
             data_type=data_type,
-            cardinality=cardinality
+            cardinality=cardinality,
+            make=self._make
         )
         self._command(cmd, property_name, "")
 
@@ -263,17 +266,17 @@ $script
 
     # Delete
     def delete_vertex_type(self, vertex_label, **kwargs):
-        self._command(self._get_graph_index.format(key=vertex_label), vertex_label, "")
+        self._command(self._get_vertex_label.format(key=_str(vertex_label)), vertex_label, "")
         remove_property_cmd = "$var.remove()"
         self._command(remove_property_cmd, vertex_label, "", var_assignment=False)
 
     def delete_edge_type(self, edge_label, **kwargs):
-        self._command(self._get_relation_type.format(key=edge_label), edge_label, "")
+        self._command(self._get_edge_label.format(key=_str(edge_label)), edge_label, "")
         remove_property_cmd = "$var.remove()"
         self._command(remove_property_cmd, edge_label, "", var_assignment=False)
 
     def delete_property_key(self, property_key, **kwargs):
-        self._command(self._get_property_key.format(key=property_key), property_key, "")
+        self._command(self._get_property_key.format(key=_str(property_key)), property_key, "")
         remove_property_cmd = "$var.remove()"
         self._command(remove_property_cmd, property_key, "", var_assignment=False)
 
