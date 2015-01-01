@@ -46,6 +46,10 @@ class Configuration(object):
     backend_database = BackendDatabases.CASSANDRA  # used to determine the method for index job repair
     __database_properties_file = None
     migration_method = MigrationMethod.RUN_BACKEND_REPAIR
+    __loaded_models = []
+
+    def add_model_to_space(self, model):
+        self.__loaded_models.append(model)
 
     @property
     def database_properties_file(self):

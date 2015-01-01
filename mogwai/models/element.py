@@ -8,7 +8,7 @@ from mogwai import properties
 from mogwai.exceptions import MogwaiException, SaveStrategyException, \
     ModelException, ElementDefinitionException
 from mogwai.gremlin import BaseGremlinMethod
-from mogwai.connection import _add_model_to_space
+from mogwai.connection import Configuration
 
 # import for backward compatibility
 from mogwai.constants import BOTH, EQUAL, GREATER_THAN, GREATER_THAN_EQUAL, \
@@ -517,7 +517,7 @@ class ElementMetaClass(type):
         for name, method in gremlin_methods.items():
             method.configure_method(klass, name, gremlin_path)
 
-        _add_model_to_space(klass)
+        Configuration.add_model_to_space(klass)
         return klass
 
 

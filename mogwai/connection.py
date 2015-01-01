@@ -7,7 +7,7 @@ from rexpro.exceptions import RexProConnectionException, RexProScriptException
 
 from mogwai.exceptions import MogwaiConnectionError, MogwaiQueryError
 from mogwai.metrics.manager import MetricManager
-from mogwai.constants import Configuration
+from mogwai.constants import Configuration as __Configuration
 
 logger = logging.getLogger(__name__)
 
@@ -18,9 +18,8 @@ CONNECTION_POOL_TYPE = None
 _connection_pool = None
 _graph_name = None
 metric_manager = MetricManager()
-_loaded_models = []
 __cached_spec = None
-configuration = Configuration()
+Configuration = __Configuration()
 
 
 @metric_manager.time_calls
@@ -103,8 +102,3 @@ def setup(host, graph_name='graph', graph_obj_name='g', username='', password=''
         raise MogwaiConnectionError("Must Specify at least one host or list of hosts: host: {}, graph_name: {}".format(
             host, graph_name)
         )
-
-
-def _add_model_to_space(model):
-    global _loaded_models
-    _loaded_models.append(model)

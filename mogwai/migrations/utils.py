@@ -1,11 +1,11 @@
 from mogwai.exceptions import MogwaiMigrationException
 from mogwai.tools import import_string, ImportStringError
 from mogwai._compat import print_
+from mogwai.connection import Configuration
 
 
 def get_loaded_models():
-    from mogwai.connection import _loaded_models
-    return [model for model in _loaded_models
+    return [model for model in Configuration.__loaded_models
             if (not model.__abstract__ and model.__name__ not in ('Element', 'Vertex', 'Edge'))]
 
 
