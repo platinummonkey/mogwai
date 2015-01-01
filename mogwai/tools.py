@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 import sys
 from mogwai._compat import reraise, string_types, PY2
 from factory import base
-import factory as factory
 
 
 class ImportStringError(ImportError):

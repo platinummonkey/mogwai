@@ -2,12 +2,12 @@ from __future__ import unicode_literals
 from mogwai._compat import string_types, array_types
 import logging
 from re import compile
-from rexpro.connection import RexProConnection
 from rexpro.utils import get_rexpro
 from rexpro.exceptions import RexProConnectionException, RexProScriptException
 
 from mogwai.exceptions import MogwaiConnectionError, MogwaiQueryError
 from mogwai.metrics.manager import MetricManager
+from mogwai.constants import Configuration
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +20,7 @@ _graph_name = None
 metric_manager = MetricManager()
 _loaded_models = []
 __cached_spec = None
+configuration = Configuration()
 
 
 @metric_manager.time_calls

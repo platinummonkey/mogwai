@@ -11,7 +11,7 @@ class Migration(SchemaMigration):
         #("otherapp", "0001_initial"),
     )
 
-    def forwards(self, ogm):
+    def forwards(self, db):
         # Adding Vertex Model 'Person'
         db.create_vertex_type(
             'person', (
@@ -37,7 +37,7 @@ class Migration(SchemaMigration):
         )
         db.send_create_signal('edge', 'owns_object')
 
-    def backwards(self, ogm):
+    def backwards(self, db):
 
         # Deleting Edge model OwnsObject
         db.delete_edge_type('owns_object')
@@ -51,16 +51,25 @@ class Migration(SchemaMigration):
     models = {
         'models.Trinket': {
             '__type': 'vertex',
-            'name': ('mogwai.properties.String', [], {'required': 'True', 'max_length': '1024'})
+            'properties': {
+                'name': ('mogwai.properties.String', [], {'required': 'True', 'max_length': '1024'})
+            },
+            'composite_indices': {}
         },
         'models.Person': {
             '__type': 'vertex',
-            'name': ('mogwai.properties.String', [], {'required': 'True', 'max_length': '512'}),
-            'email': ('mogwai.properties.Email', [], {'required': 'True'})
+            'properties': {
+                'name': ('mogwai.properties.String', [], {'required': 'True', 'max_length': '512'}),
+                'email': ('mogwai.properties.Email', [], {'required': 'True'})
+            },
+            'composite_indices': {}
         },
         'models.OwnsObject': {
             '_type': 'edge',
-            'since': ('mogwai.properties.DateTime', [], {'required': 'True'})
+            'properties': {
+                'since': ('mogwai.properties.DateTime', [], {'required': 'True'})
+            },
+            'composite_indices': {}
         }
     }
 
