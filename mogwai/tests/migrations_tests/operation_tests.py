@@ -4,6 +4,7 @@ from blinker import signal
 from functools import partial
 from mogwai.tests.base import BaseMogwaiTestCase, TestVertexModel, TestEdgeModel
 from mogwai.migrations.operation import DatabaseOperation
+from mogwai.index.index import CompositeIndex
 
 
 @attr('unit', 'migration_tests', 'migration_tests_operation')
@@ -71,7 +72,23 @@ class TestMigrationDatabaseOperations(BaseMogwaiTestCase):
                          '}\n', self.db._generate_script())
 
     def test_create_composite_index(self):
-        pass
+        composite_index = CompositeIndex("mykey", "search")
+        self.db.create_composite_index("mykey", "myedge", "Vertex", indexer=composite_index.index_ext,
+                                       composite_index=composite_index)
+        self.assertEqual(1, len(self.db.cached_commands))
+        self.assertEqual('testmodel_mykey_myedge = mgmt.buildIndex(mykey, Vertex.class)..buildMixedIndex("search")',
+                         self.db.cached_commands[0])
+        self.assertEqual(('testmodel_mykey_myedge', ('testmodel', 'mykey', 'myedge')),
+                         self.db.cached_vars.items()[0])
+        self.assertEqual('try {\n'
+                         '    mgmt = g.getManagementSystem();\n\n'
+                         '    testmodel_mykey_myedge = mgmt.buildIndex(mykey, Vertex.class)..buildMixedIndex("search")\n'
+                         '\n    mgmt.commit()\n\n'
+                         '} catch (err) {\n'
+                         '    mgmt.rollback()\n'
+                         '    g.stopTransaction(FAILURE)\n'
+                         '    throw(err)\n'
+                         '}\n', self.db._generate_script())
 
     def _subscriber(self, catcher, sender, **kwargs):
         catcher.caught_signal = True
@@ -141,7 +158,8 @@ class TestMigrationDatabaseOperations(BaseMogwaiTestCase):
                          '}\n', self.db._generate_script())
 
     def test_delete_composite_index(self):
-        self.db.delete_composite_index("mykey", "myedge")
+        composite_index = CompositeIndex("mykey", "search")
+        self.db.delete_composite_index("mykey", "myedge", composite_index=composite_index)
         self.assertEqual('testmodel_mykey_myedge = mgmt.getGraphIndex("testmodel_mykey_myedge")',
                          self.db.cached_commands[0])
         self.assertEqual('testmodel_mykey_myedge.remove()', self.db.cached_commands[1])

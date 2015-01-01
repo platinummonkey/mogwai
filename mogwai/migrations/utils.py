@@ -44,7 +44,20 @@ class BaseMigration(object):
 
 
 class SchemaMigration(BaseMigration):
-    pass
+
+    def execute(self, db):
+        """ Writes the generated migration script to a file
+
+        :param db: database operation instance
+        :type db: mogwai.migrations.operation.DatabaseOperation
+        """
+        if not self.dry_run:
+            db.execute(db._generate_script())
+        else:  # pragma: no cover
+            output = '-'*80
+            output = output + '\nMigration for {} to be executed\n'.format(self.complete_apps)
+            output = output + '{}\n'.format(db._generate_script()) + '-'*80
+            print_(output)
 
 
 class SchemaFileGeneratorMigration(BaseMigration):

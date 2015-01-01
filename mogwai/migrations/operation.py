@@ -147,8 +147,8 @@ duration = System.currentTimeMillis() - before
         return self.cached_vars[var_key]
 
     def _generate_script(self):
-        script = "\n".join(['    ' + s for s in self.cached_commands])
-        deferred_script = "\n".join(['    ' + s for s in self.deferred_cached_commands])
+        script = "\n".join(['    ' + s for s in self.cached_commands if s not in ('', None)])
+        deferred_script = "\n".join(['    ' + s for s in self.deferred_cached_commands if s not in ('', None)])
         return Template('''try {
     mgmt = g.getManagementSystem();
 
@@ -197,6 +197,15 @@ $deferred_script
         )
         self.cached_commands.append(cmd)
 
+    def _deferred_command(self, cmd, index_key, edge_key, var_assignment=True):
+        if var_assignment:
+            cmd = self._var_assignment + cmd
+
+        cmd = Template(cmd).safe_substitute(var=self._get_or_create_var(
+            index_key=index_key, edge_key=edge_key)
+        )
+        self.deferred_cached_commands.append(cmd)
+
     # Create
     def create_vertex_type(self, vertex_label, set_ttl=False, ttl_time_value=1, ttl_time_unit=None, **kwargs):
         label = self._make_vertex_label.format(key=_str(vertex_label))
@@ -243,12 +252,27 @@ $deferred_script
         )
         self._command(cmd, property_name, "")
 
-    def create_composite_index(self, index_key, element_type, indexer=None, *args, **kwargs):
+    def create_composite_index(self, index_key, edge_key, element_type, indexer=None, composite_index=None, **kwargs):
+        """ Create a composite index
+
+        :param index_key: reference key
+        :type index_key: basestring
+        :param element_type: is this a vertex or edge?
+        :type element_type: basestring
+        :param indexer: which indexing backend to use: ie. titan vs. lucene vs elasticsearch ...
+        :type indexer: basestring
+        :param composite_index: Composite index specification
+        :type composite_index: mogwai.index.index.CompositeIndex
+        :return:
+        """
         build_index = self._build_index.format(key=index_key, element_type=element_type)
         if indexer is not None:
             indexer = _str(indexer)
         build_mixed_index = self._build_mixed_index.format(key=indexer)
-        cmd_set = "".join(args)
+        cmd_set = composite_index.generate()
+        if not cmd_set.startswith('.'):  # pragma: no cover
+            # ensure it's dot prefixed.
+            cmd_set = '.' + cmd_set
 
         cmd = "{build_index}{cmd_set}{build_mixed_index}".format(
             build_index=build_index,
@@ -256,7 +280,11 @@ $deferred_script
             build_mixed_index=build_mixed_index
         )
 
-        self._command(cmd, index_key, "")
+        self._command(cmd, index_key, edge_key)
+
+        # deferred command
+        self._deferred_command(composite_index.generate_deferred(), index_key, edge_key,
+                               var_assignment=composite_index.var_assignment)
 
     def send_create_signal(self, etype, name, **kwargs):
         signal('mogwai.migration.create_{etype}_{name}'.format(etype=etype, name=name)).send(self, **kwargs)
@@ -277,11 +305,24 @@ $deferred_script
         remove_property_cmd = "$var.remove()"
         self._command(remove_property_cmd, property_key, "", var_assignment=False)
 
-    def delete_composite_index(self, index_key, edge_key, **kwargs):
+    def delete_composite_index(self, index_key, edge_key, composite_index=None, **kwargs):
+        """ Delete a composite index
+
+        :param index_key: reference key
+        :type index_key: basestring
+        :param edge_key: reference edge key
+        :type edge_key: basestring
+        :param composite_index: Composite index specification
+        :type composite_index: mogwai.index.index.CompositeIndex
+        :return:
+        """
         composite_key = self._get_or_create_var(index_key, edge_key)
         self._command(self._get_graph_index.format(key=_str(composite_key)), index_key, edge_key)
         remove_property_cmd = "$var.remove()"
         self._command(remove_property_cmd, index_key, edge_key, var_assignment=False)
+
+        self._deferred_command(composite_index.generate_deferred_delete(), index_key, edge_key,
+                               var_assignment=composite_index.var_assignment)
 
     def send_delete_signal(self, etype, name, **kwargs):
         signal('mogwai.migration.delete_{etype}_{name}'.format(etype=etype, name=name)).send(self, **kwargs)

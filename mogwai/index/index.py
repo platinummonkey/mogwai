@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from base import BaseIndexSpecification
 
 
@@ -24,8 +25,15 @@ class CompositeIndex(BaseIndexSpecification):
     """ A composite index composing of additional indices or parameters """
 
     _composite_index = []
+    var_assignment = False
 
     #TODO: finish these
 
-    def get_specification(self):
-        pass
+    def generate(self):
+        return ''
+
+    def generate_deferred(self):
+        return ''
+
+    def generate_deferred_delete(self):
+        return ''
