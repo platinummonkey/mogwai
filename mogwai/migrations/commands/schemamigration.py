@@ -26,12 +26,18 @@ class SchemaMigrationCommand(BaseCommand):
         if filepath is None:
             mpath = os.path.join(os.path.abspath(self.app.replace('.', '/')), 'migrations')
             if not os.path.exists(mpath):
-                os.makedirs(mpath)
+                os.mkdir(mpath)
+            init_file = os.path.join(mpath, '__init__.py')
+            if not os.path.exists(init_file):
+                open(init_file, 'w').close()  # touch the file
             return os.path.join(mpath, filename)
         else:
             filepath = os.path.abspath(filepath)
             if not os.path.exists(filepath):
-                os.makedirs(filepath)
+                os.mkdir(filepath)
+            init_file = os.path.join(filepath, '__init__.py')
+            if not os.path.exists(init_file):
+                open(init_file, 'w').close()  # touch the file
             return os.path.join(filepath, filename)
 
     def handle(self, app=None, initial=False, empty=False, auto=True, dry_run=False, *args, **kwargs):
@@ -39,7 +45,8 @@ class SchemaMigrationCommand(BaseCommand):
             filename = self.check_output_path(filename='blank_migration.py')
             with open(filename, 'wb') as f:
                 f.write(Template(MIGRATION_TEMPLATE).safe_substitute(forwards='', backwards='',
-                                                                     frozen_models={}, complete_apps=[self.app]))
+                                                                     frozen_models={},
+                                                                     depends_on=[]))
             print_("Wrote blank migration file to {}".format(filename))
             return
 
@@ -81,12 +88,11 @@ $backwards
 
    models = $frozen_models
 
-   complete_apps = $complete_apps
-
+   depends_on = $depends_on
 
 '''
 
 
 if __name__ == '__main__':
-    c = SchemaMirationCommand()
+    c = SchemaMigrationCommand()
     c()

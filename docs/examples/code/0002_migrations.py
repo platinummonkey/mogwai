@@ -1,17 +1,17 @@
 from __future__ import unicode_literals
-import datetime
-from mogwai.migrations import db, SchemaMigration
-from mogwai.connection import _loaded_models
+from mogwai.migrations.migrators import SchemaMigration
 
 
 class Migration(SchemaMigration):
 
     # depends on this any other migration files?
     depends_on = (
-        #("otherapp", "0001_initial"),
+        # FUTURE: ("otherapp", "0001_initial"),
+        # CURRENT:
+        '0001_initial'
     )
 
-    def forwards(self, ogm):
+    def forwards(self, db):
         # Adding property 'phone' to 'Person'
         db.add_property(
             'person', 'person_phone',
@@ -19,7 +19,7 @@ class Migration(SchemaMigration):
             keep_default=False,
         )
 
-    def backwards(self, ogm):
+    def backwards(self, db):
 
         # Delete property 'phone' from 'Person'
         db.delete_property(
@@ -43,4 +43,3 @@ class Migration(SchemaMigration):
         }
     }
 
-    complete_apps = ['models']

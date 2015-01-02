@@ -1,3 +1,4 @@
+import os
 from mogwai.exceptions import MogwaiMigrationException
 from mogwai.tools import import_string, ImportStringError
 from mogwai.connection import Configuration
@@ -5,6 +6,35 @@ from mogwai.connection import Configuration
 
 def get_import_path_for_class(klass):
     return klass.__module__ + '.' + klass.__name__
+
+
+def get_filepath_for_module(module):
+    """ Converts python module dot-syntax into an absolute filepath
+
+    :param module: module
+    :type module: str
+    :return: absolute filepath
+    :rtype: str
+    """
+    return os.path.abspath(module.replace('.', '/'))
+
+
+def get_files_for_path(filepath, pattern):
+    filenames = []
+    for f in os.listdir(filepath):
+        if pattern.match(os.path.basename(f)):
+            full_path = os.path.join(filepath, f)
+            # If it's a .pyc file, only append if the .py isn't already around
+            if f.endswith(".pyc") and (os.path.isfile(full_path[:-1])):
+                continue
+            # If it's a module directory, only append if it contains __init__.py[c].
+            if os.path.isdir(full_path):
+                if not (os.path.isfile(os.path.join(full_path, '__init__.py')) or
+                            os.path.isfile(os.path.join(full_path, '__init__.pyc'))):
+                    continue
+            filenames.append(f)
+    filenames.sort()
+    return filenames
 
 
 def get_loaded_models():

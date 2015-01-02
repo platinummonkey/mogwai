@@ -5,7 +5,6 @@ from mogwai.exceptions import MogwaiMigrationException
 class BaseMigration(object):
 
     models = {}
-    complete_apps = []
     depends_on = ()
 
     def forwards(self, db):  # pragma: no cover
