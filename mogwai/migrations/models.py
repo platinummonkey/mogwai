@@ -1,24 +1,28 @@
 from mogwai.models import Vertex, Edge
 from mogwai.properties import String, DateTime
 from mogwai.relationships import Relationship
+from mogwai.gremlin import GremlinMethod
 import datetime
 from pytz import utc
 from functools import partial
 
 
 class Migration(Vertex):
-    app_name = String(max_length=255, required=True)
-    migration = String(max_length=255, required=True)
+    element_type = 'mogwai_migration'
+    package_name = String(max_length=255, required=True)
+    migration_name = String(max_length=255, required=True)
     applied = DateTime(partial(datetime.datetime.now, tz=utc), required=True)
 
-    @classmethod
-    def for_app(cls, app_name):
-        return cls.find_by_value('app_name', app_name)
+    _find_for_migration = GremlinMethod(method_name='find_for_migration', classmethod=True)
 
     @classmethod
-    def for_migration(cls, migration):
+    def for_package(cls, package_name):
+        return cls.find_by_value('package_name', package_name)
+
+    @classmethod
+    def for_migration(cls, package, migration_name):
         try:
-            return cls.find_by_value('migration', migration)
+            return
         except cls.DoesNotExist:
             return cls.create(app_name=migration.app_label(),
                               migration=migration.name())
@@ -47,9 +51,6 @@ class PerformedMigration(Edge):
     label = 'performed_migration'
 
 
-class MigrationRoot(Vertex):
-    element_type = 'migration_root'
+class MigrationDependency(Edge):
 
-    graph_name = String(required=True, default='graph')
-
-    migrations = Relationship(PerformedMigration, Migration)
+    label = 'migration_depends_on'

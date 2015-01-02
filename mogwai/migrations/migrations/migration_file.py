@@ -113,3 +113,6 @@ class MigrationFile(object):
 
     def get_model_by_label(self, label):
         return self.models_by_label[label]
+
+    def get_database_record_for_migration(self):
+        record_uid = "{}.{}".format(self.package_migrations.module, )
