@@ -28,18 +28,21 @@ class Migration(SchemaMigration):
 
     models = {
         'models.Trinket': {
-            '__type': 'vertex',
-            'name': ('mogwai.properties.String', [], {'required': 'True', 'max_length': '1024'})
+            'type': 'vertex',
+            'label': 'trinket',
+            'name': ('mogwai.properties.String', {'required': 'True', 'max_length': '1024'})
         },
         'models.Person': {
-            '__type': 'vertex',
-            'name': ('mogwai.properties.String', [], {'required': 'True', 'max_length': '512'}),
-            'email': ('mogwai.properties.Email', [], {'required': 'True'}),
-            'phone': ('mogwai.properties.String', [], {'required': 'False', 'max_length': '15'})
+            'type': 'vertex',
+            'label': 'person',
+            'name': ('mogwai.properties.String', {'required': 'True', 'max_length': '512'}),
+            'email': ('mogwai.properties.Email', {'required': 'True'}),
+            'phone': ('mogwai.properties.String', {'required': 'False', 'max_length': '15'})
         },
         'models.OwnsObject': {
-            '_type': 'edge',
-            'since': ('mogwai.properties.DateTime', [], {'required': 'True'})
+            'type': 'edge',
+            'label': 'owns',
+            'since': ('mogwai.properties.DateTime', {'required': 'True'})
         }
     }
 

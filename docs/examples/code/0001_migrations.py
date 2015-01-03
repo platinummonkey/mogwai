@@ -46,27 +46,27 @@ class Migration(SchemaMigration):
 
     models = {
         'models.Trinket': {
-            '__type': 'vertex',
+            'type': 'vertex',
             'label': 'trinket',
             'properties': {
-                'name': ('mogwai.properties.String', [], {'required': 'True', 'max_length': '1024'})
+                'name': ('mogwai.properties.String', 'trinket_name', {'required': 'True', 'max_length': '1024'})
             },
             'composite_indices': {}
         },
         'models.Person': {
-            '__type': 'vertex',
+            'type': 'vertex',
             'label': 'person',
             'properties': {
-                'name': ('mogwai.properties.String', [], {'required': 'True', 'max_length': '512'}),
-                'email': ('mogwai.properties.Email', [], {'required': 'True'})
+                'name': ('mogwai.properties.String', 'person_name', {'required': 'True', 'max_length': '512'}),
+                'email': ('mogwai.properties.Email', 'person_email', {'required': 'True'})
             },
             'composite_indices': {}
         },
         'models.OwnsObject': {
-            '_type': 'edge',
+            'type': 'edge',
             'label': 'owns',
             'properties': {
-                'since': ('mogwai.properties.DateTime', [], {'required': 'True'})
+                'since': ('mogwai.properties.DateTime', 'owns_since', {'required': 'True'})
             },
             'composite_indices': {}
         }

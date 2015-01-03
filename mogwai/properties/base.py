@@ -127,7 +127,7 @@ class GraphProperty(object):
     instance_counter = 0
 
     def __init__(self, description=None, index=None, db_field=None, choices=None, default=None, required=False,
-                 save_strategy=SaveAlways, db_field_prefix=''):
+                 save_strategy=SaveAlways, db_field_prefix='', **kwargs):
         """
         Initialize this graph property with the given information.
 
@@ -174,7 +174,9 @@ class GraphProperty(object):
         """
 
         spec = {
-            'db_field': self.db_field_name,
+            'db_field': self.db_field,
+            'db_field_name': self.db_field_name,
+            'db_field_prefix': self.db_field_prefix,
             'default': self.get_default(),
             'required': self.required,
             'property_name': self.property_name,

@@ -88,9 +88,16 @@ class MigrationFile(object):
 
     def regenerate_models(self):
         for model_ref, model_def in self.migration.models.items():
-            element_type = model_def.get('__type')
+            element_type = model_def.get('type')
             label = model_def.get('label')
-            properties = model_def.get('properties', {})
+            properties = OrderedDict()
+            for prop_name, prop_def in model_def.get('properties', {}).items():
+                prop_klass = import_string(prop_def[0])
+                properties[prop_name] = prop_klass(**prop_def[2])
+                properties[prop_name].set_property_name(prop_def[1])
+                if not properties[prop_name].has_db_field_prefix:
+                    properties[prop_name].set_db_field_prefix(label)
+
             composite_indices = model_def.get('composite_indices', {})
             if element_type.lower() == 'vertex':
                 model = MockVertex(label=label, props=properties, composite_indices=composite_indices)
@@ -114,5 +121,5 @@ class MigrationFile(object):
     def get_model_by_label(self, label):
         return self.models_by_label[label]
 
-    def get_database_record_for_migration(self):
-        record_uid = "{}.{}".format(self.package_migrations.module, )
+    #def get_database_record_for_migration(self):
+    #    record_uid = "{}.{}".format(self.package_migrations.module, )
