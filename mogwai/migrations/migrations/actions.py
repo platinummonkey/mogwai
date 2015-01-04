@@ -46,26 +46,6 @@ class Action(object):
         """Returns the string to print on the console, e.g. ' + Added field foo'"""
         raise NotImplementedError
 
-    @classmethod
-    def triples_to_defs(cls, props):
-        """Turn the (class, args, kwargs) format into a string"""
-        for pname, prop in props.items():
-            print("triples_to_defs: {}, {}".format(pname, prop))
-            props[pname] = cls.triple_to_def(prop)
-        return props
-
-    @classmethod
-    def triple_to_def(cls, prop):
-        """Turns a single property into a definition.
-
-        :type prop: mogwai.properties.base.GraphProperty
-        """
-        print(prop)
-        return "self.gf(%r)(%s)" % (
-            prop.db_field_name,  # Field full path
-            ", ".join([])  # prop + ["%s=%s" % (kwd, val) for kwd, val in triple[2].items()]),  # args and kwds
-        )
-
 
 class AddModel(Action):
     """

@@ -48,16 +48,19 @@ class MigrationCalculation(object):
         :type current_state: mogwai.models.element.Element | MockVertex | MockEdge
         :return:
         """
-        return (MigrationCalculation.element_label_migrations(None, None),
-                MigrationCalculation.composite_indices({}, {}),
+        return (MigrationCalculation.element_label_migrations(previous_state.get_label(), current_state.get_label()),
+                MigrationCalculation.composite_indices_migrations({}, {}),
                 MigrationCalculation.property_migrations(previous_state._properties, current_state._properties))
 
     @classmethod
-    def element_label_migrations(cls, previous_index, current_index):
-        return MigrationChanges(None, None, None, current_index)
+    def element_label_migrations(cls, previous_label, current_label):
+        if previous_label != current_label:
+            return MigrationChanges(current_label, previous_label, None, current_label)
+        else:
+            return MigrationChanges(None, None, None, current_label)
 
     @classmethod
-    def composite_indices(cls, previous_indices, current_indices):
+    def composite_indices_migrations(cls, previous_indices, current_indices):
         return MigrationChanges(None, None, None, current_indices)
 
     @classmethod
@@ -134,4 +137,8 @@ class MigrationCalculation(object):
 
 
 class ActionCalculations(object):
-    pass
+
+    @classmethod
+    def to_actions(cls, element_label_changes, composite_indices_changes, properties_changes):
+        actions = []
+        return actions

@@ -157,6 +157,16 @@ class Vertex(Element):
         return cls._type_name(cls.element_type)
 
     @classmethod
+    def get_label(cls):
+        """
+        Returns the label for this vertex.
+
+        :rtype: str
+
+        """
+        return cls._type_name(cls.element_type)
+
+    @classmethod
     def all(cls, ids=[], as_dict=False, match_length=True):
         """
         Load all vertices with the given ids from the graph. By default this will return a list of vertices but if

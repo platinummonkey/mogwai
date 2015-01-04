@@ -44,12 +44,6 @@ class Migration(Vertex):
             return cls.create(package_name=package.package_label,
                               migration_name=migration_name)
 
-    def get_migrations(self):
-        """ Get migrations (import from files)
-        :return:
-        """
-        pass
-
     def get_migration(self):
         """ Get a single migration (import form file)
 

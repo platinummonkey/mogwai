@@ -16,7 +16,7 @@ class SchemaMigrationCommand(BaseCommand):
         # --auto - Attempt to automatically detect differences in the last migration
         # --update - Attempt to update the previously created migration - Overwrites!
         # default parameters
-        self.parser.add_argument('-a', '--app', type=str, help='Specify the application')
+        self.parser.add_argument('-p', '--package', type=str, help='Specify the package')
         group = self.parser.add_mutually_exclusive_group()
         group.add_argument('--initial', action='store_true', help='Generate the initial schema for the app')
         group.parser.add_argument('--empty', action='store_true', help='Generate a blank migration')
@@ -27,7 +27,9 @@ class SchemaMigrationCommand(BaseCommand):
 
     def check_output_path(self, filename, filepath=None):
         if filepath is None:
-            mpath = os.path.join(os.path.abspath(self.app.replace('.', '/')), 'migrations')
+            if self.args.package in ('', '.', None):
+                self.args.package = ''
+            mpath = os.path.join(os.path.abspath(self.args.package.replace('.', '/')), 'migrations')
             if not os.path.exists(mpath):
                 os.mkdir(mpath)
             init_file = os.path.join(mpath, '__init__.py')
@@ -35,6 +37,8 @@ class SchemaMigrationCommand(BaseCommand):
                 open(init_file, 'w').close()  # touch the file
             return os.path.join(mpath, filename)
         else:
+            if filepath in ('', './', '.'):
+                filepath = ''
             filepath = os.path.abspath(filepath)
             if not os.path.exists(filepath):
                 os.mkdir(filepath)
@@ -43,14 +47,16 @@ class SchemaMigrationCommand(BaseCommand):
                 open(init_file, 'w').close()  # touch the file
             return os.path.join(filepath, filename)
 
-    def handle(self, app=None, initial=False, empty=False, auto=True, dry_run=False, *args, **kwargs):
+    def handle(self, package=None, initial=False, empty=False, auto=True, dry_run=False, *args, **kwargs):
         uuid = Migration.generate_migration_id()
         if empty:
             filename = self.check_output_path(filename='blank_migration.py')
             with open(filename, 'wb') as f:
-                f.write(Template(MIGRATION_TEMPLATE).safe_substitute(forwards='', backwards='',
-                                                                     frozen_models={}, uuid=uuid,
-                                                                     depends_on=[]))
+                f.write(Template(MIGRATION_TEMPLATE).safe_substitute(
+                    forwards='        raise NotImplementedError("This needs to be replaced")',
+                    backwards='        raise NotImplementedError("This needs to be replaced")',
+                    frozen_models={}, uuid=uuid, depends_on=[]
+                ))
             print_("Wrote blank migration file to {}".format(filename))
             return
 
