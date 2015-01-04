@@ -6,25 +6,15 @@ class Migration(SchemaMigration):
 
     # depends on this any other migration files?
     depends_on = (
-        # FUTURE: ("otherapp", "0001_initial"),
-        # CURRENT:
         '0001_initial'
     )
 
     def forwards(self, db):
-        # Adding property 'phone' to 'Person'
-        db.add_property(
-            'person', 'person_phone',
-            self.gf('mogwai.properties.String')(required=False, max_length=15, default=None),
-            keep_default=False,
-        )
+        pass
 
     def backwards(self, db):
+        pass
 
-        # Delete property 'phone' from 'Person'
-        db.delete_property(
-            'person', 'person_phone'
-        )
 
     models = {
         'models.Trinket': {

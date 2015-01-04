@@ -9,14 +9,16 @@ class BaseCommand(object):
     usage_str = ''
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dry_run', action='store_true', help='Do not perform migration, onlyl print out to STDOUT')
 
     def __init__(self, *args, **kwargs):
         self.current_directory = os.getcwd()
         self.args = None
 
     def setup_args(self):
-        pass
+        self.parser.add_argument('--dry_run', action='store_true', help='Do not perform migration, onlyl print out to STDOUT')
+        group = self.parser.add_mutually_exclusive_group()
+        group.add_argument('-v', '--verbose', action='store_true')
+        group.add_argument('-q', '--quiet', action='store_true')
 
     def parse_args(self):
         self.args = self.parser.parse_args()

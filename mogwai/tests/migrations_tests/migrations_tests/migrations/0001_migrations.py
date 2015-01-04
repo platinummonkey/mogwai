@@ -5,26 +5,13 @@ from mogwai.migrations.migrators import SchemaMigration
 class Migration(SchemaMigration):
 
     # depends on this any other migration files?
-    depends_on = (
-        # FUTURE: ("otherapp", "0001_initial"),
-        # CURRENT:
-        '0001_initial'
-    )
+    depends_on = ()
 
     def forwards(self, db):
-        # Adding property 'phone' to 'Person'
-        db.add_property(
-            'person', 'person_phone',
-            self.gf('mogwai.properties.String')(required=False, max_length=15, default=None),
-            keep_default=False,
-        )
+        pass
 
     def backwards(self, db):
-
-        # Delete property 'phone' from 'Person'
-        db.delete_property(
-            'person', 'person_phone'
-        )
+        pass
 
     models = {
         'models.Trinket': {
@@ -40,8 +27,7 @@ class Migration(SchemaMigration):
             'label': 'person',
             'properties': {
                 'name': ('mogwai.properties.String', 'person_name', {'required': 'True', 'max_length': '512'}),
-                'email': ('mogwai.properties.Email', 'person_email', {'required': 'True'}),
-                'phone': ('mogwai.properties.String', 'person_phone', {'required': 'False', 'max_length': '15'})
+                'email': ('mogwai.properties.Email', 'person_email', {'required': 'True'})
             },
             'composite_indices': {}
         },
@@ -54,4 +40,3 @@ class Migration(SchemaMigration):
             'composite_indices': {}
         }
     }
-

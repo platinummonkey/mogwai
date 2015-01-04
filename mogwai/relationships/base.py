@@ -46,10 +46,31 @@ class Relationship(object):
         self.edge_callback = edge_callback
         self.query_callback = query_callback
         self.create_callback = create_callback
+        self._have_lazy_loaded = False
 
     def _setup_instantiated_vertex(self, vertex):
         self.top_level_vertex = vertex
         self.top_level_vertex_class = vertex.__class__
+
+    def _import_lazy_loaded_classes(self):
+        if not self._have_lazy_loaded:
+            ect = []
+            for ec in self.edge_classes:
+                if isinstance(ec, LazyImportClass):
+                    ect.append(ec.klass)
+                else:
+                    ect.append(ec)
+            self.edge_classes = tuple(ect)
+
+            vct = []
+            for vc in self.vertex_classes:
+                if isinstance(vc, LazyImportClass):
+                    vct.append(vc.klass)
+                else:
+                    vct.append(vc)
+            self.vertex_classes = tuple(vct)
+
+        self._have_lazy_loaded = True
 
     def __create_class_tuple(self, model_class, enforce_type=None):
         """ Take in an string, array of classes, or a single class and make a tuple of said referenced classes
@@ -99,6 +120,7 @@ class Relationship(object):
         :type callback: method
         :rtype: List[mogwai.models.Vertex] | Object
         """
+        self._import_lazy_loaded_classes()
         allowed_elts = []
         allowed_vlts = []
         for e in self.edge_classes:
@@ -135,6 +157,7 @@ class Relationship(object):
         :type callback: method
         :rtype: List[mogwai.models.Edge] | Object
         """
+        self._import_lazy_loaded_classes()
         allowed_elts = []
         for e in self.edge_classes:
             allowed_elts += [e.get_label()]
@@ -164,6 +187,7 @@ class Relationship(object):
         :type: mogwai.models.Vertex
         :rtype: bool
         """
+        self._import_lazy_loaded_classes()
         if self.strict:
             if edge_type in self.edge_classes and vertex_type in self.vertex_classes:
                 return True
@@ -182,6 +206,7 @@ class Relationship(object):
         :type callback: method
         :rtype: mogwai.models.query.Query | Object
         """
+        self._import_lazy_loaded_classes()
         #if not self.top_level_vertex:
         #    raise MogwaiRelationshipException("No vertex known to start with, this is an error")
         if edge_types:
@@ -238,6 +263,7 @@ class Relationship(object):
         :type callback: method
         :rtype: tuple(mogwai.models.Edge, mogwai.models.Vertex) | Object
         """
+        self._import_lazy_loaded_classes()
         #if not self.top_level_vertex:
         #    raise MogwaiRelationshipException("No existing vertex known, have you created a vertex?")
         if not vertex_type:

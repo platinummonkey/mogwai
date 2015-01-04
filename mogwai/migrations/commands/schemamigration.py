@@ -8,6 +8,7 @@ from mogwai._compat import print_
 class SchemaMigrationCommand(BaseCommand):
 
     def setup_args(self):
+        super(SchemaMigrationCommand, self).setup_args()
         # --app - Specify the app
         # --initial - Generate the initial schema for the app, store_true, initial
         # --empty - Generate a blank migration, store_true, empty
@@ -15,12 +16,13 @@ class SchemaMigrationCommand(BaseCommand):
         # --update - Attempt to update the previously created migration - Overwrites!
         # default parameters
         self.parser.add_argument('-a', '--app', type=str, help='Specify the application')
-        self.parser.add_argument('--initial', action='store_true', help='Generate the initial schema for the app')
-        self.parser.add_argument('--empty', action='store_true', help='Generate a blank migration')
-        self.parser.add_argument('--auto', action='store_true',
-                                 help='Attempt to automatically detect differences in the last migration')
-        self.parser.add_argument('--update', action='store_true',
-                                 help='Attempt to update the previously created migration. Beware this overwrites!')
+        group = self.parser.add_mutually_exclusive_group()
+        group.add_argument('--initial', action='store_true', help='Generate the initial schema for the app')
+        group.parser.add_argument('--empty', action='store_true', help='Generate a blank migration')
+        group.parser.add_argument('--auto', action='store_true',
+                                  help='Attempt to automatically detect differences in the last migration')
+        group.parser.add_argument('--update', action='store_true',
+                                  help='Attempt to update the previously created migration. Beware this overwrites!')
 
     def check_output_path(self, filename, filepath=None):
         if filepath is None:
