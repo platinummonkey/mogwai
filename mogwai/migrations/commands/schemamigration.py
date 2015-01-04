@@ -3,6 +3,7 @@ from base import BaseCommand
 import os
 from string import Template
 from mogwai._compat import print_
+from mogwai.migrations.models import Migration, MigrationDependency
 
 
 class SchemaMigrationCommand(BaseCommand):
@@ -43,11 +44,12 @@ class SchemaMigrationCommand(BaseCommand):
             return os.path.join(filepath, filename)
 
     def handle(self, app=None, initial=False, empty=False, auto=True, dry_run=False, *args, **kwargs):
+        uuid = Migration.generate_migration_id()
         if empty:
             filename = self.check_output_path(filename='blank_migration.py')
             with open(filename, 'wb') as f:
                 f.write(Template(MIGRATION_TEMPLATE).safe_substitute(forwards='', backwards='',
-                                                                     frozen_models={},
+                                                                     frozen_models={}, uuid=uuid,
                                                                      depends_on=[]))
             print_("Wrote blank migration file to {}".format(filename))
             return
@@ -56,7 +58,6 @@ class SchemaMigrationCommand(BaseCommand):
             return
 
         if auto:
-
             if dry_run:
                 #output = '-'*80
                 #output = output + '\nMigration for {} to be executed\n'.format(self.complete_apps)
@@ -81,6 +82,8 @@ from mogwai.migrations.migrators import SchemaMigration
 from mogwai.migrations.state import MockVertex as Vertex, MockEdge as Edge
 
 class Migration(SchemaMigration):
+
+   uuid = '$uuid'
 
    def forwards(self, db):
 $forwards

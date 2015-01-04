@@ -5,6 +5,7 @@ from mogwai.gremlin import GremlinMethod
 import datetime
 from pytz import utc
 from functools import partial
+from uuid import uuid4
 
 
 class MigrationDependency(Edge):
@@ -22,6 +23,14 @@ class Migration(Vertex):
     _find_for_migration = GremlinMethod(method_name='find_for_migration', classmethod=True)
     depends_on = Relationship(MigrationDependency, 'mogwai.migrations.models.Migration', direction=OUT)
     required_for = Relationship(MigrationDependency, 'mogwai.migrations.models.Migration', direction=IN)
+
+    @classmethod
+    def generate_migration_id(cls):
+        return str(uuid4())
+
+    @classmethod
+    def for_uuid(cls, uuid):
+        return cls.find_by_value('uuid', uuid)
 
     @classmethod
     def for_package(cls, package_name):

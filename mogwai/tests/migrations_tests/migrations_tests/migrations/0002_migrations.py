@@ -4,6 +4,8 @@ from mogwai.migrations.migrators import SchemaMigration
 
 class Migration(SchemaMigration):
 
+    uuid = '8e7ce1f8-5796-4b2b-8a17-a020acea417a'
+
     # depends on this any other migration files?
     depends_on = (
         '0001_initial'
