@@ -20,7 +20,9 @@ class TestMigrationStateCalculation(BaseMogwaiTestCase):
         self.assertEqual(len(TestVertexModel._properties), len(migration.additions))
         self.assertDictEqual({}, migration.deletions)
         self.assertDictEqual({}, migration.changes)
-        self.assertEqual(migration.current, TestVertexModel)
+
+        self.assertDictEqual(migration.current, TestVertexModel._properties)
+        self.assertEqual(migration.model, TestVertexModel)
 
     def test_property_addition_state_calculation_edge(self):
         previous_edge = MockEdge(TestEdgeModel.label, {})
@@ -31,7 +33,9 @@ class TestMigrationStateCalculation(BaseMogwaiTestCase):
         self.assertEqual(len(TestEdgeModel._properties), len(migration.additions))
         self.assertDictEqual({}, migration.deletions)
         self.assertDictEqual({}, migration.changes)
-        self.assertEqual(migration.current, TestEdgeModel)
+
+        self.assertDictEqual(migration.current, TestEdgeModel._properties)
+        self.assertEqual(migration.model, TestEdgeModel)
 
     def test_property_deletion_state_calculation_vertex(self):
         current_vertex = MockVertex(TestVertexModel.element_type, {})
@@ -42,7 +46,9 @@ class TestMigrationStateCalculation(BaseMogwaiTestCase):
         self.assertEqual(len(TestVertexModel._properties), len(migration.deletions))
         self.assertDictEqual({}, migration.additions)
         self.assertDictEqual({}, migration.changes)
-        self.assertEqual(migration.current, current_vertex)
+
+        self.assertDictEqual(migration.current, current_vertex._properties)
+        self.assertEqual(migration.model, current_vertex)
 
     def test_property_deletion_state_calculation_edge(self):
         current_edge = MockEdge(TestEdgeModel.label, {})
@@ -53,7 +59,9 @@ class TestMigrationStateCalculation(BaseMogwaiTestCase):
         self.assertEqual(len(TestEdgeModel._properties), len(migration.deletions))
         self.assertDictEqual({}, migration.additions)
         self.assertDictEqual({}, migration.changes)
-        self.assertEqual(migration.current, current_edge)
+
+        self.assertDictEqual(migration.current, current_edge._properties)
+        self.assertEqual(migration.model, current_edge)
 
     def test_property_changes_state_calculation_vertex(self):
         current_vertex = MockVertex(TestVertexModel.element_type, copy.deepcopy(TestVertexModel._properties))
@@ -73,7 +81,8 @@ class TestMigrationStateCalculation(BaseMogwaiTestCase):
         self.assertIsInstance(migration.changes.values()[0][0], MigrationChanges)
         self.assertEqual(name_prop._definition(), migration.changes.values()[0][0].current._definition())
 
-        self.assertEqual(migration.current, current_vertex)
+        self.assertDictEqual(migration.current, current_vertex._properties)
+        self.assertEqual(migration.model, current_vertex)
 
     def test_property_changes_state_calculation_edge(self):
         current_edge = MockEdge(TestEdgeModel.label, copy.deepcopy(TestEdgeModel._properties))
@@ -93,4 +102,5 @@ class TestMigrationStateCalculation(BaseMogwaiTestCase):
         self.assertIsInstance(migration.changes.values()[0][0], MigrationChanges)
         self.assertEqual(name_prop._definition(), migration.changes.values()[0][0].current._definition())
 
-        self.assertEqual(migration.current, current_edge)
+        self.assertDictEqual(migration.current, current_edge._properties)
+        self.assertEqual(migration.model, current_edge)
