@@ -6,12 +6,7 @@ blocks into the forwards() and backwards() methods, in the right place.
 
 from __future__ import unicode_literals, print_function
 
-import sys
-import datetime
-from pytz import timezone, utc
-
 from mogwai._compat import print_
-from mogwai.properties import String, Text
 from mogwai.models import Vertex, Edge
 from mogwai.exceptions import MogwaiMigrationException
 from mock_elements import MockEdge, MockVertex
@@ -28,10 +23,10 @@ class Action(object):
     prepend_backwards = False
 
     def forwards_code(self):
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     def backwards_code(self):
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     def add_forwards(self, forwards):
         if self.prepend_forwards:
@@ -47,19 +42,22 @@ class Action(object):
 
     def console_line(self):
         """Returns the string to print on the console, e.g. ' + Added field foo'"""
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     @classmethod
     def get_model_info(cls, model):
-        if issubclass(model, Vertex):
-            return 'vertex', get_import_path_for_class(model), model.get_label()
-        elif issubclass(model, MockVertex):
-            return 'vertex', model.model_class_name, model.label
-        elif issubclass(model, Edge):
-            return 'edge', get_import_path_for_class(model), model.get_label()
-        elif issubclass(model, MockEdge):
-            return 'edge', model.model_class_name, model.label
-        else:
+        try:
+            if isinstance(model, MockVertex):
+                return 'vertex', model.model_class_name, model.label
+            elif isinstance(model, MockEdge):
+                return 'edge', model.model_class_name, model.label
+            elif issubclass(model, Vertex):
+                return 'vertex', get_import_path_for_class(model), model.get_label()
+            elif issubclass(model, Edge):
+                return 'edge', get_import_path_for_class(model), model.get_label()
+            else:
+                raise MogwaiMigrationException("{} is Not a Vertex or Edge".format(model))
+        except:
             raise MogwaiMigrationException("{} is Not a Vertex or Edge".format(model))
 
 
@@ -70,11 +68,11 @@ class AddElementType(Action):
 
     FORWARDS_TEMPLATE = '''
         # Adding {model_type} '{model_class_name}'
-        db.create_{model_type}('{label}')'''[1:] + "\n"
+        db.create_{model_type}_type('{label}')'''[1:] + "\n"
 
     BACKWARDS_TEMPLATE = '''
         # Deleting {model_type} '{model_class_name}'
-        db.delete_{model_type}('{label}')'''[1:] + "\n"
+        db.delete_{model_type}_type('{label}')'''[1:] + "\n"
 
     def __init__(self, model, package_name=''):
         self.package_name = package_name
