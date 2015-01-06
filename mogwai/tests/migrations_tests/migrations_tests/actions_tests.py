@@ -49,7 +49,7 @@ class TestMigrationActions(BaseMogwaiTestCase):
 
     def test_add_element_type_action(self):
         action = AddElementType(TestVertexModel, 'test')
-        self.assertEqual(" + Added element type mogwai.tests.base.TestVertexModel for package test",
+        self.assertEqual(" + Added element type 'mogwai.tests.base.TestVertexModel' for package 'test'",
                          action.console_line())
 
         self.assertEqual("""        # Adding vertex 'mogwai.tests.base.TestVertexModel'
@@ -72,7 +72,7 @@ class TestMigrationActions(BaseMogwaiTestCase):
 
     def test_delete_element_type_action(self):
         action = DeleteElementType(TestVertexModel, 'test')
-        self.assertEqual(" - Deleted element type mogwai.tests.base.TestVertexModel for package test",
+        self.assertEqual(" - Deleted element type 'mogwai.tests.base.TestVertexModel' for package 'test'",
                          action.console_line())
 
         self.assertEqual("""        # Deleting vertex 'mogwai.tests.base.TestVertexModel'
@@ -94,10 +94,52 @@ class TestMigrationActions(BaseMogwaiTestCase):
         db.create_vertex_type('test_vertex_model')\n""", backwards_actions[0])
 
     def test_add_property_action(self):
-        pass
+        prop = TestVertexModel._properties['name']
+        action = AddProperty(TestVertexModel, prop, package_name='test')
+        self.assertEqual(" + Added element property 'name' to 'mogwai.tests.base.TestVertexModel' for package 'test'",
+                         action.console_line())
+
+        self.assertEqual("""        # Adding element property 'mogwai.tests.base.TestVertexModel.name'
+        db.create_property_key("testvertexmodel_name", data_type="String")\n""", action.forwards_code())
+        self.assertEqual("""        # Deleting element property 'mogwai.tests.base.TestVertexModel.name'
+        db.delete_property_key("testvertexmodel_name")\n""", action.backwards_code())
+
+        forwards_actions = []
+        backwards_actions = []
+        action.add_forwards(forwards_actions)
+        action.add_backwards(backwards_actions)
+
+        self.assertEqual(1, len(forwards_actions))
+        self.assertEqual(1, len(backwards_actions))
+
+        self.assertEqual("""        # Adding element property 'mogwai.tests.base.TestVertexModel.name'
+        db.create_property_key("testvertexmodel_name", data_type="String")\n""", forwards_actions[0])
+        self.assertEqual("""        # Deleting element property 'mogwai.tests.base.TestVertexModel.name'
+        db.delete_property_key("testvertexmodel_name")\n""", backwards_actions[0])
 
     def test_delete_property_action(self):
-        pass
+        prop = TestVertexModel._properties['name']
+        action = DeleteProperty(TestVertexModel, prop, package_name='test')
+        self.assertEqual(" - Deleted element property 'name' to 'mogwai.tests.base.TestVertexModel' for package 'test'",
+                         action.console_line())
+
+        self.assertEqual("""        # Deleting element property 'mogwai.tests.base.TestVertexModel.name'
+        db.delete_property_key("testvertexmodel_name")\n""", action.forwards_code())
+        self.assertEqual("""        # Adding element property 'mogwai.tests.base.TestVertexModel.name'
+        db.create_property_key("testvertexmodel_name", data_type="String")\n""", action.backwards_code())
+
+        forwards_actions = []
+        backwards_actions = []
+        action.add_forwards(forwards_actions)
+        action.add_backwards(backwards_actions)
+
+        self.assertEqual(1, len(forwards_actions))
+        self.assertEqual(1, len(backwards_actions))
+
+        self.assertEqual("""        # Deleting element property 'mogwai.tests.base.TestVertexModel.name'
+        db.delete_property_key("testvertexmodel_name")\n""", forwards_actions[0])
+        self.assertEqual("""        # Adding element property 'mogwai.tests.base.TestVertexModel.name'
+        db.create_property_key("testvertexmodel_name", data_type="String")\n""", backwards_actions[0])
 
     def test_add_composite_index_action(self):
         pass

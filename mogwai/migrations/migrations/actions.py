@@ -81,7 +81,7 @@ class AddElementType(Action):
 
     def console_line(self):
         """Returns the string to print on the console, e.g. ' + Added field foo'"""
-        return " + Added element type {} for package {}".format(self.model_class_name, self.package_name)
+        return " + Added element type '{}' for package '{}'".format(self.model_class_name, self.package_name)
 
     def forwards_code(self):
         """Produces the code snippet that gets put into forwards()"""
@@ -108,7 +108,7 @@ class DeleteElementType(AddElementType):
 
     def console_line(self):
         """Returns the string to print on the console, e.g. ' + Added field foo'"""
-        return " - Deleted element type {} for package {}".format(self.model_class_name, self.package_name)
+        return " - Deleted element type '{}' for package '{}'".format(self.model_class_name, self.package_name)
 
     def forwards_code(self):
         return AddElementType.backwards_code(self)
@@ -155,7 +155,7 @@ class AddProperty(Action):
 
         e.g. ' + Added element property foo to mymodel for package mypackage'
         """
-        return " + Added element property {} to {} for package {}".format(
+        return " + Added element property '{}' to '{}' for package '{}'".format(
             self.prop_name,
             self.model_class_name,
             self.package_name
@@ -184,7 +184,7 @@ class DeleteProperty(AddProperty):
 
     def console_line(self):
         """Returns the string to print on the console, e.g. ' + Added field foo'"""
-        return " - Deleted element property {} to {} for package {}".format(
+        return " - Deleted element property '{}' to '{}' for package '{}'".format(
             self.prop_name,
             self.model_class_name,
             self.package_name
@@ -223,7 +223,7 @@ class AddCompositeIndex(Action):
 
     def console_line(self):
         """Returns the string to print on the console, e.g. ' + Added field foo'"""
-        return " + Added index {} for model {} for package {}".format(
+        return " + Added index '{}' for model '{}' for package '{}'".format(
             self.index,
             self.model_class_name,
             self.package_name
@@ -257,7 +257,7 @@ class DeleteCompositeIndex(AddCompositeIndex):
 
     def console_line(self):
         """Returns the string to print on the console, e.g. ' + Added field foo'"""
-        return " + Deleted index {} for model {} for package {}".format(
+        return " + Deleted index '{}' for model '{}' for package '{}'".format(
             self.index,
             self.model_class_name,
             self.package_name
