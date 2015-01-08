@@ -3,8 +3,8 @@ def _save_vertex(id, attrs) {
     /**
      * Saves a vertex
      *
-     * :param id: edge id, if null, a new vertex is created
-     * :param attrs: map of parameters to set on the edge
+     * :param id: vertex id, if null, a new vertex is created
+     * :param attrs: map of parameters to set on the vertex
      */
     try {
         def v = id == null ? g.addVertex() : g.v(id)
@@ -22,6 +22,21 @@ def _save_vertex(id, attrs) {
         g.stopTransaction(FAILURE)
         throw(err)
     }
+}
+
+def _delete_vertex(id) {
+    /**
+     * Deletes a vertex
+     *
+     * :param id: vertex id
+     */
+     try {
+        g.removeVertex(g.v(id))
+        g.stopTransaction(SUCCESS)
+     } catch (err) {
+        g.stopTransaction(FAILURE)
+        throw(err)
+     }
 }
 
 def _create_relationship(id, in_direction, edge_label, edge_attrs, vertex_attrs) {

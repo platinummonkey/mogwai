@@ -5,6 +5,10 @@ ChangeLog
 
 Changes to the library are recorded here.
 
+v0.6.7
+------
+ * fixed GremlinTable method to return a new Table object that composes Row(s)
+
 v0.6.6
 ------
  * find_by_value bugfix - thanks to Justin Hohner for identifying this bug.

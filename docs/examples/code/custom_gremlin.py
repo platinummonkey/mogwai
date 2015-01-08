@@ -6,6 +6,7 @@ from mogwai._compat import print_
 import datetime
 from pytz import utc
 from functools import partial
+import os
 
 setup('127.0.0.1')
 
@@ -21,7 +22,7 @@ class IsFriendsWith(Edge):
 class Person(Vertex):
 
     element_type = 'person'  # this is optional, will default to the class name
-    gremlin_path = 'custom_gremlin.groovy'
+    gremlin_path = os.path.join(os.getcwd(), 'custom_gremlin.groovy')
 
     name = properties.String(required=True, max_length=512)
     email = properties.Email(required=True)
@@ -29,6 +30,9 @@ class Person(Vertex):
     friends_and_friends_of_friends = gremlin.GremlinMethod(method_name='friends_and_friends_of_friends',
                                                            property=True,
                                                            defaults={'friend_edge_label': IsFriendsWith.get_label()})
+    friends_and_friends_of_friends_table = gremlin.GremlinTable(method_name='friends_and_friends_of_friends_table',
+                                                                property=True,
+                                                                defaults={'friend_edge_label': IsFriendsWith.get_label()})
 
     @property
     def friends(self):
@@ -78,3 +82,15 @@ for friend_set in bobs_friends_and_friends_of_friends:
     assert friend_set[0] == bob
     assert friend_set[1] == alice
     assert kyle not in friend_set
+
+
+# GremlinTable
+print_("Using GremlinTable:")
+friend_table = bob.friends_and_friends_of_friends_table
+for row in friend_table:
+    print_("{} is friends with {}, who is also friends with {}".format(row.person.name, row.friend.name, row.friend_of_friend.name))
+
+# Output:
+# Using GremlinTable:
+# Bob is friends with Alice, who is also friends with John
+# Bob is friends with Alice, who is also friends with Tim

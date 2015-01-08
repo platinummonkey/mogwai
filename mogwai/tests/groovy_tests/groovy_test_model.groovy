@@ -43,3 +43,7 @@ def arg_test1(self) {
 def arg_test2(my_id) {
     g.v(my_id)
 }
+
+def get_table_of_models(element_type) {
+    return g.V('element_type', element_type).as('text').as('v').table{it}{it.groovytestmodel2_text}.cap
+}
