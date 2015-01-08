@@ -90,6 +90,7 @@ class Vertex(Element):
     gremlin_path = 'vertex.groovy'
 
     _save_vertex = GremlinMethod()
+    _delete_vertex = GremlinMethod()
     _traversal = GremlinMethod()
     _delete_related = GremlinMethod()
     _find_vertex_by_value = GremlinMethod(classmethod=True)
@@ -258,11 +259,7 @@ class Vertex(Element):
             raise MogwaiQueryError('Cant delete abstract elements')
         if self._id is None:  # pragma: no cover
             return self
-        query = """
-        g.removeVertex(g.v(id))
-        g.stopTransaction(SUCCESS)
-        """
-        results = execute_query(query, {'id': self._id})
+        self._delete_vertex()
 
     def _simple_traversal(self,
                           operation,

@@ -43,6 +43,7 @@ class Edge(Element):
     gremlin_path = 'edge.groovy'
 
     _save_edge = GremlinMethod()
+    _delete_edge = GremlinMethod()
     _get_edges_between = GremlinMethod(classmethod=True)
     _find_edge_by_value = GremlinMethod(classmethod=True)
 
@@ -272,14 +273,7 @@ class Edge(Element):
             raise MogwaiQueryError('cant delete abstract elements')
         if self._id is None:
             return self
-        query = """
-        e = g.e(id)
-        if (e != null) {
-          g.removeEdge(e)
-          g.stopTransaction(SUCCESS)
-        }
-        """
-        results = execute_query(query, {'id': self.id})
+        self._delete_edge()
 
     def _simple_traversal(self, operation):
         """

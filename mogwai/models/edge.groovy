@@ -36,6 +36,23 @@ def _save_edge(id, outV, inV, label, attrs, exclusive) {
 	}
 }
 
+def _delete_edge(id) {
+    /**
+     * Deletes an edge
+     *
+     * :param id: edge id
+     */
+     try {
+        e = g.e(id)
+        if (e != null) {
+          g.removeEdge(e)
+        }
+        g.stopTransaction(SUCCESS)
+     } catch (err) {
+        g.stopTransaction(FAILURE)
+        throw(err)
+     }
+}
 
 def _get_edges_between(out_v, in_v, label, page_num, per_page) {
     try {

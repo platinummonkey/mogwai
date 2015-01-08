@@ -1,13 +1,14 @@
 import inspect
 import os.path
-import time
+from datetime import datetime
+from decimal import Decimal as _Decimal
+from uuid import UUID as _UUID
 import logging
 from mogwai._compat import array_types, string_types, integer_types, float_types, iteritems
-
 from mogwai.connection import execute_query
 from mogwai.exceptions import MogwaiQueryError, MogwaiGremlinException
 from .groovy import parse, GroovyImport
-
+from .table import Table, Row
 
 logger = logging.getLogger(__name__)
 
@@ -220,10 +221,6 @@ class BaseGremlinMethod(object):
         :rtype: dict
 
         """
-        import inspect
-        from datetime import datetime
-        from decimal import Decimal as _Decimal
-        from uuid import UUID as _UUID
         from mogwai.models.element import BaseElement
         from mogwai.models import Edge, Vertex
         from mogwai.properties import DateTime, Decimal, UUID
@@ -305,6 +302,6 @@ class GremlinTable(GremlinMethod):  # pragma: no cover
 
     def __call__(self, instance, *args, **kwargs):
         results = super(GremlinTable, self).__call__(instance, *args, **kwargs)
-        if results is None:
+        if results is None or (isinstance(results, array_types) and len(results) != 1):
             return
-        return Table(results)
+        return Table(results[0])

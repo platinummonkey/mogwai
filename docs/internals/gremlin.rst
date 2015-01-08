@@ -14,3 +14,8 @@ Gremlin
     :inherited-members:
     :undoc-members:
 
+
+.. automodule:: mogwai.gremlin.table
+    :members:
+    :inherited-members:
+    :undoc-members:
