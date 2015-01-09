@@ -58,8 +58,8 @@ class TestTableContainer(BaseMogwaiTestCase):
         self.assertEqual(len(d), len(r))
 
         # test tuple-like access
-        self.assertEqual(d['test'], r[0])
-        self.assertListEqual(d.values(), r[:])
+        self.assertIn(r[0], d.values())
+        self.assertListEqual(list(d.values()), list(r[:]))
         with self.assertRaises(MogwaiException):
             r[0] = 'test'
 
@@ -73,9 +73,9 @@ class TestTableContainer(BaseMogwaiTestCase):
             del r[0:2]
 
         # test dict-like access
-        self.assertListEqual(d.values(), r.values())
-        self.assertListEqual(d.keys(), r.keys())
-        self.assertListEqual(d.items(), r.items())
+        self.assertListEqual(list(d.values()), list(r.values()))
+        self.assertListEqual(list(d.keys()), list(r.keys()))
+        self.assertListEqual(list(d.items()), list(r.items()))
         self.assertEqual(d['test'], r['test'])
         self.assertEqual(d['a'], r['a'])
         self.assertEqual(d['c'], r['c'])
@@ -96,12 +96,12 @@ class TestTableContainer(BaseMogwaiTestCase):
 
         # test iteration
         self.assertEqual(len(d), len([v for v in r]))
-        self.assertListEqual(d.values(), [v for v in r])
+        self.assertListEqual(list(d.values()), [v for v in r])
 
         # test next
-        self.assertEqual(d['test'], r.next())
-        self.assertEqual(d['a'], r.next())
-        self.assertEqual(d['c'], r.next())
+        self.assertIn(r.next(), d.values())
+        self.assertIn(r.next(), d.values())
+        self.assertIn(r.next(), d.values())
 
         # test equality
         r2 = Row(deepcopy(d))

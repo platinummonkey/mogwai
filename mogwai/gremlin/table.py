@@ -1,5 +1,5 @@
 from __future__ import unicode_literals
-from mogwai._compat import integer_types, float_types, string_types
+from mogwai._compat import integer_types, float_types, string_types, iteritems
 from mogwai.tools import LazyImportClass
 from mogwai.exceptions import MogwaiException
 
@@ -35,7 +35,7 @@ class Row(object):
         self.__ready = True
 
     def __getslice__(self, i, j):
-        return self.__data.values()[i:j]
+        return list(self.__data.values())[i:j]
 
     def __setslice__(self, i, j, sequence):
         raise MogwaiException("Row is not editable")
@@ -44,8 +44,8 @@ class Row(object):
         raise MogwaiException("Row is not editable")
 
     def __getitem__(self, item):
-        if isinstance(item, numeric_types):
-            return self.__data.values()[item]
+        if isinstance(item, numeric_types) or isinstance(item, slice):
+            return list(self.__data.values())[item]
         return self.__data[item]
 
     def __setitem__(self, key, value):
@@ -66,6 +66,9 @@ class Row(object):
     def __iter__(self):
         return self
 
+    def __next__(self):
+        return self.next()
+
     def keys(self):
         return self.__data.keys()
 
@@ -83,7 +86,7 @@ class Row(object):
         if self.__position == len(self.__data):
             self.__position = 0
             raise StopIteration()
-        tmp = self.__data.values()[self.__position]
+        tmp = list(self.__data.values())[self.__position]
         self.__position += 1
         return tmp
 
@@ -92,7 +95,7 @@ class Row(object):
 
     def __repr__(self):
         result = "{}(".format(self.__class__.__name__)
-        for k, v in self.__data.items():
+        for k, v in iteritems(self.__data):
             result += "{}={}, ".format(k, v)
         result = result.rstrip(", ")
         result += ")"
@@ -154,6 +157,9 @@ class Table(object):
 
     def __iter__(self):
         return self
+
+    def __next__(self):
+        return self.next()
 
     def next(self):
         if self.__position == len(self.__gremlin_result):
