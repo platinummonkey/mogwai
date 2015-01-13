@@ -28,8 +28,6 @@ class Relationship(object):
 
     Warn if queries return schema violations.
     """
-    top_level_vertex_class = None
-    top_level_vertex = None
 
     def __init__(self, edge_class, vertex_class, direction=BOTH, strict=True, gremlin_path=None, vertex_callback=None,
                  edge_callback=None, query_callback=None, create_callback=None):
@@ -46,6 +44,8 @@ class Relationship(object):
         self.edge_callback = edge_callback
         self.query_callback = query_callback
         self.create_callback = create_callback
+        self.top_level_vertex_class = None
+        self.top_level_vertex = None
 
     def _setup_instantiated_vertex(self, vertex):
         self.top_level_vertex = vertex
