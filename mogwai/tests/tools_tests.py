@@ -6,6 +6,11 @@ from mogwai.models import Vertex, Edge
 from mogwai import properties
 from mogwai.tools import ImportStringError, import_string, cached_property, LazyImportClass, _Missing, Factory
 import factory
+from nose.tools import raises
+from mogwai import connection
+from mogwai.exceptions import MogwaiQueryError
+from rexpro.exceptions import RexProScriptException
+from mogwai.tools import BlueprintsWrapper, PartitionGraph
 
 
 @attr('unit', 'tools')
@@ -89,3 +94,62 @@ class TestModelFactory(BaseMogwaiTestCase):
         e2.delete()
         v1.delete()
         v2.delete()
+
+
+class BlueprintsWrapperVertex(Vertex):
+    element_type = 'blueprints_wrapper_vertex'
+    name = properties.String(required=True, max_length=128)
+
+
+class BlueprintsWrapperEdge(Edge):
+    element_type = 'blueprints_wrapper_edge'
+    name = properties.String(required=True, max_length=128)
+
+
+@attr('unit', 'tools', 'blueprintswrapper')
+class TestBlueprintsWrapper(BaseMogwaiTestCase):
+
+    def test_blueprints_wrapper(self):
+        wrapper_config = {
+            'class_name': "ReadOnlyGraph",
+            'setup': []
+        }
+        with BlueprintsWrapper(wrapper_configuration=wrapper_config):
+            k = connection.execute_query("k = 10")
+            gsk = connection.execute_query('"powers of ${k}"')
+            pysk = "powers of {}".format(k)
+            self.assertEqual(gsk, pysk)
+            kk = connection.execute_query("k * k")
+            self.assertEqual(kk, k * k)
+
+    @raises(RexProScriptException, MogwaiQueryError)
+    def test_wrapper_isolation(self):
+        connection.execute_query("k")
+
+    def test_partition_graph(self):
+        with PartitionGraph(write='a'):
+            v1 = BlueprintsWrapperVertex.create(name="only in a")
+            v3 = BlueprintsWrapperVertex.create(name="started in a")
+
+        with PartitionGraph(write='b', read=['a']):
+            v2 = BlueprintsWrapperVertex.create(name="only in b")
+            e1 = BlueprintsWrapperEdge.create(outV=v2, inV=v1, name="only in b")
+            v3.name = "still in a"
+            v3.save()
+
+        with PartitionGraph(write='a'):
+            v1 = BlueprintsWrapperVertex.get(v1._id)
+            self.assertEqual(len(v1.bothE()), 0)
+            with self.assertRaises(BlueprintsWrapperVertex.DoesNotExist):
+                v2 = BlueprintsWrapperVertex.get(v2._id)
+
+        self.assertEqual(len(v1.bothE()), 1)
+        self.assertIsInstance(v1.bothE()[0], BlueprintsWrapperEdge)
+        self.assertEqual(v1.bothE()[0]._id, e1._id)
+        v3 = BlueprintsWrapperVertex.get(v3._id)
+        self.assertEqual(v3['_partition'], 'a')
+        e1.delete()
+        v1.delete()
+        v2.delete()
+        v3.delete()
+
