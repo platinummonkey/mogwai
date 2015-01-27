@@ -1,7 +1,10 @@
 ## TODO: Reference: Tooling from werkzeug tools - citation needed
 from __future__ import unicode_literals
 import sys
+from rexpro.exceptions import RexProConnectionException, RexProScriptException
 from mogwai._compat import reraise, string_types, PY2
+from mogwai import connection
+from mogwai.exceptions import MogwaiBlueprintsWrapperException
 from factory import base
 import factory as factory
 
@@ -203,3 +206,92 @@ class Factory(base.Factory):
         else:
             obj = target_class.create(*args, **kwargs)
         return obj
+
+
+class BlueprintsWrapper():
+    """Abstract implementation for using a Blueprints graph wrapper
+    within a persisted transaction. Within this transaction `g`
+    refers to the wrapped graph.
+
+    :param dict wrapper_configuration: the dict that defines which
+        wrapper should be initialized, and with which configuration.
+        `wrapper_configuration['class_name']` must be the Blueprints
+        class name as a string.
+        `wrapper_configuration['setup']` is an iterable with additional
+        groovy statements that are executed upon initialization. It
+        may be empty.
+    :return: the used RexPro connection
+    :raises MogwaiBlueprintsWrapperException: if no configuration is provided
+    :raises RexProConnectionException: if the connection from the pool is closed
+    """
+
+    def __init__(self, wrapper_configuration=None):
+        if not wrapper_configuration: # pragma: no cover
+            raise MogwaiBlueprintsWrapperException("A wrapper configuration is required.")
+        self.g_assignment = "g = new {}(g)".format(wrapper_configuration['class_name'])
+        self.setup = wrapper_configuration['setup']
+
+    def __enter__(self):
+        # assign original execute_query()
+        self.original_execute_query = connection.execute_query
+        # open connection from pool
+        self.connection = connection._connection_pool.create_connection()
+        if not self.connection: # pragma: no cover
+            raise RexProConnectionException("Cannot commit because connection was closed: %r" % (self.connection, ))
+        self.connection.test_connection()
+        self.connection.open_transaction()
+
+        # shadow execute_query with self.connection and isolated=False
+        def execute_with_connection(query, params={}, transaction=False, isolate=False, connection=self.connection, *args, **kwargs):
+            return self.original_execute_query(
+                query, params=params, transaction=False, isolate=False, connection=connection, *args, **kwargs
+            )
+
+        # patch execute_query to persist the transaction
+        connection.execute_query = execute_with_connection
+
+        # execute g_assignment
+        resp = connection.execute_query(self.g_assignment)
+
+        # provide a dummy stopTransaction() on non-transactional graphs
+        connection.execute_query(
+            "if (!g.metaClass.respondsTo(g, 'stopTransaction')) { g.metaClass.stopTransaction = {null} }"
+        )
+
+        # execute wrapper setup
+        for statement in self.setup:
+            connection.execute_query(statement)
+
+        return self.connection
+
+    def __exit__(self, type, value, traceback):
+        # execute g = g.baseGraph
+        if type is None:
+            connection.execute_query("g = g.baseGraph")
+        # replace original execute_query()
+        connection.execute_query = self.original_execute_query
+        # close connection
+        try:
+            self.connection.close_transaction(type is None)
+        except RexProScriptException: # pragma: no cover
+            pass
+        connection._connection_pool.close_connection(self.connection, soft=True)
+        if type is not None: # pragma: no cover
+            raise type, value, traceback
+
+
+class PartitionGraph(BlueprintsWrapper):
+    """Wrapper for the Blueprints PartitionGraph, which is
+    documented by https://github.com/tinkerpop/blueprints/wiki/Partition-Implementation
+
+    :param str write: the default read+write partition.
+    :param iterable read: optional read partitions.
+    :return: the used RexPro connection
+    :raises MogwaiBlueprintsWrapperException: if no write partition is provided
+    """
+
+    def __init__(self, write=None, read=[]):
+        if not write: # pragma: no cover
+            raise MogwaiBlueprintsWrapperException("A write partition is required.")
+        self.g_assignment = "g = new PartitionGraph(g, '_partition', '{}')".format(write)
+        self.setup = ["g.addReadPartition('{}')".format(rp) for rp in read]

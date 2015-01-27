@@ -57,3 +57,8 @@ class MogwaiRelationshipException(MogwaiException):
 class MogwaiMetricsException(MogwaiException):
     """ Exception thrown when a metric system error occurs """
     pass
+
+
+class MogwaiBlueprintsWrapperException(MogwaiException):
+    """ Exception thrown when a Blueprints wrapper error occurs """
+    pass
