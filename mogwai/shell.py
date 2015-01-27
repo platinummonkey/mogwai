@@ -1,5 +1,5 @@
 from __future__ import unicode_literals
-from mogwai.connection import setup, _parse_host, execute_query
+from mogwai import connection
 from mogwai import models
 from mogwai import properties
 from mogwai import gremlin
@@ -25,14 +25,14 @@ if not args.password:
 if not args.database:
     args.database = 'graph'
 
-hd = _parse_host(args.host, args.username, args.password, args.database)
+hd = connection._parse_host(args.host, args.username, args.password, args.database)
 host = hd.get('host', 'localhost')
 port = hd.get('port', 8184)
 username = hd.get('username', '')
 password = hd.get('password', '')
 graph_name = hd.get('graph_name', 'graph')
 
-setup([host, ], graph_name=graph_name, username=username, password=password)
+connection.setup([host, ], graph_name=graph_name, username=username, password=password)
 
 del args, parser, username, password, hd
 
@@ -41,7 +41,7 @@ class __help_object(object):
 
     def __repr__(self):
         return """The following have already been imported:
-  - mogwai.execute_query as execute_query
+  - mogwai.connection as connection
   - mogwai.models as models
   - mogwai.properties as properties
   - mogwai.gremlin as gremlin

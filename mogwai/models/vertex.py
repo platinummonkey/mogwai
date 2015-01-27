@@ -3,7 +3,7 @@ import inspect
 import logging
 
 from mogwai._compat import array_types, string_types, add_metaclass, integer_types, float_types
-from mogwai.connection import execute_query
+from mogwai import connection
 from mogwai.exceptions import MogwaiException, ElementDefinitionException, MogwaiQueryError
 from mogwai.gremlin import GremlinMethod
 from .element import Element, ElementMetaClass, vertex_types
@@ -175,12 +175,12 @@ class Vertex(Element):
             raise MogwaiQueryError("ids must be of type list or tuple")
 
         if len(ids) == 0:
-            results = execute_query('g.V("element_type","%s").toList()' % cls.get_element_type())
+            results = connection.execute_query('g.V("element_type","%s").toList()' % cls.get_element_type())
 
         else:
             strids = [str(i) for i in ids]
 
-            results = execute_query('ids.collect{g.v(it)}', {'ids': strids})
+            results = connection.execute_query('ids.collect{g.v(it)}', {'ids': strids})
             results = list(filter(None, results))
 
             if len(results) != len(ids) and match_length:
@@ -204,7 +204,7 @@ class Vertex(Element):
 
         """
         reloaded_values = {}
-        results = execute_query('g.v(id)', {'id': self._id})
+        results = connection.execute_query('g.v(id)', {'id': self._id})
         #del results['_id']
         del results['_type']
         reloaded_values['_id'] = results['_id']

@@ -5,7 +5,7 @@ from decimal import Decimal as _Decimal
 from uuid import UUID as _UUID
 import logging
 from mogwai._compat import array_types, string_types, integer_types, float_types, iteritems
-from mogwai.connection import execute_query
+from mogwai import connection
 from mogwai.exceptions import MogwaiQueryError, MogwaiGremlinException
 from .groovy import parse, GroovyImport
 from .table import Table, Row
@@ -197,7 +197,7 @@ class BaseGremlinMethod(object):
 
             context = "{}.{}".format(context, self.method_name)
 
-            tmp = execute_query(script, params, transaction=self.transaction, context=context)
+            tmp = connection.execute_query(script, params, transaction=self.transaction, context=context)
         except MogwaiQueryError as pqe:  # pragma: no cover
             import pprint
             msg = "Error while executing Gremlin method\n\n"

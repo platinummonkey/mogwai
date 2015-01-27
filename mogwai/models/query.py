@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 import logging
 
 from mogwai._compat import float_types, print_
-from mogwai.connection import execute_query
+from mogwai import connection
 from mogwai.exceptions import MogwaiQueryError
 from .element import Element, EQUAL, NOT_EQUAL, GREATER_THAN, GREATER_THAN_EQUAL, LESS_THAN, LESS_THAN_EQUAL,\
     OUT, IN, BOTH
@@ -168,7 +168,7 @@ class Query(object):
     def _execute(self, func, deserialize=True):
         tmp = "{}.{}()".format(self._get_partial(), func)
         self._vars.update({"id": self._vertex._id, "limit": self._limit})
-        results = execute_query(tmp, self._vars)
+        results = connection.execute_query(tmp, self._vars)
 
         if deserialize:
             return [Element.deserialize(r) for r in results]

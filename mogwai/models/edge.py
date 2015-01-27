@@ -1,6 +1,6 @@
 import logging
 from mogwai._compat import array_types, integer_types, float_types, string_types, add_metaclass
-from mogwai.connection import execute_query
+from mogwai import connection
 from mogwai.exceptions import ElementDefinitionException, MogwaiQueryError, ValidationError
 from mogwai.gremlin import GremlinMethod
 from .element import Element, ElementMetaClass, edge_types
@@ -138,7 +138,7 @@ class Edge(Element):
         strids = [str(i) for i in ids]
         qs = ['ids.collect{g.e(it)}']
 
-        results = execute_query('\n'.join(qs), {'ids': strids})
+        results = connection.execute_query('\n'.join(qs), {'ids': strids})
         results = list(filter(None, results))
 
         if len(results) != len(ids):
@@ -213,7 +213,7 @@ class Edge(Element):
     def _reload_values(self):
         """ Re-read the values for this edge from the graph database. """
         reloaded_values = {}
-        results = execute_query('g.e(id)', {'id': self._id})
+        results = connection.execute_query('g.e(id)', {'id': self._id})
         if results:  # note this won't work if you update a node for titan pre-0.5.x, new id's are created
             #del results['_id']
             del results['_type']
@@ -284,7 +284,7 @@ class Edge(Element):
         :rtype: list
 
         """
-        results = execute_query('g.e(id).%s()' % operation, {'id': self.id})
+        results = connection.execute_query('g.e(id).%s()' % operation, {'id': self.id})
         return [Element.deserialize(r) for r in results]
 
     def inV(self):

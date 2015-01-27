@@ -23,7 +23,7 @@ __cached_spec = None
 
 
 @metric_manager.time_calls
-def execute_query(query, params={}, transaction=True, isolate=True, *args, **kwargs):
+def execute_query(query, params={}, transaction=True, isolate=True, connection=None, *args, **kwargs):
     """
     Execute a raw Gremlin query with the given parameters passed in.
 
@@ -31,32 +31,43 @@ def execute_query(query, params={}, transaction=True, isolate=True, *args, **kwa
     :type query: str
     :param params: Parameters to the Gremlin query
     :type params: dict
+    :param connection: The RexPro connection to execute the query with
+    :type connection: RexPro(Sync|Gevent|Eventlet)Connection or None
     :param context: String context data to include with the query for stats logging
     :rtype: dict
 
     """
-    global _connection_pool
-    """ :type _connection_pool: RexProConnectionPool | None """
+    if connection:
+        response = get_response(query, params=params, isolate=isolate, transaction=transaction, connection=connection)
+    else:
+        global _connection_pool
+        """ :type _connection_pool: RexProConnectionPool | None """
 
-    if not _connection_pool:  # pragma: no cover
-        raise MogwaiConnectionError('Must call mogwai.connection.setup before querying.')
+        if not _connection_pool:  # pragma: no cover
+            raise MogwaiConnectionError('Must call mogwai.connection.setup before querying.')
 
-    with _connection_pool.connection() as conn:
-        try:
-            response = conn.execute(query, params=params, isolate=isolate, transaction=transaction)
+        with _connection_pool.connection() as conn:
+            response = get_response(query, params=params, isolate=isolate, transaction=transaction, connection=conn)
 
-        except RexProConnectionException as ce:  # pragma: no cover
-            _connection_pool.close_connection(conn, soft=True)
-            raise MogwaiConnectionError("Connection Error during query - {}".format(ce))
-        except RexProScriptException as se:  # pragma: no cover
-            _connection_pool.close_connection(conn, soft=True)
-            raise MogwaiQueryError("Error during query - {}".format(se))
-        except:  # pragma: no cover
-            _connection_pool.close_connection(conn, soft=True)
-            raise
+    return response
 
-        logger.debug(response)
-        return response
+
+def get_response(query, params, isolate, transaction, connection):
+    try:
+        response = connection.execute(query, params=params, isolate=isolate, transaction=transaction)
+
+    except RexProConnectionException as ce:  # pragma: no cover
+        _connection_pool.close_connection(connection, soft=True)
+        raise MogwaiConnectionError("Connection Error during query - {}".format(ce))
+    except RexProScriptException as se:  # pragma: no cover
+        _connection_pool.close_connection(connection, soft=True)
+        raise MogwaiQueryError("Error during query - {}".format(se))
+    except:  # pragma: no cover
+        _connection_pool.close_connection(connection, soft=True)
+        raise
+
+    logger.debug(response)
+    return response
 
 
 _host_re = compile(r'^((?P<user>.+?)(:(?P<password>.*?))?@)?(?P<host>.*?)(:(?P<port>\d+?))?(?P<graph_name>/.*?)?$')
