@@ -264,20 +264,20 @@ class BlueprintsWrapper():
 
         return self.connection
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, exc, message, traceback):
         # execute g = g.baseGraph
-        if type is None:
+        if exc is None:
             connection.execute_query("g = g.baseGraph")
         # replace original execute_query()
         connection.execute_query = self.original_execute_query
         # close connection
         try:
-            self.connection.close_transaction(type is None)
+            self.connection.close_transaction(exc is None)
         except RexProScriptException: # pragma: no cover
             pass
         connection._connection_pool.close_connection(self.connection, soft=True)
-        if type is not None: # pragma: no cover
-            raise type, value, traceback
+
+        return False
 
 
 class PartitionGraph(BlueprintsWrapper):
