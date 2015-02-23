@@ -6,11 +6,12 @@ from mogwai.models import Vertex, Edge
 from mogwai import properties
 from mogwai.tools import ImportStringError, import_string, cached_property, LazyImportClass, _Missing, Factory
 import factory
-from nose.tools import raises
+from nose.tools import raises, nottest
 from mogwai import connection
 from mogwai.exceptions import MogwaiQueryError
 from rexpro.exceptions import RexProScriptException
 from mogwai.tools import BlueprintsWrapper, PartitionGraph
+import eventlet
 
 
 @attr('unit', 'tools')
@@ -110,12 +111,12 @@ class BlueprintsWrapperEdge(Edge):
 class TestBlueprintsWrapper(BaseMogwaiTestCase):
 
     def test_blueprints_wrapper(self):
+        k = 10
         wrapper_config = {
             'class_name': "ReadOnlyGraph",
-            'setup': []
+            'bindings': {'k': k}
         }
-        with BlueprintsWrapper(wrapper_configuration=wrapper_config):
-            k = connection.execute_query("k = 10")
+        with BlueprintsWrapper(**wrapper_config):
             gsk = connection.execute_query('"powers of ${k}"')
             pysk = "powers of {}".format(k)
             self.assertEqual(gsk, pysk)
@@ -153,3 +154,74 @@ class TestBlueprintsWrapper(BaseMogwaiTestCase):
         v2.delete()
         v3.delete()
 
+
+@nottest
+def isolation_query(scope):
+    wrapper_config = {
+        'class_name': "ReadOnlyGraph",
+        'bindings': {'scope': scope},
+        'pool_size': 5
+    }
+    scope_values = []
+    with BlueprintsWrapper(**wrapper_config) as pool:
+        for i in range(7):
+            scope_val = connection.execute_query(
+                "sleep sleep_length\nreturn scope",
+                params={'sleep_length': 100 * (i % 2 + 1) - scope*10},
+                pool=pool
+            )
+            scope_values.append(scope_val)
+
+    return scope, scope_values
+
+@nottest
+def nested_wrappers(scope):
+    partition_config = {
+        'write': "characters",
+        'bindings': {'scope': scope},
+        'pool_size': 3
+    }
+    with PartitionGraph(**partition_config) as pool:
+        pile = eventlet.GreenPile()
+        [pile.spawn(isolation_query, i) for i in range(3)]
+        scope_val = connection.execute_query('scope', pool=pool)
+        scope_v = BlueprintsWrapperVertex.create(name=scope_val, pool=pool)
+        scope_v['nested_values'] = list(pile)
+        scope_v.save(pool=pool)
+
+    return scope, scope_v
+
+@attr('unit', 'tools', 'blueprintswrapper', 'concurrency')
+class TestWrapperConcurrency(BaseMogwaiTestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super(TestWrapperConcurrency, cls).setUpClass()
+        host_params = connection.HOST_PARAMS.copy()
+        host_params.pop('port')
+        connection.setup(concurrency='eventlet', **host_params)
+
+    @classmethod
+    def tearDownClass(cls):
+        host_params = connection.HOST_PARAMS.copy()
+        host_params.pop('port')
+        connection.setup(concurrency='sync', **host_params)
+        super(TestWrapperConcurrency, cls).tearDownClass()
+
+    def test_wrapper_isolation(self):
+        pile = eventlet.GreenPile()
+        [pile.spawn(isolation_query, i) for i in range(10)]
+
+        for scope, scope_values in pile:
+            for val in scope_values:
+                self.assertEqual(scope, val)
+
+    def test_nested_values(self):
+        pile = eventlet.GreenPile()
+        [pile.spawn(nested_wrappers, chr(i)) for i in range(97, 103)]
+
+        for scope, scope_v in pile:
+            self.assertEqual(scope, scope_v.name)
+            for inner_scope, scope_values in scope_v['nested_values']:
+                for val in scope_values:
+                    self.assertEqual(inner_scope, val)

@@ -68,7 +68,7 @@ class BaseMogwaiTestCase(TestCase):
     def setUpClass(cls):
         super(BaseMogwaiTestCase, cls).setUpClass()
         #sync_spec(filename='test.spec', host='192.168.133.12', graph_name='graph')
-        setup(os.getenv('TITAN_REXPRO_URL', 'localhost'), graph_name='graph')
+        setup(os.getenv('TITAN_REXPRO_URL', 'localhost'), graph_name='mogwai', concurrency='sync')
 
     def assertHasAttr(self, obj, attr):
         self.assertTrue(hasattr(obj, attr), "%s doesn't have attribute: %s" % (obj, attr))
