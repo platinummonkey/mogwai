@@ -225,3 +225,4 @@ class TestWrapperConcurrency(BaseMogwaiTestCase):
             for inner_scope, scope_values in scope_v['nested_values']:
                 for val in scope_values:
                     self.assertEqual(inner_scope, val)
+            scope_v.delete()
