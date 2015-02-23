@@ -215,10 +215,13 @@ class SessionPoolManager(object):
     to use connections from the pool by default. In concurrent mode the pool always
     needs to be used explicitly, because we cannot rely on global context for patching.
 
+    :param dict bindings: variables that are available throughout the session (optional)
+    :param int pool_size: the maximum number of simultaneous connections for this pool
     :return: the used RexPro connection pool (with default session)
     """
 
-    def __init__(self, pool_size=10):
+    def __init__(self, bindings=None, pool_size=10):
+        self.bindings = bindings
         self.pool_size = pool_size
 
     def __enter__(self):
@@ -227,6 +230,10 @@ class SessionPoolManager(object):
         # create a pool with session
         self.pool = connection.CONNECTION_POOL_TYPE(pool_size=self.pool_size, with_session=True,
                                                     **connection.HOST_PARAMS)
+
+        # assign optional binding variables
+        if self.bindings:
+            connection.execute_query('g', params=self.bindings, isolate=False, pool=self.pool)
 
         # patch execute_query if we're running non-concurrently
         if connection.CONNECTION_TYPE == RexProSyncConnection:
@@ -303,14 +310,14 @@ class PartitionGraph(BlueprintsWrapper):
 
     :param str write: the default read+write partition.
     :param iterable read: optional read partitions.
-    :return: the used RexPro connection
+    :return: the used RexPro connection pool (with default session)
     :raises MogwaiBlueprintsWrapperException: if no write partition is provided
     """
 
-    def __init__(self, write=None, read=None, pool_size=10):
+    def __init__(self, write=None, read=None, *args, **kwargs):
         if not write: # pragma: no cover
             raise MogwaiBlueprintsWrapperException("A write partition is required.")
         read = read or []
+        super(PartitionGraph, self).__init__('PartitionGraph', *args, **kwargs)
         self.g_assignment = "g = new PartitionGraph(g, '_partition', '{}')".format(write)
         self.setup = ["g.addReadPartition('{}')".format(rp) for rp in read]
-        self.pool_size = pool_size
