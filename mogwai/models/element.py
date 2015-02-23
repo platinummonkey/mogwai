@@ -8,7 +8,7 @@ from mogwai import properties
 from mogwai.exceptions import MogwaiException, SaveStrategyException, \
     ModelException, ElementDefinitionException
 from mogwai.gremlin import BaseGremlinMethod
-from mogwai.connection import _add_model_to_space
+from mogwai import connection
 
 # import for backward compatibility
 from mogwai.constants import BOTH, EQUAL, GREATER_THAN, GREATER_THAN_EQUAL, \
@@ -243,7 +243,9 @@ class BaseElement(object):
     @classmethod
     def create(cls, *args, **kwargs):
         """Create a new element with the given information."""
-        return cls(*args, **kwargs).save()
+        # pop the optional execute query arguments from kwargs
+        query_kwargs = connection.pop_execute_query_kwargs(kwargs)
+        return cls(*args, **kwargs).save(**query_kwargs)
 
     def pre_save(self):
         """Pre-save hook which is run before saving an element"""
@@ -286,12 +288,12 @@ class BaseElement(object):
         """
         raise NotImplementedError
 
-    def reload(self):
+    def reload(self, *args, **kwargs):
         """
         Reload the given element from the database.
 
         """
-        values = self._reload_values()
+        values = self._reload_values(**kwargs)
         for name, prop in self._properties.items():
             value = values.get(prop.db_field_name, None)
             if value is not None:
@@ -517,7 +519,7 @@ class ElementMetaClass(type):
         for name, method in gremlin_methods.items():
             method.configure_method(klass, name, gremlin_path)
 
-        _add_model_to_space(klass)
+        connection._add_model_to_space(klass)
         return klass
 
 

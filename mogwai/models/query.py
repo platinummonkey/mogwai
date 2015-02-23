@@ -28,12 +28,12 @@ class Query(object):
         self._direction = []
         self._vars = {}
 
-    def count(self):
+    def count(self, *args, **kwargs):
         """
         :returns: number of matching vertices
         :rtype: int
         """
-        return self._execute('count', deserialize=False)
+        return self._execute('count', deserialize=False, **kwargs)
 
     def direction(self, direction):
         """
@@ -46,11 +46,11 @@ class Query(object):
         q._direction = direction
         return q
 
-    def edges(self):
+    def edges(self, *args, **kwargs):
         """
         :rtype: list[edge.Edge]
         """
-        return self._execute('edges')
+        return self._execute('edges', **kwargs)
 
     def has(self, key, value, compare=EQUAL):
         """
@@ -105,15 +105,15 @@ class Query(object):
         q._limit = limit
         return q
 
-    def remove(self):
+    def remove(self, *args, **kwargs):
         """ Deletes a vertex or edge """
-        return self._execute('remove', deserialize=False)
+        return self._execute('remove', deserialize=False, **kwargs)
 
-    def vertexIds(self):
-        return self._execute('vertexIds', deserialize=False)
+    def vertexIds(self, *args, **kwargs):
+        return self._execute('vertexIds', deserialize=False, **kwargs)
 
-    def vertices(self):
-        return self._execute('vertices')
+    def vertices(self, *args, **kwargs):
+        return self._execute('vertices', **kwargs)
 
     def _get_partial(self):
         limit = ".limit(limit)" if self._limit else ""
@@ -165,10 +165,10 @@ class Query(object):
 
         return "g.v(id).query(){}{}{}{}{}".format(labels, limit, dir, has, intervals)
 
-    def _execute(self, func, deserialize=True):
+    def _execute(self, func, deserialize=True, *args, **kwargs):
         tmp = "{}.{}()".format(self._get_partial(), func)
         self._vars.update({"id": self._vertex._id, "limit": self._limit})
-        results = connection.execute_query(tmp, self._vars)
+        results = connection.execute_query(tmp, self._vars, **kwargs)
 
         if deserialize:
             return [Element.deserialize(r) for r in results]

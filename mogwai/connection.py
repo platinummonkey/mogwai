@@ -197,3 +197,16 @@ def sync_spec(filename, host, graph_name='graph', graph_obj_name='g', username='
     conn = RexProConnection(graph_name=graph_name, **_parse_host(host, username, password, graph_name, graph_obj_name))
     #Spec(filename).sync(conn, dry_run=dry_run)
     pass
+
+
+def pop_execute_query_kwargs(keyword_arguments):
+    """ pop the optional execute query arguments from arbitrary kwargs;
+        return non-None query kwargs in a dict
+    """
+    query_kwargs = {}
+    for key in ('transaction', 'isolate', 'pool'):
+        val = keyword_arguments.pop(key, None)
+        if val is not None:
+            query_kwargs[key] = val
+
+    return query_kwargs

@@ -121,7 +121,7 @@ class Edge(Element):
         return results
 
     @classmethod
-    def all(cls, ids, as_dict=False):
+    def all(cls, ids, as_dict=False, *args, **kwargs):
         """
         Load all edges with the given edge_ids from the graph. By default this will return a list of edges but if
         as_dict is True then it will return a dictionary containing edge_ids as keys and edges found as values.
@@ -138,7 +138,7 @@ class Edge(Element):
         strids = [str(i) for i in ids]
         qs = ['ids.collect{g.e(it)}']
 
-        results = connection.execute_query('\n'.join(qs), {'ids': strids})
+        results = connection.execute_query('\n'.join(qs), {'ids': strids}, **kwargs)
         results = list(filter(None, results))
 
         if len(results) != len(ids):
@@ -203,17 +203,18 @@ class Edge(Element):
         """
         Save this edge to the graph database.
         """
-        super(Edge, self).save(*args, **kwargs)
+        super(Edge, self).save()
         return self._save_edge(self._outV,
                                self._inV,
                                self.get_label(),
                                self.as_save_params(),
-                               exclusive=self.__exclusive__)
+                               exclusive=self.__exclusive__,
+                               **kwargs)
 
-    def _reload_values(self):
+    def _reload_values(self, *args, **kwargs):
         """ Re-read the values for this edge from the graph database. """
         reloaded_values = {}
-        results = connection.execute_query('g.e(id)', {'id': self._id})
+        results = connection.execute_query('g.e(id)', {'id': self._id}, **kwargs)
         if results:  # note this won't work if you update a node for titan pre-0.5.x, new id's are created
             #del results['_id']
             del results['_type']
@@ -227,7 +228,7 @@ class Edge(Element):
             return {}
 
     @classmethod
-    def get(cls, id):
+    def get(cls, id, *args, **kwargs):
         """
         Look up edge by titan assigned ID. Raises a DoesNotExist exception if a edge with the given edge id was not
         found. Raises a MultipleObjectsReturned exception if the edge_id corresponds to more than one edge in the graph.
@@ -237,7 +238,7 @@ class Edge(Element):
         :rtype: mogwai.models.Edge
         """
         try:
-            results = cls.all([id])
+            results = cls.all([id], **kwargs)
             if len(results) > 1:  # pragma: no cover
                 # This requires titan to be broken.
                 raise cls.MultipleObjectsReturned
@@ -275,7 +276,7 @@ class Edge(Element):
             return self
         self._delete_edge()
 
-    def _simple_traversal(self, operation):
+    def _simple_traversal(self, operation, *args, **kwargs):
         """
         Perform a simple traversal starting from the current edge returning a list of results.
 
@@ -284,10 +285,10 @@ class Edge(Element):
         :rtype: list
 
         """
-        results = connection.execute_query('g.e(id).%s()' % operation, {'id': self.id})
+        results = connection.execute_query('g.e(id).%s()' % operation, {'id': self.id}, **kwargs)
         return [Element.deserialize(r) for r in results]
 
-    def inV(self):
+    def inV(self, *args, **kwargs):
         """
         Return the vertex that this edge goes into.
 
@@ -297,12 +298,12 @@ class Edge(Element):
         from mogwai.models.vertex import Vertex
 
         if self._inV is None:
-            self._inV = self._simple_traversal('inV')[0]
+            self._inV = self._simple_traversal('inV', **kwargs)[0]
         if isinstance(self._inV, string_types + integer_types):
-            self._inV = Vertex.get(self._inV)
+            self._inV = Vertex.get(self._inV, **kwargs)
         return self._inV
 
-    def outV(self):
+    def outV(self, *args, **kwargs):
         """
         Return the vertex that this edge is coming out of.
 
@@ -312,7 +313,7 @@ class Edge(Element):
         from mogwai.models.vertex import Vertex
 
         if self._outV is None:
-            self._outV = self._simple_traversal('outV')[0]
+            self._outV = self._simple_traversal('outV', **kwargs)[0]
         if isinstance(self._inV, string_types + integer_types):
-            self._outV = Vertex.get(self._outV)
+            self._outV = Vertex.get(self._outV, **kwargs)
         return self._outV
