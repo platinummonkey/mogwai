@@ -6,7 +6,7 @@ from mogwai._compat import reraise, string_types, PY2
 from mogwai import connection
 from mogwai.exceptions import MogwaiBlueprintsWrapperException
 from factory import base
-import factory as factory
+from rexpro.connectors.sync import RexProSyncConnection
 
 
 class ImportStringError(ImportError):
@@ -208,76 +208,93 @@ class Factory(base.Factory):
         return obj
 
 
-class BlueprintsWrapper():
-    """Abstract implementation for using a Blueprints graph wrapper
-    within a persisted transaction. Within this transaction `g`
-    refers to the wrapped graph.
+class SessionPoolManager(object):
+    """A context manager that exposes a pool whose connections share the same session.
+    If RexPro is used without concurrency, it is not necessary to use connections
+    from the pool explicitly. `connection.execute_query` is patched in this case
+    to use connections from the pool by default. In concurrent mode the pool always
+    needs to be used explicitly, because we cannot rely on global context for patching.
 
-    :param dict wrapper_configuration: the dict that defines which
-        wrapper should be initialized, and with which configuration.
-        `wrapper_configuration['class_name']` must be the Blueprints
-        class name as a string.
-        `wrapper_configuration['setup']` is an iterable with additional
-        groovy statements that are executed upon initialization. It
-        may be empty.
-    :return: the used RexPro connection
-    :raises MogwaiBlueprintsWrapperException: if no configuration is provided
-    :raises RexProConnectionException: if the connection from the pool is closed
+    :return: the used RexPro connection pool (with default session)
     """
 
-    def __init__(self, wrapper_configuration=None):
-        if not wrapper_configuration: # pragma: no cover
-            raise MogwaiBlueprintsWrapperException("A wrapper configuration is required.")
-        self.g_assignment = "g = new {}(g)".format(wrapper_configuration['class_name'])
-        self.setup = wrapper_configuration['setup']
+    def __init__(self, pool_size=10):
+        self.pool_size = pool_size
 
     def __enter__(self):
         # assign original execute_query()
         self.original_execute_query = connection.execute_query
-        # open connection from pool
-        self.connection = connection._connection_pool.create_connection()
-        if not self.connection: # pragma: no cover
-            raise RexProConnectionException("Cannot commit because connection was closed: %r" % (self.connection, ))
-        self.connection.test_connection()
-        self.connection.open_transaction()
+        # create a pool with session
+        self.pool = connection.CONNECTION_POOL_TYPE(pool_size=self.pool_size, with_session=True,
+                                                    **connection.HOST_PARAMS)
 
-        # shadow execute_query with self.connection and isolated=False
-        def execute_with_connection(query, params={}, transaction=False, isolate=False, connection=self.connection, *args, **kwargs):
-            return self.original_execute_query(
-                query, params=params, transaction=False, isolate=False, connection=connection, *args, **kwargs
-            )
+        # patch execute_query if we're running non-concurrently
+        if connection.CONNECTION_TYPE == RexProSyncConnection:
+            # shadow execute_query with default self.pool
+            def execute_in_pool(query, params=None, transaction=True, isolate=True,
+                                pool=self.pool, *args, **kwargs):
+                params = params or {}
+                return self.original_execute_query(
+                    query, params=params, transaction=transaction, isolate=isolate, pool=pool, *args, **kwargs
+                )
 
-        # patch execute_query to persist the transaction
-        connection.execute_query = execute_with_connection
+            # patch execute_query to re-use the pool with session
+            connection.execute_query = execute_in_pool
+
+        return self.pool
+
+    def __exit__(self, exc, message, traceback):
+        # replace original execute_query()
+        connection.execute_query = self.original_execute_query
+        # commit and close all connections
+        self.pool.close_all(force_commit=True)
+
+        return False
+
+
+class BlueprintsWrapper(SessionPoolManager):
+    """Abstract implementation for using a Blueprints graph wrapper
+    within a persisted transaction. Within this transaction `g`
+    refers to the wrapped graph.
+
+    :param str class_name: the Blueprints Implementation class name
+    :param str setup: an iterable with additional groovy statements that are
+        executed upon initialization. (optional, default: [])
+    :return: the used RexPro connection pool (with default session)
+    :raises MogwaiBlueprintsWrapperException: if no class name is provided
+    """
+
+    def __init__(self, class_name=None, setup=None, *args, **kwargs):
+        super(BlueprintsWrapper, self).__init__(*args, **kwargs)
+
+        if not class_name: # pragma: no cover
+            raise MogwaiBlueprintsWrapperException("A wrapper class name is required.")
+        self.g_assignment = "g = new {}(g)".format(class_name)
+        self.setup = setup or []
+
+    def __enter__(self):
+        pool = super(BlueprintsWrapper, self).__enter__()
 
         # execute g_assignment
-        resp = connection.execute_query(self.g_assignment)
+        resp = connection.execute_query(self.g_assignment, transaction=False, isolate=False, pool=pool)
 
         # provide a dummy stopTransaction() on non-transactional graphs
         connection.execute_query(
-            "if (!g.metaClass.respondsTo(g, 'stopTransaction')) { g.metaClass.stopTransaction = {null} }"
+            "if (!g.metaClass.respondsTo(g, 'stopTransaction')) { g.metaClass.stopTransaction = {null} }",
+            transaction=False, isolate=False, pool=self.pool
         )
 
         # execute wrapper setup
         for statement in self.setup:
-            connection.execute_query(statement)
+            connection.execute_query(statement, transaction=False, isolate=False, pool=pool)
 
-        return self.connection
+        return pool
 
     def __exit__(self, exc, message, traceback):
         # execute g = g.baseGraph
-        if exc is None:
-            connection.execute_query("g = g.baseGraph")
-        # replace original execute_query()
-        connection.execute_query = self.original_execute_query
-        # close connection
-        try:
-            self.connection.close_transaction(exc is None)
-        except RexProScriptException: # pragma: no cover
-            pass
-        connection._connection_pool.close_connection(self.connection, soft=True)
+        connection.execute_query("g = g.baseGraph", transaction=False, isolate=False, pool=self.pool)
 
-        return False
+        return super(BlueprintsWrapper, self).__exit__(exc, message, traceback)
 
 
 class PartitionGraph(BlueprintsWrapper):
@@ -290,8 +307,10 @@ class PartitionGraph(BlueprintsWrapper):
     :raises MogwaiBlueprintsWrapperException: if no write partition is provided
     """
 
-    def __init__(self, write=None, read=[]):
+    def __init__(self, write=None, read=None, pool_size=10):
         if not write: # pragma: no cover
             raise MogwaiBlueprintsWrapperException("A write partition is required.")
+        read = read or []
         self.g_assignment = "g = new PartitionGraph(g, '_partition', '{}')".format(write)
         self.setup = ["g.addReadPartition('{}')".format(rp) for rp in read]
+        self.pool_size = pool_size

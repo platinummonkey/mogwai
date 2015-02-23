@@ -5,7 +5,6 @@ from re import compile
 from rexpro.connection import RexProConnection
 from rexpro.utils import get_rexpro
 from rexpro.exceptions import RexProConnectionException, RexProScriptException
-
 from mogwai.exceptions import MogwaiConnectionError, MogwaiQueryError
 from mogwai.metrics.manager import MetricManager
 
@@ -15,6 +14,7 @@ logger = logging.getLogger(__name__)
 SOCKET_TYPE = None
 CONNECTION_TYPE = None
 CONNECTION_POOL_TYPE = None
+HOST_PARAMS = None
 _connection_pool = None
 _graph_name = None
 metric_manager = MetricManager()
@@ -23,7 +23,7 @@ __cached_spec = None
 
 
 @metric_manager.time_calls
-def execute_query(query, params={}, transaction=True, isolate=True, connection=None, *args, **kwargs):
+def execute_query(query, params={}, transaction=True, isolate=True, pool=None, *args, **kwargs):
     """
     Execute a raw Gremlin query with the given parameters passed in.
 
@@ -37,17 +37,18 @@ def execute_query(query, params={}, transaction=True, isolate=True, connection=N
     :rtype: dict
 
     """
-    if connection:
-        response = get_response(query, params=params, isolate=isolate, transaction=transaction, connection=connection)
+    if pool:
+        connection_pool = pool
     else:
         global _connection_pool
         """ :type _connection_pool: RexProConnectionPool | None """
+        connection_pool = _connection_pool
 
-        if not _connection_pool:  # pragma: no cover
-            raise MogwaiConnectionError('Must call mogwai.connection.setup before querying.')
+    if not connection_pool:  # pragma: no cover
+        raise MogwaiConnectionError('Must call mogwai.connection.setup before querying.')
 
-        with _connection_pool.connection() as conn:
-            response = get_response(query, params=params, isolate=isolate, transaction=transaction, connection=conn)
+    with connection_pool.connection(transaction=transaction) as conn:
+        response = get_response(query, params=params, isolate=isolate, transaction=transaction, connection=conn)
 
     return response
 
@@ -93,7 +94,7 @@ def setup(host, graph_name='graph', graph_obj_name='g', username='', password=''
 
     """
     global _connection_pool
-    global SOCKET_TYPE, CONNECTION_TYPE, CONNECTION_POOL_TYPE
+    global SOCKET_TYPE, CONNECTION_TYPE, CONNECTION_POOL_TYPE, HOST_PARAMS
     global metric_manager
 
     if metric_reporters:  # pragma: no cover
@@ -104,10 +105,10 @@ def setup(host, graph_name='graph', graph_obj_name='g', username='', password=''
     SOCKET_TYPE = sock
     CONNECTION_TYPE = conn
     CONNECTION_POOL_TYPE = pool
+    HOST_PARAMS = _parse_host(host, username, password, graph_name, graph_obj_name)
 
     if isinstance(host, string_types):
-        _connection_pool = pool(pool_size=pool_size,
-                                **_parse_host(host, username, password, graph_name, graph_obj_name))
+        _connection_pool = pool(pool_size=pool_size, **HOST_PARAMS)
 
     else:  # pragma: no cover
         raise MogwaiConnectionError("Must Specify at least one host or list of hosts: host: {}, graph_name: {}".format(
