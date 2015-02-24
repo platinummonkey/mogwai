@@ -2,13 +2,13 @@ from __future__ import unicode_literals
 from six import print_
 import json
 
-from mogwai.connection import generate_spec, execute_query
+from mogwai import connection
 
 
 def get_existing_indices():
     """ Find all Vertex and Edge types available in the database """
-    vertex_indices = execute_query('g.getIndexedKeys(Vertex.class)')
-    edge_indices = execute_query('g.getIndexedKeys(Edge.class)')
+    vertex_indices = connection.execute_query('g.getIndexedKeys(Vertex.class)')
+    edge_indices = connection.execute_query('g.getIndexedKeys(Edge.class)')
     return vertex_indices, edge_indices
 
 
@@ -20,7 +20,7 @@ def write_diff_indices_to_file(filename, spec=None):  # pragma: no cover
     """
     if not spec:
         print_("Generating Specification...")
-        spec = generate_spec()
+        spec = connection.generate_spec()
     print_("Writing Compiled Diff Indices to File %s ..." % filename)
     vertex_indices, edge_indices = get_existing_indices()
     with open(filename, 'wb') as f:
@@ -40,7 +40,7 @@ def write_compiled_indices_to_file(filename, spec=None):  # pragma: no cover
     """
     if not spec:
         print_("Generating Specification...")
-        spec = generate_spec()
+        spec = connection.generate_spec()
     print_("Writing Compiled Indices to File %s ..." % filename)
     with open(filename, 'wb') as f:
         for s in spec:
@@ -55,7 +55,7 @@ def write_specs_to_file(filename):  # pragma: no cover
     :type filename: basestring
     """
     print_("Generating Specification...")
-    spec = generate_spec()
+    spec = connection.generate_spec()
     print_("Writing Specification to File %s ..." % filename)
     with open(filename, 'wb') as f:
         json.dump(spec, f)

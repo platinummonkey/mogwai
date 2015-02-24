@@ -3,7 +3,7 @@ import inspect
 import logging
 
 from mogwai._compat import array_types, string_types, add_metaclass, integer_types, float_types
-from mogwai.connection import execute_query
+from mogwai import connection
 from mogwai.exceptions import MogwaiException, ElementDefinitionException, MogwaiQueryError
 from mogwai.gremlin import GremlinMethod
 from .element import Element, ElementMetaClass, vertex_types
@@ -159,7 +159,7 @@ class Vertex(Element):
         return cls._type_name(cls.element_type)
 
     @classmethod
-    def all(cls, ids=[], as_dict=False, match_length=True):
+    def all(cls, ids=[], as_dict=False, match_length=True, *args, **kwargs):
         """
         Load all vertices with the given ids from the graph. By default this will return a list of vertices but if
         as_dict is True then it will return a dictionary containing ids as keys and vertices found as values.
@@ -175,12 +175,12 @@ class Vertex(Element):
             raise MogwaiQueryError("ids must be of type list or tuple")
 
         if len(ids) == 0:
-            results = execute_query('g.V("element_type","%s").toList()' % cls.get_element_type())
+            results = connection.execute_query('g.V("element_type","%s").toList()' % cls.get_element_type(), **kwargs)
 
         else:
             strids = [str(i) for i in ids]
 
-            results = execute_query('ids.collect{g.v(it)}', {'ids': strids})
+            results = connection.execute_query('ids.collect{g.v(it)}', {'ids': strids}, **kwargs)
             results = list(filter(None, results))
 
             if len(results) != len(ids) and match_length:
@@ -198,13 +198,13 @@ class Vertex(Element):
 
         return objects
 
-    def _reload_values(self):
+    def _reload_values(self, *args, **kwargs):
         """
         Method for reloading the current vertex by reading its current values from the database.
 
         """
         reloaded_values = {}
-        results = execute_query('g.v(id)', {'id': self._id})
+        results = connection.execute_query('g.v(id)', {'id': self._id}, **kwargs)
         #del results['_id']
         del results['_type']
         reloaded_values['_id'] = results['_id']
@@ -213,7 +213,7 @@ class Vertex(Element):
         return reloaded_values
 
     @classmethod
-    def get(cls, id):
+    def get(cls, id, *args, **kwargs):
         """
         Look up vertex by its ID. Raises a DoesNotExist exception if a vertex with the given vid was not found.
         Raises a MultipleObjectsReturned exception if the vid corresponds to more than one vertex in the graph.
@@ -224,7 +224,7 @@ class Vertex(Element):
 
         """
         try:
-            results = cls.all([id])
+            results = cls.all([id], **kwargs)
             if len(results) > 1:  # pragma: no cover
                 # This requires to titan to be broken.
                 raise cls.MultipleObjectsReturned
@@ -244,10 +244,10 @@ class Vertex(Element):
         Save the current vertex using the configured save strategy, the default save strategy is to re-save all
         fields every time the object is saved.
         """
-        super(Vertex, self).save(*args, **kwargs)
+        super(Vertex, self).save()
         params = self.as_save_params()
         params['element_type'] = self.get_element_type()
-        result = self._save_vertex(params)
+        result = self._save_vertex(params, **kwargs)
         self._id = result._id
         for k, v in self._values.items():
             v.previous_value = result._values[k].previous_value

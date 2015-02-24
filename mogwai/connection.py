@@ -5,7 +5,6 @@ from re import compile
 from rexpro.connection import RexProConnection
 from rexpro.utils import get_rexpro
 from rexpro.exceptions import RexProConnectionException, RexProScriptException
-
 from mogwai.exceptions import MogwaiConnectionError, MogwaiQueryError
 from mogwai.metrics.manager import MetricManager
 
@@ -15,6 +14,7 @@ logger = logging.getLogger(__name__)
 SOCKET_TYPE = None
 CONNECTION_TYPE = None
 CONNECTION_POOL_TYPE = None
+HOST_PARAMS = None
 _connection_pool = None
 _graph_name = None
 metric_manager = MetricManager()
@@ -23,7 +23,7 @@ __cached_spec = None
 
 
 @metric_manager.time_calls
-def execute_query(query, params={}, transaction=True, isolate=True, *args, **kwargs):
+def execute_query(query, params={}, transaction=True, isolate=True, pool=None, *args, **kwargs):
     """
     Execute a raw Gremlin query with the given parameters passed in.
 
@@ -31,32 +31,44 @@ def execute_query(query, params={}, transaction=True, isolate=True, *args, **kwa
     :type query: str
     :param params: Parameters to the Gremlin query
     :type params: dict
+    :param connection: The RexPro connection to execute the query with
+    :type connection: RexPro(Sync|Gevent|Eventlet)Connection or None
     :param context: String context data to include with the query for stats logging
     :rtype: dict
 
     """
-    global _connection_pool
-    """ :type _connection_pool: RexProConnectionPool | None """
+    if pool:
+        connection_pool = pool
+    else:
+        global _connection_pool
+        """ :type _connection_pool: RexProConnectionPool | None """
+        connection_pool = _connection_pool
 
-    if not _connection_pool:  # pragma: no cover
+    if not connection_pool:  # pragma: no cover
         raise MogwaiConnectionError('Must call mogwai.connection.setup before querying.')
 
-    with _connection_pool.connection() as conn:
-        try:
-            response = conn.execute(query, params=params, isolate=isolate, transaction=transaction)
+    with connection_pool.connection(transaction=transaction) as conn:
+        response = get_response(query, params=params, isolate=isolate, transaction=transaction, connection=conn)
 
-        except RexProConnectionException as ce:  # pragma: no cover
-            _connection_pool.close_connection(conn, soft=True)
-            raise MogwaiConnectionError("Connection Error during query - {}".format(ce))
-        except RexProScriptException as se:  # pragma: no cover
-            _connection_pool.close_connection(conn, soft=True)
-            raise MogwaiQueryError("Error during query - {}".format(se))
-        except:  # pragma: no cover
-            _connection_pool.close_connection(conn, soft=True)
-            raise
+    return response
 
-        logger.debug(response)
-        return response
+
+def get_response(query, params, isolate, transaction, connection):
+    try:
+        response = connection.execute(query, params=params, isolate=isolate, transaction=transaction)
+
+    except RexProConnectionException as ce:  # pragma: no cover
+        _connection_pool.close_connection(connection, soft=True)
+        raise MogwaiConnectionError("Connection Error during query - {}".format(ce))
+    except RexProScriptException as se:  # pragma: no cover
+        _connection_pool.close_connection(connection, soft=True)
+        raise MogwaiQueryError("Error during query - {}".format(se))
+    except:  # pragma: no cover
+        _connection_pool.close_connection(connection, soft=True)
+        raise
+
+    logger.debug(response)
+    return response
 
 
 _host_re = compile(r'^((?P<user>.+?)(:(?P<password>.*?))?@)?(?P<host>.*?)(:(?P<port>\d+?))?(?P<graph_name>/.*?)?$')
@@ -82,7 +94,7 @@ def setup(host, graph_name='graph', graph_obj_name='g', username='', password=''
 
     """
     global _connection_pool
-    global SOCKET_TYPE, CONNECTION_TYPE, CONNECTION_POOL_TYPE
+    global SOCKET_TYPE, CONNECTION_TYPE, CONNECTION_POOL_TYPE, HOST_PARAMS
     global metric_manager
 
     if metric_reporters:  # pragma: no cover
@@ -93,10 +105,10 @@ def setup(host, graph_name='graph', graph_obj_name='g', username='', password=''
     SOCKET_TYPE = sock
     CONNECTION_TYPE = conn
     CONNECTION_POOL_TYPE = pool
+    HOST_PARAMS = _parse_host(host, username, password, graph_name, graph_obj_name)
 
     if isinstance(host, string_types):
-        _connection_pool = pool(pool_size=pool_size,
-                                **_parse_host(host, username, password, graph_name, graph_obj_name))
+        _connection_pool = pool(pool_size=pool_size, **HOST_PARAMS)
 
     else:  # pragma: no cover
         raise MogwaiConnectionError("Must Specify at least one host or list of hosts: host: {}, graph_name: {}".format(
@@ -185,3 +197,16 @@ def sync_spec(filename, host, graph_name='graph', graph_obj_name='g', username='
     conn = RexProConnection(graph_name=graph_name, **_parse_host(host, username, password, graph_name, graph_obj_name))
     #Spec(filename).sync(conn, dry_run=dry_run)
     pass
+
+
+def pop_execute_query_kwargs(keyword_arguments):
+    """ pop the optional execute query arguments from arbitrary kwargs;
+        return non-None query kwargs in a dict
+    """
+    query_kwargs = {}
+    for key in ('transaction', 'isolate', 'pool'):
+        val = keyword_arguments.pop(key, None)
+        if val is not None:
+            query_kwargs[key] = val
+
+    return query_kwargs

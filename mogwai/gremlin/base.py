@@ -5,7 +5,7 @@ from decimal import Decimal as _Decimal
 from uuid import UUID as _UUID
 import logging
 from mogwai._compat import array_types, string_types, integer_types, float_types, iteritems
-from mogwai.connection import execute_query
+from mogwai import connection
 from mogwai.exceptions import MogwaiQueryError, MogwaiGremlinException
 from .groovy import parse, GroovyImport
 from .table import Table, Row
@@ -21,7 +21,7 @@ class BaseGremlinMethod(object):
                  method_name=None,
                  classmethod=False,
                  property=False,
-                 defaults={},
+                 defaults=None,
                  transaction=True,
                  imports=None):
         """
@@ -50,7 +50,7 @@ class BaseGremlinMethod(object):
         self.method_name = method_name
         self.classmethod = classmethod
         self.property = property
-        self.defaults =defaults
+        self.defaults = defaults or {}
         self.transaction = transaction
 
         # function
@@ -144,10 +144,15 @@ class BaseGremlinMethod(object):
         Intercept attempts to call the GremlinMethod attribute and perform a gremlin query returning the results.
 
         :param instance: The class instance the method was called on
+        :param pool: The RexPro connection pool to execute the query with (optional)
         :type instance: object
 
         """
         self._setup()
+
+        # pop the optional execute query arguments from kwargs
+        query_kwargs = connection.pop_execute_query_kwargs(kwargs)
+        query_kwargs['transaction'] = query_kwargs.get('transaction') or self.transaction
 
         args = list(args)
         if not self.classmethod:
@@ -197,7 +202,7 @@ class BaseGremlinMethod(object):
 
             context = "{}.{}".format(context, self.method_name)
 
-            tmp = execute_query(script, params, transaction=self.transaction, context=context)
+            tmp = connection.execute_query(script, params, context=context, **query_kwargs)
         except MogwaiQueryError as pqe:  # pragma: no cover
             import pprint
             msg = "Error while executing Gremlin method\n\n"

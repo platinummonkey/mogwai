@@ -6,7 +6,7 @@ from nose.tools import nottest
 
 
 from .base import BaseMogwaiTestCase
-from mogwai.connection import generate_spec, execute_query
+from mogwai import connection
 from mogwai.models import Vertex, Edge
 from mogwai.properties import String
 from mogwai.spec import get_existing_indices
@@ -29,7 +29,7 @@ class TestSpecSystem(BaseMogwaiTestCase):
     """ Test specification system """
 
     def test_loaded(self):
-        spec = generate_spec()
+        spec = connection.generate_spec()
         self.assertIsInstance(spec, (list, tuple))
         self.assertGreater(len(spec), 0)
         for s in spec:
@@ -56,10 +56,10 @@ class TestSpecSystem(BaseMogwaiTestCase):
         self.assertEqual(len(e_idx), 0)
 
         # create vertex and edge index
-        execute_query('g.makeKey(name).dataType(Object.class).indexed(Vertex.class).make(); g.commit()',
-                      params={'name': 'testvertexindex'})
-        execute_query('g.makeLabel(name).dataType(Object.class).indexed(Edge.class).make(); g.commit()',
-                      params={'name': 'testedgeindex'})
+        connection.execute_query('g.makeKey(name).dataType(Object.class).indexed(Vertex.class).make(); g.commit()',
+                                 params={'name': 'testvertexindex'})
+        connection.execute_query('g.makeLabel(name).dataType(Object.class).indexed(Edge.class).make(); g.commit()',
+                                 params={'name': 'testedgeindex'})
         v_idx, e_idx = get_existing_indices()
         self.assertEqual(len(v_idx), 1)
         self.assertEqual(len(e_idx), 1)
