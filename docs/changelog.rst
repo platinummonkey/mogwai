@@ -5,6 +5,10 @@ ChangeLog
 
 Changes to the library are recorded here.
 
+v0.7.0
+------
+ * BluePrints PartitionGraph support - thanks to Alex Olieman (aolieman)
+
 v0.6.8
 ------
  * critical Relationships bugfix
