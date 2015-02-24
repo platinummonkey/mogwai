@@ -27,7 +27,7 @@ pyformance==0.2.4
 pyparsing==2.0.2
 pytz==2014.4
 requests==2.2.1
-rexpro==0.3.0
+rexpro==0.4.0
 semantic-version==2.3.0
 six==1.6.1
 sphinx-rtd-theme==0.1.6
