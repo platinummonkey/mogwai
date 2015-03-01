@@ -48,34 +48,30 @@ def execute_query(query, params={}, transaction=True, isolate=True, pool=None, *
         raise MogwaiConnectionError('Must call mogwai.connection.setup before querying.')
 
     with connection_pool.connection(transaction=transaction) as conn:
-        response = get_response(query, params=params, isolate=isolate, transaction=transaction, connection=conn)
+        response = get_response(query, params=params, isolate=isolate, transaction=transaction, connection=conn, connection_pool=connection_pool)
 
     return response
 
 
-def get_response(query, params, isolate, transaction, connection):
+def get_response(query, params, isolate, transaction, connection, connection_pool):
 
-    global _connection_pool
-
-    def soft_close_connection(connection):
-        global _connection_pool
+    def soft_close_connection(connection_pool, connection):
         try:
-            _connection_pool.close_connection(connection, soft=True)
+            connection_pool.close_connection(connection, soft=True)
         except:
             pass
-        #_connection_pool.close_connection(connection, soft=True)
 
     try:
         response = connection.execute(query, params=params, isolate=isolate, transaction=transaction)
 
     except RexProConnectionException as ce:  # pragma: no cover
-        soft_close_connection(connection)
+        soft_close_connection(connection_pool, connection)
         raise MogwaiConnectionError("Connection Error during query - {}".format(ce))
     except RexProScriptException as se:  # pragma: no cover
-        soft_close_connection(connection)
+        soft_close_connection(connection_pool, connection)
         raise MogwaiQueryError("Error during query - {}".format(se))
     except:  # pragma: no cover
-        soft_close_connection(connection)
+        soft_close_connection(connection_pool, connection)
         raise
 
     logger.debug(response)
