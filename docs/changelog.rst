@@ -5,6 +5,11 @@ ChangeLog
 
 Changes to the library are recorded here.
 
+v0.7.1
+------
+ * Fixed Rexpro Connection Pooling connection soft-closing on exception
+ * Fixed Relationship isolation bug (issue #10)
+
 v0.7.0
 ------
  * BluePrints PartitionGraph support - thanks to Alex Olieman (aolieman)
