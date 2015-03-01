@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 from nose.plugins.attrib import attr
+from copy import deepcopy
+from mogwai._compat import print_
 from mogwai.models import Vertex, Edge
 from mogwai.properties import String, Integer
 from mogwai.exceptions import MogwaiRelationshipException
@@ -59,3 +61,34 @@ class GraphRelationshipVertexIOTestCase(BaseMogwaiTestCase):
         e1.delete()
         v1.delete()
         v2.delete()
+
+    @attr('relationship_isolation')
+    def test_relationship_isolation(self):
+        """ Test that the relationship adheres to instance methods """
+
+        v11 = self.vertex_model.create(name='test1')
+        e1, v12 = v11.relation.create(vertex_params={'name': 'new_relation_1'})
+
+        r11 = deepcopy(v11.relation.vertices())
+        print_("Vertex 1-1 relationships: {}".format(r11))
+
+        v21 = self.vertex_model.create(name='test2')
+        e2, v22 = v21.relation.create(vertex_params={'name': 'new_relation_2'})
+
+        r2 = deepcopy(v21.relation.vertices())
+        print_("Vertex 2-1 relationships: {}".format(r2))
+
+        with self.assertRaises(AssertionError):
+            self.assertListEqual(r11, r2)
+
+        r12 = deepcopy(v11.relation.vertices())
+        print_("Vertex 1-1 relationships again: {}".format(r12))
+        with self.assertRaises(AssertionError):
+            self.assertListEqual(r2, r12)
+
+        self.assertListEqual(r11, r12)
+
+        v11.delete()
+        v12.delete()
+        v21.delete()
+        v22.delete()

@@ -74,8 +74,6 @@ class BaseElement(object):
             value_mngr = prop.value_manager(prop, value, prop.save_strategy)
             self._values[name] = value_mngr
             setattr(self, name, value)
-        for name, relationship in self._relationships.items():
-            relationship._setup_instantiated_vertex(self)
 
         # unknown properties that are loaded manually
         from mogwai.properties.base import BaseValueManager
@@ -473,11 +471,19 @@ class ElementMetaClass(type):
         body['_db_map'] = db_map
 
         ## Manage relationship attributes
+        def wrap_relationship(relationship):
+            def relationship_wrapper(self):
+                relationship._setup_instantiated_vertex(self)
+                return relationship
+            return relationship_wrapper
+
         from mogwai.relationships import Relationship
         from mogwai.tools import LazyImportClass
         for k, v in body.items():
             if isinstance(v, (Relationship, LazyImportClass)):
                 relationship_dict[k] = v
+                method = wrap_relationship(v)
+                body[k] = property(method)
         body['_relationships'] = relationship_dict
 
         #auto link gremlin methods
