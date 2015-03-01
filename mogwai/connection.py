@@ -54,17 +54,28 @@ def execute_query(query, params={}, transaction=True, isolate=True, pool=None, *
 
 
 def get_response(query, params, isolate, transaction, connection):
+
+    global _connection_pool
+
+    def soft_close_connection(connection):
+        global _connection_pool
+        try:
+            _connection_pool.close_connection(connection, soft=True)
+        except:
+            pass
+        #_connection_pool.close_connection(connection, soft=True)
+
     try:
         response = connection.execute(query, params=params, isolate=isolate, transaction=transaction)
 
     except RexProConnectionException as ce:  # pragma: no cover
-        _connection_pool.close_connection(connection, soft=True)
+        soft_close_connection(connection)
         raise MogwaiConnectionError("Connection Error during query - {}".format(ce))
     except RexProScriptException as se:  # pragma: no cover
-        _connection_pool.close_connection(connection, soft=True)
+        soft_close_connection(connection)
         raise MogwaiQueryError("Error during query - {}".format(se))
     except:  # pragma: no cover
-        _connection_pool.close_connection(connection, soft=True)
+        soft_close_connection(connection)
         raise
 
     logger.debug(response)
