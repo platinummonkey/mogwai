@@ -302,3 +302,50 @@ validate_url = URLValidator()
 re_uuid = re.compile(r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
 validate_uuid4 = RegexValidator(re_uuid, 'Enter a valid UUID4.', 'invalid')
 validate_uuid1 = RegexValidator(re_uuid, 'Enter a valid UUID1.', 'invalid')
+
+
+float_pattern = r'[+-]? *(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?'
+
+geoshape_point_re = re.compile(r'point\[(?P<latitude>' + float_pattern + r'),'
+                               r'(?P<longitude>' + float_pattern + r')\]', re.IGNORECASE)
+geoshape_box_re = re.compile(r'box\[\[(?P<sw_latitude>' + float_pattern + r'),'
+                             r'(?P<sw_longitude>' + float_pattern + r')\],'
+                             r'\[(?P<ne_latitude>' + float_pattern + r'),'
+                             r'(?P<ne_longitude>' + float_pattern + r')\]\]', re.IGNORECASE)
+geoshape_circle_re = re.compile(r'circle\['
+                                r'(?P<latitude>' + float_pattern + r'),'
+                                r'(?P<longitude>' + float_pattern + r')\]'
+                                r':(?P<radius>' + float_pattern + r')', re.IGNORECASE)
+
+
+validate_geoshape_point = RegexValidator(geoshape_point_re, 'Enter a valid ', 'invalid')
+
+
+class GeoShapePointValidator(BaseValidator):
+    regex = geoshape_point_re
+
+    def __init__(self, regex=None, message=None, code=None):
+        super(RegexValidator, self).__init__(message=message, code=code)
+        if regex is not None:
+            self.regex = regex
+
+        # Compile the regex if it was not passed pre-compiled.
+        if isinstance(self.regex, string_types):  # pragma: no cover
+            self.regex = re.compile(self.regex)
+
+    def __call__(self, value):
+        """
+        Validates that the input matches the regular expression.
+        """
+        if not self.regex.search(text_type(value)):
+            raise ValidationError(self.message, code=self.code)
+        else:
+            return value
+
+
+class GeoShapeBoxValidator(RegexValidator):
+    regex = geoshape_box_re
+
+
+class GeoShapeCircleValidator(RegexValidator):
+    regex = geoshape_circle_re
