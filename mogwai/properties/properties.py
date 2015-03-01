@@ -572,63 +572,49 @@ class Slug(GraphProperty):
         return value
 
 
-class GeoShapeObject(object):
-
-    class Types(object):
-        point = 'point'
-        box = 'box'
-        circle = 'circle'
-
-    def __init__(self, geo_type='point', **kwargs):
-        if geo_type not in [GeoShapeObject.Types.point, GeoShapeObject.Types.box, GeoShapeObject.Types.circle]:
-            raise MogwaiException('Invalid GeoShape type: {}'.format(geo_type))
-        self.geo_type = geo_type
-        if self.geo_type is GeoShapeObject.Types.point:
-            self.latitude = kwargs.get('latitude', None)
-            self.longitude = kwargs.get('longitude', None)
-        elif self.geo_type is GeoShapeObject.Types.box:
-            self.southwest_latitude = kwargs.get('southwest_latitude', None)
-            self.southwest_longitude = kwargs.get('southwest_longitude', None)
-            self.northeast_latitude = kwargs.get('northeast_latitude', None)
-            self.northeast_longitude = kwargs.get('northeast_longitude', None)
-        elif self.geo_type is GeoShapeObject.Types.circle:
-            self.latitude = kwargs.get('latitude', None)
-            self.longitude = kwargs.get('longitude', None)
-            self.radius_in_kilometers = kwargs.get('radius_in_kilometers', None)
-        if not self.validate():
-            raise ValidationError("Invalid GeoShape!: {}(**{})".format(geo_type, kwargs))
-
-    def validate(self):
-        number_types = integer_types + float_types
-        if self.geo_type is GeoShapeObject.Types.point:
-            return isinstance(self.longitude, number_types) and isinstance(self.latitude, number_types)
-        elif self.geo_type is GeoShapeObject.Types.box:
-            return isinstance(self.southwest_latitude, number_types) and \
-                   isinstance(self.southwest_longitude, number_types) and \
-                   isinstance(self.northeast_latitude, number_types) and \
-                   isinstance(self.northeast_longitude, number_types)
-        elif self.geo_type is GeoShapeObject.Types.circle:
-            return isinstance(self.latitude, number_types) and \
-                   isinstance(self.longitude, number_types) and \
-                   isinstance(self.radius_in_kilometers, number_types)
-
-    @staticmethod
-    def point(latitude, longitude):
-        return GeoShapeObject(geo_type=GeoShapeObject.Types.point,
-                              latitude=latitude, longitude=longitude)
-
-    @staticmethod
-    def circle(latitude, longitude, radius_in_kilometers):
-        return GeoShapeObject(geo_type=GeoShapeObject.Types.point,
-                              latitude=latitude, longitude=longitude, radius_in_kilometers=radius_in_kilometers)
-
-    @staticmethod
-    def box(southwest_latitude, southwest_longitude, northeast_latitude, northeast_longitude):
-        return GeoShapeObject(geo_type=GeoShapeObject.Types.point,
-                              southwest_latitude=southwest_latitude, southwest_longitude=southwest_longitude,
-                              northeast_latitude=northeast_latitude, northeast_longitude=northeast_longitude)
-
-
 class GeoShape(GraphProperty):
-    pass
+    """
+    GeoShape Data property type
+    """
+    data_type = "Geoshape"
+    validator = geoshape_validator
 
+    def __init__(self, geo_type=None, *args, **kwargs):
+        self.geo_type = geo_type
+        if self.geo_type is not None and self.geo_type not in ['point', 'box', 'circle']:
+            raise MogwaiException("Geoshape does not support {} type!".format(geo_type))
+        super(GeoShape, self).__init__(*args, **kwargs)
+
+    def to_python(self, value):
+        """ GeoShape from database
+
+        :param value: response object received over the wire. Note rexpro serializes these as strings!
+        :return: GeoShapeObject instance representing received geoshape
+        :rtype: GeoShapeObject | None
+        """
+        val = super(GeoShape, self).to_python(value)
+        if val is not None:
+            return GeoShapeObject._from_rexpro(value)
+
+    def to_database(self, value):
+        """ GeoShape to database
+
+        :param value: Stored GeoShapeObject value
+        :type value: GeoShapeObject | None
+        :return: storable value to send over the wire
+        :rtype: str | basestring
+        """
+        val = super(GeoShape, self).to_database(value)
+        if val is not None:
+            return val.to_database()
+
+    def validate(self, value):
+        value = super(GeoShape, self).validate(value)
+
+        if value is None:
+            return None
+
+        if self.geo_type is not None and value.geo_type != self.geo_type:
+            raise ValidationError("GeoShape type mismatch, expected: {}, got: {}".format(self.geo_type, value.geo_type))
+
+        return value

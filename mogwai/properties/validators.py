@@ -308,44 +308,115 @@ float_pattern = r'[+-]? *(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?'
 
 geoshape_point_re = re.compile(r'point\[(?P<latitude>' + float_pattern + r'),'
                                r'(?P<longitude>' + float_pattern + r')\]', re.IGNORECASE)
-geoshape_box_re = re.compile(r'box\[\[(?P<sw_latitude>' + float_pattern + r'),'
-                             r'(?P<sw_longitude>' + float_pattern + r')\],'
-                             r'\[(?P<ne_latitude>' + float_pattern + r'),'
-                             r'(?P<ne_longitude>' + float_pattern + r')\]\]', re.IGNORECASE)
+geoshape_box_re = re.compile(r'box\[\[(?P<southwest_latitude>' + float_pattern + r'),'
+                             r'(?P<southwest_longitude>' + float_pattern + r')\],'
+                             r'\[(?P<northeast_latitude>' + float_pattern + r'),'
+                             r'(?P<northeast_longitude>' + float_pattern + r')\]\]', re.IGNORECASE)
 geoshape_circle_re = re.compile(r'circle\['
                                 r'(?P<latitude>' + float_pattern + r'),'
                                 r'(?P<longitude>' + float_pattern + r')\]'
-                                r':(?P<radius>' + float_pattern + r')', re.IGNORECASE)
+                                r':(?P<radius_in_kilometers>' + float_pattern + r')', re.IGNORECASE)
 
 
-validate_geoshape_point = RegexValidator(geoshape_point_re, 'Enter a valid ', 'invalid')
+class GeoShapeObject(object):
+
+    class Types(object):
+        point = 'point'
+        box = 'box'
+        circle = 'circle'
+
+    def __init__(self, geo_type='point', **kwargs):
+        if geo_type not in [GeoShapeObject.Types.point, GeoShapeObject.Types.box, GeoShapeObject.Types.circle]:
+            raise MogwaiException('Invalid GeoShape type: {}'.format(geo_type))
+        self.geo_type = geo_type
+        if self.geo_type is GeoShapeObject.Types.point:
+            self.latitude = kwargs.get('latitude', None)
+            self.longitude = kwargs.get('longitude', None)
+        elif self.geo_type is GeoShapeObject.Types.box:
+            self.southwest_latitude = kwargs.get('southwest_latitude', None)
+            self.southwest_longitude = kwargs.get('southwest_longitude', None)
+            self.northeast_latitude = kwargs.get('northeast_latitude', None)
+            self.northeast_longitude = kwargs.get('northeast_longitude', None)
+        elif self.geo_type is GeoShapeObject.Types.circle:
+            self.latitude = kwargs.get('latitude', None)
+            self.longitude = kwargs.get('longitude', None)
+            self.radius_in_kilometers = kwargs.get('radius_in_kilometers', None)
+        if not self.validate():
+            raise ValidationError("Invalid GeoShape!: {}(**{})".format(geo_type, kwargs))
+
+    def validate(self):
+        number_types = integer_types + float_types
+        if self.geo_type is GeoShapeObject.Types.point:
+            return isinstance(self.longitude, number_types) and isinstance(self.latitude, number_types)
+        elif self.geo_type is GeoShapeObject.Types.box:
+            return isinstance(self.southwest_latitude, number_types) and \
+                   isinstance(self.southwest_longitude, number_types) and \
+                   isinstance(self.northeast_latitude, number_types) and \
+                   isinstance(self.northeast_longitude, number_types)
+        elif self.geo_type is GeoShapeObject.Types.circle:
+            return isinstance(self.latitude, number_types) and \
+                   isinstance(self.longitude, number_types) and \
+                   isinstance(self.radius_in_kilometers, number_types)
+
+    def _to_database(self):
+        if self.geo_type is GeoShapeObject.Types.point:
+            return "Geoshape.point({:f},{:f})".format(self.latitude, self.longitude)
+        elif self.geo_type is GeoShapeObject.Types.box:
+            return "Geoshape.box({:f}, {:f}, {:f}, {:f})".format(self.southwest_latitude, self.southwest_longitude,
+                                                                 self.northeast_latitude, self.northeast_longitude)
+        elif self.geo_type is GeoShapeObject.Types.circle:
+            return "Geoshape.circle({:f}, {:f}, {:f})".format(self.latitude, self.longitude, self.radius_in_kilometers)
+
+    @staticmethod
+    def point(latitude, longitude):
+        return GeoShapeObject(geo_type=GeoShapeObject.Types.point,
+                              latitude=latitude, longitude=longitude)
+
+    @staticmethod
+    def _from_rexpro(response):
+        if geoshape_point_re.match(response):
+            GeoShapeObject.point(**geoshape_point_re.match(response).groupdict())
+        elif geoshape_box_re.match(response):
+            GeoShapeObject.box(**geoshape_box_re.match(response).groupdict())
+        elif geoshape_circle_re.match(response):
+            GeoShapeObject.circle(**geoshape_circle_re.match(response).groupdict())
+
+    @staticmethod
+    def circle(latitude, longitude, radius_in_kilometers):
+        return GeoShapeObject(geo_type=GeoShapeObject.Types.point,
+                              latitude=latitude, longitude=longitude, radius_in_kilometers=radius_in_kilometers)
+
+    @staticmethod
+    def box(southwest_latitude, southwest_longitude, northeast_latitude, northeast_longitude):
+        return GeoShapeObject(geo_type=GeoShapeObject.Types.point,
+                              southwest_latitude=southwest_latitude, southwest_longitude=southwest_longitude,
+                              northeast_latitude=northeast_latitude, northeast_longitude=northeast_longitude)
+
+    def __repr__(self):
+        kwargs = ', '.join(['{}={}'.format(k, v) for k, v in self.__dict__.items() if k != 'geo_type'])
+        return '{}(geo_type={}, {})'.format(self.__class__.__name__, self.geo_type, kwargs)
+
+    def __eq__(self, other):
+        if not isinstance(other, GeoShapeObject):
+            return False
+        else:
+            return other.__dict__ == self.__dict__
 
 
-class GeoShapePointValidator(BaseValidator):
-    regex = geoshape_point_re
-
-    def __init__(self, regex=None, message=None, code=None):
-        super(RegexValidator, self).__init__(message=message, code=code)
-        if regex is not None:
-            self.regex = regex
-
-        # Compile the regex if it was not passed pre-compiled.
-        if isinstance(self.regex, string_types):  # pragma: no cover
-            self.regex = re.compile(self.regex)
+class GeoShapeValidator(BaseValidator):
+    message = 'Enter a valid GeoShapeObject.'
+    code = 'invalid'
 
     def __call__(self, value):
         """
-        Validates that the input matches the regular expression.
+        Validates that the input is a GeoShapeObject
         """
-        if not self.regex.search(text_type(value)):
+        if not isinstance(value, GeoShapeObject):
             raise ValidationError(self.message, code=self.code)
         else:
-            return value
+            if value.validate():
+                return value
+            else:
+                raise ValidationError(self.message, code=self.code)
 
-
-class GeoShapeBoxValidator(RegexValidator):
-    regex = geoshape_box_re
-
-
-class GeoShapeCircleValidator(RegexValidator):
-    regex = geoshape_circle_re
+geoshape_validator = GeoShapeValidator()

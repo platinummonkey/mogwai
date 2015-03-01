@@ -237,3 +237,13 @@ class UUID4ValidatorTestCase(ValidatorBaseClassTestCase):
 @attr('unit', 'validators')
 class UUID1ValidatorTestCase(UUID4ValidatorTestCase):
     klass = validate_uuid1
+
+
+@attr('unit', 'validators')
+class GeoShapeValidatorTestCase(ValidatorBaseClassTestCase):
+    """ Boolean Validator """
+    klass = GeoShapeValidator()
+    good_cases = (GeoShapeObject.point(0.0, 1.0),
+                  GeoShapeObject.box(0.0, 1.0, 2.0, 3.0),
+                  GeoShapeObject.circle(0.0, 1.0, 2.0))
+    bad_cases = (0, 1.1, 'val', [], (), {}, None)
