@@ -374,6 +374,7 @@ class GeoShapeObject(object):
 
     @staticmethod
     def _from_rexpro(response):
+        print "Got response: {} ({})".format(response, type(response))
         if geoshape_point_re.match(response):
             GeoShapeObject.point(**geoshape_point_re.match(response).groupdict())
         elif geoshape_box_re.match(response):
@@ -383,12 +384,12 @@ class GeoShapeObject(object):
 
     @staticmethod
     def circle(latitude, longitude, radius_in_kilometers):
-        return GeoShapeObject(geo_type=GeoShapeObject.Types.point,
+        return GeoShapeObject(geo_type=GeoShapeObject.Types.circle,
                               latitude=latitude, longitude=longitude, radius_in_kilometers=radius_in_kilometers)
 
     @staticmethod
     def box(southwest_latitude, southwest_longitude, northeast_latitude, northeast_longitude):
-        return GeoShapeObject(geo_type=GeoShapeObject.Types.point,
+        return GeoShapeObject(geo_type=GeoShapeObject.Types.box,
                               southwest_latitude=southwest_latitude, southwest_longitude=southwest_longitude,
                               northeast_latitude=northeast_latitude, northeast_longitude=northeast_longitude)
 
@@ -404,7 +405,7 @@ class GeoShapeObject(object):
 
 
 class GeoShapeValidator(BaseValidator):
-    message = 'Enter a valid GeoShapeObject.'
+    message = 'Enter a valid GeoShapeObject, got: {}'
     code = 'invalid'
 
     def __call__(self, value):
@@ -412,11 +413,11 @@ class GeoShapeValidator(BaseValidator):
         Validates that the input is a GeoShapeObject
         """
         if not isinstance(value, GeoShapeObject):
-            raise ValidationError(self.message, code=self.code)
+            raise ValidationError(self.message.format(repr(value)), code=self.code)
         else:
             if value.validate():
                 return value
             else:
-                raise ValidationError(self.message, code=self.code)
+                raise ValidationError(self.message.format(repr(value)), code=self.code)
 
 geoshape_validator = GeoShapeValidator()

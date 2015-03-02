@@ -592,9 +592,12 @@ class GeoShape(GraphProperty):
         :return: GeoShapeObject instance representing received geoshape
         :rtype: GeoShapeObject | None
         """
+        print "Got value: {} ({})".format(value, type(value))
         val = super(GeoShape, self).to_python(value)
-        if val is not None:
+        if val is not None and isinstance(value, string_types):
             return GeoShapeObject._from_rexpro(value)
+        elif val is not None and isinstance(value, GeoShapeObject):
+            return value
 
     def to_database(self, value):
         """ GeoShape to database
@@ -606,7 +609,7 @@ class GeoShape(GraphProperty):
         """
         val = super(GeoShape, self).to_database(value)
         if val is not None:
-            return val.to_database()
+            return val._to_database()
 
     def validate(self, value):
         value = super(GeoShape, self).validate(value)

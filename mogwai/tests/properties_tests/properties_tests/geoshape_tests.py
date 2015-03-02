@@ -6,7 +6,7 @@ from mogwai.models import Vertex
 from mogwai._compat import print_
 
 
-@attr('unit', 'property', 'property_slug')
+@attr('unit', 'property', 'property_geoshape')
 class GeoShapePropertyTestCase(GraphPropertyBaseClassTestCase):
     klass = GeoShape
     good_cases = (GeoShapeObject.point(0.0, 1.0),

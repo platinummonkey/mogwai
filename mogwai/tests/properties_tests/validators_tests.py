@@ -239,7 +239,7 @@ class UUID1ValidatorTestCase(UUID4ValidatorTestCase):
     klass = validate_uuid1
 
 
-@attr('unit', 'validators')
+@attr('unit', 'validators', 'validator_geoshape')
 class GeoShapeValidatorTestCase(ValidatorBaseClassTestCase):
     """ Boolean Validator """
     klass = GeoShapeValidator()
