@@ -5,7 +5,7 @@ ChangeLog
 
 Changes to the library are recorded here.
 
-v0.7.2
+v0.7.3
 ------
  * Remove trace messages and clean-up developer logs
 
