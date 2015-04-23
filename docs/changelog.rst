@@ -5,6 +5,10 @@ ChangeLog
 
 Changes to the library are recorded here.
 
+v0.7.2
+------
+ * Remove trace messages and clean-up developer logs
+
 v0.7.1
 ------
  * Fixed Rexpro Connection Pooling connection soft-closing on exception

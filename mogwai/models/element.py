@@ -327,8 +327,6 @@ class BaseElement(object):
         return create_cls
 
     def __getitem__(self, item):
-        logger.debug("Using __getitem__({})...".format(item))
-        #print_("Using __getitem__({})...: options: _properties({}), _manual_values({})".format(item, self._properties.items(), self._manual_values.items()))
         value = self._properties.get(item, None)
         if value is not None:
             # call the normal getattr method
@@ -342,7 +340,6 @@ class BaseElement(object):
             return value_manager.value
 
     def __setitem__(self, key, value):
-        logger.debug("Using __setitem__({}): {}...".format(key, value))
         prop = self._properties.get(key, None)
         if prop is not None:
             # call the normal setattr method
@@ -358,7 +355,6 @@ class BaseElement(object):
                 self._manual_values[key] = BaseValueManager(None, value)
 
     def __delitem__(self, key):
-        logger.debug("Using __delitem__({})...".format(key))
         prop = self._properties.get(key, None)
         if prop is not None:
             # call the normal delattr method
@@ -372,20 +368,16 @@ class BaseElement(object):
                 raise AttributeError(key)
 
     def __contains__(self, item):
-        logger.debug("Checking contains...")
         return item in set(self._properties.keys()).union(set(self._manual_values.keys()))
 
     def __len__(self):
-        logger.debug("Getting len...")
         return len(set(self._properties.keys()).union(set(self._manual_values.keys())))
 
     def __iter__(self):
-        logger.debug("Iterating through __iter__...")
         for item in set(self._properties.keys()).union(set(self._manual_values.keys())):
             yield item
 
     def items(self):
-        logger.debug("Iterating through items...")
         items = []
         for key in self._properties.keys():
             items.append((key, getattr(self, key)))
@@ -393,14 +385,12 @@ class BaseElement(object):
         return items
 
     def keys(self):
-        logger.debug("Iterating through keys...")
         items = []
         items.extend(self._properties.keys())
         items.extend([k for k in self._manual_values.keys() if self._manual_values.get(k) is not None])
         return items
 
     def values(self):
-        logger.debug("Iterating through values...")
         items = []
         for key in self._properties.keys():
             items.append(getattr(self, key))
