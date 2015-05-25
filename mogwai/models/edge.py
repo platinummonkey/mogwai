@@ -314,6 +314,6 @@ class Edge(Element):
 
         if self._outV is None:
             self._outV = self._simple_traversal('outV', **kwargs)[0]
-        if isinstance(self._inV, string_types + integer_types):
+        if isinstance(self._outV, string_types + integer_types):
             self._outV = Vertex.get(self._outV, **kwargs)
         return self._outV
