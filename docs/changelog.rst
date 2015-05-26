@@ -5,6 +5,10 @@ ChangeLog
 
 Changes to the library are recorded here.
 
+v0.7.4
+------
+ * Fix minor bug with Edge.outV not returning Vertex - thanks to Leif Asgeirsson
+
 v0.7.3
 ------
  * Remove trace messages and clean-up developer logs
