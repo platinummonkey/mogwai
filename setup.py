@@ -67,7 +67,7 @@ setup(
                       'rexpro>=0.4.1,<1.0.0',
                       'six==1.6.1',
                       'argparse>=1.2.1',
-                      'factory-boy>=2.4.1',
+                      'factory-boy>=2.4.1,<3.0.0',
                       'pyformance==0.2.4',
                       'Twisted>=13.2.0,<14.0.0',
                       'pytz>=2014.4'],
