@@ -69,6 +69,8 @@ def get_response(query, params, isolate, transaction, connection, connection_poo
         raise MogwaiConnectionError("Connection Error during query - {}".format(ce))
     except RexProScriptException as se:  # pragma: no cover
         soft_close_connection(connection_pool, connection)
+        if se.message == 'transaction is not open':
+            return None
         raise MogwaiQueryError("Error during query - {}".format(se))
     except:  # pragma: no cover
         soft_close_connection(connection_pool, connection)

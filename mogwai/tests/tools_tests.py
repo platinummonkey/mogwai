@@ -165,12 +165,17 @@ def isolation_query(scope):
     scope_values = []
     with BlueprintsWrapper(**wrapper_config) as pool:
         for i in range(7):
-            scope_val = connection.execute_query(
-                "sleep sleep_length\nreturn scope",
-                params={'sleep_length': 100 * (i % 2 + 1) - scope*10},
-                pool=pool
-            )
-            scope_values.append(scope_val)
+            try:
+                scope_val = connection.execute_query(
+                    "sleep sleep_length\nreturn scope",
+                    params={'sleep_length': 100 * (i % 2 + 1) - scope*10},
+                    pool=pool
+                )
+                scope_values.append(scope_val)
+            except RexProScriptException as se:
+                if se.message == 'transaction is not open':
+                    pass
+                raise
 
     return scope, scope_values
 
@@ -184,10 +189,15 @@ def nested_wrappers(scope):
     with PartitionGraph(**partition_config) as pool:
         pile = eventlet.GreenPile()
         [pile.spawn(isolation_query, i) for i in range(3)]
-        scope_val = connection.execute_query('scope', pool=pool)
-        scope_v = BlueprintsWrapperVertex.create(name=scope_val, pool=pool)
-        scope_v['nested_values'] = list(pile)
-        scope_v.save(pool=pool)
+        try:
+            scope_val = connection.execute_query('scope', pool=pool)
+            scope_v = BlueprintsWrapperVertex.create(name=scope_val, pool=pool)
+            scope_v['nested_values'] = list(pile)
+            scope_v.save(pool=pool)
+        except RexProScriptException as se:
+            if se.message == 'transaction is not open':
+                pass
+            raise
 
     return scope, scope_v
 
