@@ -207,6 +207,10 @@ class Factory(base.Factory):
             obj = target_class.create(*args, **kwargs)
         return obj
 
+    class Meta:
+        model = None
+        abstract = True
+
 
 class SessionPoolManager(object):
     """A context manager that exposes a pool whose connections share the same session.
