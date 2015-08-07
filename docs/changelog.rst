@@ -5,6 +5,10 @@ ChangeLog
 
 Changes to the library are recorded here.
 
+v0.7.5
+------
+  * Loosen six version requirement, reflected updated dependency for loosened rexpro version
+
 v0.7.4
 ------
  * Fix minor bug with Edge.outV not returning Vertex - thanks to Leif Asgeirsson
