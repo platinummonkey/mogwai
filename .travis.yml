@@ -37,10 +37,5 @@ matrix:
     - python: '2.7'
     - python: '3.3'
     - python: '3.4'
-    - python: pypy
-    - python: jython
-  allow_failures:
-    - python: pypy
-    - python: jython
   fast_finish: true
 

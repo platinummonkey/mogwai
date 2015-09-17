@@ -1,8 +1,9 @@
 mogwai
 ======
 
-mogwai in an object-graph mapper (OGM) designed specifically for use with Titan
-(http://thinkaurelius.github.io/titan/) via RexPro (https://github.com/tinkerpop/rexster/wiki/RexPro).
+mogwai in an object-graph mapper (OGM) designed specifically for use with Tinkerpop3 graph databases.
+Originally focused on TitanDB (0.5.x and below) (http://thinkaurelius.github.io/titan/) via RexPro (mogwai versions pre-1.x), the current
+focus is now supporting TinkerPop3 based graph databases (ex. Titan 1.x)
 Mogwai supports easily integrating Gremlin graph-traversals with vertex and edge models. For those
 already familiar with Blueprints (https://github.com/tinkerpop/blueprints/wiki) there is is a
 simple example.
@@ -21,7 +22,7 @@ Installation
 Testing
 =======
 
-To get mogwai unit tests running you'll need a titan installation with rexster server configured with a mogwai graph::
+To get mogwai unit tests running you'll need a tinkerpop graph installation gremlin server configured with a mogwai graph::
 
     <graph>
         <graph-name>mogwai</graph-name>
@@ -46,9 +47,9 @@ To get mogwai unit tests running you'll need a titan installation with rexster s
 Pull Requests
 =============
 
-General Rules:
+General Tips for getting your pull request merged:
   - All Tests must pass
   - Coverage shouldn't decrease
-  - All Pull Requests should be rebased against master **before** submitting the PR.
+  - Clean up spurious commits before submitting the PR via rebasing appropriately.
 
 
