@@ -1,0 +1,46 @@
+sudo: required
+
+language: python
+
+services:
+  - docker
+
+before_install:
+  - docker pull itzg/elasticsearch
+  - docker pull poklet/cassandra
+  - docker pull elubow/titan-gremlin
+
+install:
+  - docker run -d --name es1 itzg/elasticsearch
+  - docker run -d --name cas1 poklet/cassandra
+  - docker run -d -p 8182:8182 -p 8183:8183 -p 8184:8184 --name titan --link es1:elasticsearch --link cas1:cassandra elubow/titan-gremlin
+
+before_script:
+  - sleep 10
+
+script:
+  - run_tests.sh
+  - run_coverage.sh
+
+deploy:
+  provider: pypi
+  username: platinummonkey
+  distributions: "sdist bdist_wheel"
+  on:
+    tags: true
+    python: '2.7'
+  password:
+    secure: L0fqIUv7D60DIXLf5AnigKm4nyUIAieO5cfrpc7P8LhhuRAc+ZbSJmQd02EjwEoJouwV5tjMH28cJKuEwvq+RdtRTmlSQPgZKHs8Pk0IaljC2hy6RKIBU/zFJ9ycpERXdJMpbfl0LxwwJmeVo/2r8tA/nf5yuFzrrex3dKQxMOotWz9VS++LkvOMgXpcgvYTrbYA2kRkGklv9Tjh4kps4ZgpabnWtq5C73H8zHkIM3gAb99zSjceD1JtNRkCXTys9BfzJiQP63y5Xb/uLJTQRMWYCY1+oVfReyxIa6VmwLpmL++gvlqRitdSGdYMXYV7B6lEbbp0yu+P3BEY+ymuQI1462wIBGe7wfSWwKr76L5NVKqGSJZjTLKxwmoB9rcg9zEAzJF98D82hbfYccALFs3wUt4Af3IncTGozZ4He2c+wFGnOXaBB8TSUcKAf/DgcxRX0Bs0Lngd2kByddGyfzxpntSDdlYSIyzFEsYQ2nO+7RM15MrRlIIYNOqSQUIizh9k4OawBj6iTGfl/KiVay74AaCDY2YvJnb7t64Goeh6tzYm6aFcVGzfet1gO/IPFnHsuwTWLKMBmNKxE7UUetVtNY+mT/eFNh2gGLQRjTB0AZXcP1W+z4/v+cGE0N7sf6MGjaAWy/mL6KGNYY4jTxK7Mm4FtY0wOBloPcvz+wo=
+
+matrix:
+  include:
+    - python: '2.7'
+    - python: '3.3'
+    - python: '3.4'
+    - python: pypy
+    - python: jython
+  allow_failures:
+    - python: pypy
+    - python: jython
+  fast_finish: true
+
