@@ -1,6 +1,12 @@
 mogwai
 ======
 
+.. image:: https://travis-ci.org/platinummonkey/mogwai.svg?branch=master
+    :target: https://travis-ci.org/platinummonkey/mogwai
+
+.. image:: https://ga-beacon.appspot.com/UA-50275923-1/platinummonkey/mogwai
+    :target: http://github.com/platinummonkey/mogwai
+
 mogwai in an object-graph mapper (OGM) designed specifically for use with Titan
 (http://thinkaurelius.github.io/titan/) via RexPro (https://github.com/tinkerpop/rexster/wiki/RexPro).
 Mogwai supports easily integrating Gremlin graph-traversals with vertex and edge models. For those
