@@ -5,6 +5,10 @@ ChangeLog
 
 Changes to the library are recorded here.
 
+v0.7.6
+------
+  * Update Rexpro Dependency version to include the fixed rexpro library
+
 v0.7.5
 ------
   * Loosen six version requirement, reflected updated dependency for loosened rexpro version
