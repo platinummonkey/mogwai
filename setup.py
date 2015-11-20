@@ -64,7 +64,7 @@ setup(
     ],
     keywords='cassandra,titan,ogm,mogwai,thunderdome',
     install_requires=['pyparsing>=2.0.2,<3.0.0',
-                      'rexpro>=0.455,<1.0.0',
+                      'rexpro>=0.4.5,<1.0.0',
                       'six>=1.6.1',
                       'argparse>=1.2.1',
                       'factory-boy>=2.4.1',
