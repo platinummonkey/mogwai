@@ -19,8 +19,8 @@ before_script:
   - sleep 10
 
 script:
-  - run_tests.sh
-  - run_coverage.sh
+  - bash run_tests.sh
+  - bash run_coverage.sh
 
 deploy:
   provider: pypi
