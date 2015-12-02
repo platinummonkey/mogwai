@@ -1,6 +1,8 @@
 from __future__ import unicode_literals
 import logging
 
+from tornado.concurrent import Future
+
 from mogwai._compat import float_types, print_
 from mogwai import connection
 from mogwai.exceptions import MogwaiQueryError
@@ -168,9 +170,15 @@ class Query(object):
     def _execute(self, func, deserialize=True, *args, **kwargs):
         tmp = "{}.{}()".format(self._get_partial(), func)
         self._vars.update({"id": self._vertex._id, "limit": self._limit})
-        results = connection.execute_query(tmp, self._vars, **kwargs)
 
-        if deserialize:
-            return [Element.deserialize(r) for r in results]
-        else:
-            return results
+        future = Future()
+        future_results = connection.execute_query(tmp, self._vars, **kwargs)
+
+        def process_results(f):
+            results = f.result()
+            if deserialize:
+                results = [Element.deserialize(r) for r in results]
+            future.set_result(results)
+
+        future_results.add_done_callback(process_results)
+        return future
