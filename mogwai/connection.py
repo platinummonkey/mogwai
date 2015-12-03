@@ -24,7 +24,8 @@ __cached_spec = None
 
 
 @metric_manager.time_calls
-def execute_query(query, params={}, transaction=True, isolate=True, pool=None, *args, **kwargs):
+def execute_query(query, params={}, handler=None, transaction=True,
+                  isolate=True, pool=None, *args, **kwargs):
     """
     Execute a raw Gremlin query with the given parameters passed in.
 
@@ -52,7 +53,9 @@ def execute_query(query, params={}, transaction=True, isolate=True, pool=None, *
     #     response = get_response(query, params=params, isolate=isolate, transaction=transaction, connection=conn, connection_pool=connection_pool)
 
     # Simplified, will add pooling in next gremlinclient release
-    response = get_response(query, params=params, isolate=isolate, transaction=transaction, connection=None, connection_pool=None)
+    response = get_response(query, params=params, handler=handler,
+                            isolate=isolate, transaction=transaction,
+                            connection=None, connection_pool=None)
     return response
 
 
@@ -80,7 +83,7 @@ def get_response(query, params, isolate, transaction, connection, connection_poo
     # logger.debug(response)
 
     # NEED TO PASS HOST PARAMS etc. HERE. Will adjust the client to reflect this in the next release
-    response = submit(query, bindings=params)
+    response = submit(query, bindings=params, handler=handler)
     return response
 
 

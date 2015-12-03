@@ -171,14 +171,11 @@ class Query(object):
         tmp = "{}.{}()".format(self._get_partial(), func)
         self._vars.update({"id": self._vertex._id, "limit": self._limit})
 
-        future = Future()
-        future_results = connection.execute_query(tmp, self._vars, **kwargs)
-
-        def process_results(f):
-            results = f.result()
+        def process_results(results):
             if deserialize:
                 results = [Element.deserialize(r) for r in results]
-            future.set_result(results)
 
-        future_results.add_done_callback(process_results)
-        return future
+        future_results = connection.execute_query(
+            tmp, self._vars, handler=process_results, **kwargs)
+
+        return future_results
