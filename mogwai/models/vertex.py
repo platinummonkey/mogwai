@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 import inspect
 import logging
-
+from tornado.concurrent import Future
 from mogwai._compat import array_types, string_types, add_metaclass, integer_types, float_types
 from mogwai import connection
 from mogwai.exceptions import MogwaiException, ElementDefinitionException, MogwaiQueryError
@@ -174,29 +174,55 @@ class Vertex(Element):
         if not isinstance(ids, array_types):
             raise MogwaiQueryError("ids must be of type list or tuple")
 
+        handlers = []
+        future = Future()
         if len(ids) == 0:
-            results = connection.execute_query('g.V("element_type","%s").toList()' % cls.get_element_type(), **kwargs)
+            future_results = connection.execute_query(
+                'g.V.has("element_type", "%s")' % cls.get_element_type(),
+                **kwargs)
 
         else:
             strids = [str(i) for i in ids]
+            # Need to test sending complex bindings with client
+            vids = ", ".join(strids)
+            future_results = connection.execute_query(
+                'g.V(%s)' % vids, **kwargs)
 
-            results = connection.execute_query('ids.collect{g.v(it)}', {'ids': strids}, **kwargs)
-            results = list(filter(None, results))
+            def id_handler(results):
+                results = list(filter(None, results))
+                if len(results) != len(ids) and match_length:
+                    raise MogwaiQueryError("the number of results don't match the number of ids requested")
+                return results
+            handlers.append(id_handler)
 
-            if len(results) != len(ids) and match_length:
-                raise MogwaiQueryError("the number of results don't match the number of ids requested")
+        def result_handler(results):
+            objects = []
+            for r in results:
+                try:
+                    objects += [Element.deserialize(r)]
+                except KeyError:  # pragma: no cover
+                    raise MogwaiQueryError('Vertex type "%s" is unknown' % r.get('element_type', ''))
 
-        objects = []
-        for r in results:
+            if as_dict:  # pragma: no cover
+                return {v._id: v for v in objects}
+
+            return objects
+
+        handlers.append(result_handler)
+
+        def on_result(f):
             try:
-                objects += [Element.deserialize(r)]
-            except KeyError:  # pragma: no cover
-                raise MogwaiQueryError('Vertex type "%s" is unknown' % r.get('element_type', ''))
+                stream = f.result()
+            except Exception as e:
+                future.set_exception(e)
+            else:
+                [stream.add_handler(h) for h in handlers]
+                future.set_result(stream)
 
-        if as_dict:  # pragma: no cover
-            return {v._id: v for v in objects}
+        future_results.add_done_callback(on_result)
 
-        return objects
+        return future
+
 
     def _reload_values(self, *args, **kwargs):
         """
@@ -224,17 +250,31 @@ class Vertex(Element):
 
         """
         try:
-            results = cls.all([id], **kwargs)
-            if len(results) > 1:  # pragma: no cover
-                # This requires to titan to be broken.
-                raise cls.MultipleObjectsReturned
+            future_results = cls.all([id], **kwargs)
+            future = Future()
+            def get_results_handler(results):
+                if len(results) > 1:  # pragma: no cover
+                    # This requires to titan to be broken.
+                    raise cls.MultipleObjectsReturned
 
-            result = results[0]
-            if not isinstance(result, cls):
-                raise cls.WrongElementType(
-                    '%s is not an instance or subclass of %s' % (result.__class__.__name__, cls.__name__)
-                )
-            return result
+                result = results[0]
+                if not isinstance(result, cls):
+                    raise cls.WrongElementType(
+                        '%s is not an instance or subclass of %s' % (result.__class__.__name__, cls.__name__)
+                    )
+                return result
+
+            def on_result(f):
+                try:
+                    stream = f.result()
+                except Exception as e:
+                    future.set_exception(e)
+                else:
+                    stream.add_handler(get_results_handler)
+                    future.set_result(stream)
+
+            future_results.add_done_callback(on_result)
+            return future
         except MogwaiQueryError as e:
             logger.exception(e)
             raise cls.DoesNotExist
@@ -247,11 +287,28 @@ class Vertex(Element):
         super(Vertex, self).save()
         params = self.as_save_params()
         params['element_type'] = self.get_element_type()
-        result = self._save_vertex(params, **kwargs)
-        self._id = result._id
-        for k, v in self._values.items():
-            v.previous_value = result._values[k].previous_value
-        return result
+        # Here this is a future, have to set handler in callback
+        future = Future()
+        future_result = self._save_vertex(params, **kwargs)
+
+        def handler(result):
+            result = result[0]
+            self._id = result._id
+            for k, v in self._values.items():
+                v.previous_value = result._values[k].previous_value
+            return result
+
+        def on_save(f):
+
+            try:
+                stream = f.result()
+            except Exception as e:
+                future.set_exception(e)
+            else:
+                stream.add_handler(handler)
+                future.set_result(stream)
+        future_result.add_done_callback(on_save)
+        return future
 
     def delete(self):
         """ Delete the current vertex from the graph. """
@@ -259,7 +316,7 @@ class Vertex(Element):
             raise MogwaiQueryError('Cant delete abstract elements')
         if self._id is None:  # pragma: no cover
             return self
-        self._delete_vertex()
+        return self._delete_vertex()
 
     def _simple_traversal(self,
                           operation,

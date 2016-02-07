@@ -1,5 +1,5 @@
 
-def _save_vertex(id, attrs) {
+def _save_vertex(vid, attrs) {
     /**
      * Saves a vertex
      *
@@ -7,34 +7,35 @@ def _save_vertex(id, attrs) {
      * :param attrs: map of parameters to set on the vertex
      */
     try {
-        def v = id == null ? g.addVertex() : g.v(id)
+        def v = vid == null ? graph.addVertex() : g.V(vid).next()
 
         for (item in attrs.entrySet()) {
             if (item.value == null) {
-                v.removeProperty(item.key)
+                v.property(item.key).remove()
             } else {
-                v.setProperty(item.key, item.value)
+                v.property(item.key, item.value)
             }
         }
-        g.stopTransaction(SUCCESS)
-        return g.getVertex(v.id)
+        graph.tx().commit()
+        return g.V(v.id()).next()
     } catch (err) {
-        g.stopTransaction(FAILURE)
+        graph.tx().rollback()
         throw(err)
     }
 }
 
-def _delete_vertex(id) {
+def _delete_vertex(vid) {
     /**
      * Deletes a vertex
      *
      * :param id: vertex id
      */
      try {
-        g.removeVertex(g.v(id))
-        g.stopTransaction(SUCCESS)
+        def v = g.V(vid).next()
+        v.remove()
+        graph.tx().commit();
      } catch (err) {
-        g.stopTransaction(FAILURE)
+        graph.tx().rollback();
         throw(err)
      }
 }
@@ -50,23 +51,23 @@ def _create_relationship(id, in_direction, edge_label, edge_attrs, vertex_attrs)
      * :param vertex_attrs: map of parameters to set on the vertex
      */
     try {
-        def v1 = g.v(id)
-        def v2 = g.addVertex()
+        def v1 = g.V(id).next()
+        def v2 = graph.addVertex()
         def e
 
         for (item in vertex_attrs.entrySet()) {
-                v2.setProperty(item.key, item.value)
+                v2.property(item.key, item.value)
         }
-        v2 = g.getVertex(v2.id)
+        v2 = g.V(v2.id).next()
         if(in_direction) {
-            e = g.addEdge(v2, v1, edge_label)
+            e = graph.addEdge(v2, v1, edge_label)
         } else {
-            e = g.addEdge(v1, v2, edge_label)
+            e = graph.addEdge(v1, v2, edge_label)
         }
         for (item in edge_attrs.entrySet()) {
-            e.setProperty(item.key, item.value)
+            e.property(item.key, item.value)
         }
-        return [g.getEdge(e.id), v2)]
+        return [g.E(e.id).next(), v2)]
     } catch (err) {
         g.stopTransaction(FAILURE)
         throw(err)

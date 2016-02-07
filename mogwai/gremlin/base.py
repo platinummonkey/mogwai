@@ -4,6 +4,7 @@ from datetime import datetime
 from decimal import Decimal as _Decimal
 from uuid import UUID as _UUID
 import logging
+from tornado.concurrent import Future
 from mogwai._compat import array_types, string_types, integer_types, float_types, iteritems
 from mogwai import connection
 from mogwai.exceptions import MogwaiQueryError, MogwaiGremlinException
@@ -192,28 +193,28 @@ class BaseGremlinMethod(object):
 
         script = '\n'.join([import_string, self.function_body])
 
-        try:
-            if hasattr(instance, 'get_element_type'):
-                context = "vertices.{}".format(instance.get_element_type())
-            elif hasattr(instance, 'get_label'):
-                context = "edges.{}".format(instance.get_label())
-            else:
-                context = "other"
+        # try:
+        if hasattr(instance, 'get_element_type'):
+            context = "vertices.{}".format(instance.get_element_type())
+        elif hasattr(instance, 'get_label'):
+            context = "edges.{}".format(instance.get_label())
+        else:
+            context = "other"
 
-            context = "{}.{}".format(context, self.method_name)
-
-            tmp = connection.execute_query(script, params, context=context, **query_kwargs)
-        except MogwaiQueryError as pqe:  # pragma: no cover
-            import pprint
-            msg = "Error while executing Gremlin method\n\n"
-            msg += "[Method]\n{}\n\n".format(self.method_name)
-            msg += "[Params]\n{}\n\n".format(pprint.pformat(params))
-            msg += "[Function Body]\n{}\n".format(self.function_body)
-            msg += "[Imports]\n{}\n".format(import_string)
-            msg += "\n[Error]\n{}\n".format(pqe)
-            if hasattr(pqe, 'raw_response'):
-                msg += "\n[Raw Response]\n{}\n".format(pqe.raw_response)
-            raise MogwaiGremlinException(msg)
+        context = "{}.{}".format(context, self.method_name)
+        tmp = connection.execute_query(script, params, context=context,
+                                       **query_kwargs)  # Temporary hack
+        # except MogwaiQueryError as pqe:  # pragma: no cover
+        #     import pprint
+        #     msg = "Error while executing Gremlin method\n\n"
+        #     msg += "[Method]\n{}\n\n".format(self.method_name)
+        #     msg += "[Params]\n{}\n\n".format(pprint.pformat(params))
+        #     msg += "[Function Body]\n{}\n".format(self.function_body)
+        #     msg += "[Imports]\n{}\n".format(import_string)
+        #     msg += "\n[Error]\n{}\n".format(pqe)
+        #     if hasattr(pqe, 'raw_response'):
+        #         msg += "\n[Raw Response]\n{}\n".format(pqe.raw_response)
+        #     raise MogwaiGremlinException(msg)
         return tmp
 
     def transform_params_to_database(self, params):
@@ -262,8 +263,7 @@ class GremlinMethod(BaseGremlinMethod):
 
         """
         from mogwai.models.element import Element
-
-        if isinstance(obj, dict) and '_id' in obj and '_type' in obj:
+        if isinstance(obj, dict) and 'id' in obj and 'type' in obj:
             return Element.deserialize(obj)
         elif isinstance(obj, dict):
             return {k: GremlinMethod._deserialize(v) for k, v in obj.items()}
@@ -273,8 +273,21 @@ class GremlinMethod(BaseGremlinMethod):
             return obj
 
     def __call__(self, instance, *args, **kwargs):
-        results = super(GremlinMethod, self).__call__(instance, *args, **kwargs)
-        return GremlinMethod._deserialize(results)
+        future_results = super(GremlinMethod, self).__call__(
+            instance, *args, **kwargs)
+        future = Future()
+
+        def on_call(f):
+            try:
+                stream = f.result()
+            except Exception as e:
+                future.set_exception(e)
+            else:
+                stream.add_handler(GremlinMethod._deserialize)
+                future.set_result(stream)
+        future_results.add_done_callback(on_call)
+
+        return future
 
 
 class GremlinValue(GremlinMethod):

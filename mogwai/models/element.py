@@ -58,7 +58,7 @@ class BaseElement(object):
         :type values: dict
 
         """
-        self._id = values.get('_id')
+        self._id = values.get('id')
         self._values = {}
         self._manual_values = {}
         #print_("Received values: %s" % values)
@@ -78,7 +78,7 @@ class BaseElement(object):
         # unknown properties that are loaded manually
         from mogwai.properties.base import BaseValueManager
         for kwarg in set(values.keys()).difference(set(self._properties.keys())):  # set(self._properties.keys()) - set(values.keys()):
-            if kwarg not in ('_id', '_inV', '_outV', 'element_type'):
+            if kwarg not in ('id', 'inV', 'outV', 'element_type'):
                 self._manual_values[kwarg] = BaseValueManager(None, values.get(kwarg))
 
     @property
@@ -225,9 +225,9 @@ class BaseElement(object):
         :param data: dict
         :rtype: dict
         """
-        dst_data = data.copy().get('_properties', {})
-        if data.get('_id', None):
-            dst_data.update({'_id': data.copy().get('_id')})
+        dst_data = data.copy().get('properties', {})
+        if data.get('id', None):
+            dst_data.update({'id': data.copy().get('id')})
         #print_("Raw incoming data: %s" % data)
         for name, prop in cls._properties.items():
             #print_("trying db_field_name: %s and name: %s" % (prop.db_field_name, name))
@@ -323,7 +323,7 @@ class BaseElement(object):
             create_cls = factory_cls.create
         else:
             create_cls = cls.create
-        
+
         return create_cls
 
     def __getitem__(self, item):
@@ -526,10 +526,12 @@ class Element(BaseElement):
     @classmethod
     def deserialize(cls, data):
         """ Deserializes rexpro response into vertex or edge objects """
-
-        dtype = data.get('_type')
-        data_id = data.get('_id')
-        properties = data.get('_properties')
+        dtype = data.get('type')
+        data_id = data.get('id')
+        properties = data.get('properties')
+        # properties are more complex now, this is a temporary hack for the prototype
+        properties = {k: v[0]["value"] for (k, v) in properties.items()}
+        data["properties"] =  properties
         if dtype == 'vertex':
             vertex_type = properties['element_type']
             if vertex_type not in vertex_types:
@@ -539,12 +541,12 @@ class Element(BaseElement):
             return vertex_types[vertex_type](**translated_data)
 
         elif dtype == 'edge':
-            edge_type = data.get('_label') or properties['_label']
+            edge_type = data.get('label') or properties['label']
             if edge_type not in edge_types:
                 raise ElementDefinitionException('Edge "%s" not defined' % edge_type)
 
             translated_data = edge_types[edge_type].translate_db_fields(data)
-            return edge_types[edge_type](data['_outV'], data['_inV'], **translated_data)
+            return edge_types[edge_type](data['outV'], data['inV'], **translated_data)
 
         else:
             raise TypeError("Can't deserialize '%s'" % dtype)
