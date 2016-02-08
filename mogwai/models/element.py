@@ -305,8 +305,9 @@ class BaseElement(object):
                 for name, prop in self._properties.items():
                     # Again, this is a bit of a hack until decide how
                     # to deal with titan properties
-                    value = values.get(prop.db_field_name, None)[0]["value"]
+                    value = values.get(prop.db_field_name, None)
                     if value is not None:
+                        value = value[0]["value"]
                         value = prop.to_python(value)
                     setattr(self, name, value)
                 future.set_result(self)
