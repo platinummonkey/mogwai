@@ -1,12 +1,11 @@
 ## TODO: Reference: Tooling from werkzeug tools - citation needed
 from __future__ import unicode_literals
 import sys
-from rexpro.exceptions import RexProConnectionException, RexProScriptException
 from mogwai._compat import reraise, string_types, PY2
 from mogwai import connection
 from mogwai.exceptions import MogwaiBlueprintsWrapperException
 from factory import base
-from rexpro.connectors.sync import RexProSyncConnection
+from gremlinclient.connection import Connection
 
 
 class ImportStringError(ImportError):
@@ -236,7 +235,7 @@ class SessionPoolManager(object):
             connection.execute_query('g', params=self.bindings, isolate=False, pool=self.pool)
 
         # patch execute_query if we're running non-concurrently
-        if connection.CONNECTION_TYPE == RexProSyncConnection:
+        if connection.CONNECTION_TYPE == Connection:
             # shadow execute_query with default self.pool
             def execute_in_pool(query, params=None, transaction=True, isolate=True,
                                 pool=self.pool, *args, **kwargs):

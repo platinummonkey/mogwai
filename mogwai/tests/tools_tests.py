@@ -9,9 +9,8 @@ import factory
 from nose.tools import raises, nottest
 from mogwai import connection
 from mogwai.exceptions import MogwaiQueryError
-from rexpro.exceptions import RexProScriptException
 from mogwai.tools import BlueprintsWrapper, PartitionGraph
-import eventlet
+# import eventlet
 
 
 @attr('unit', 'tools')
@@ -123,7 +122,7 @@ class TestBlueprintsWrapper(BaseMogwaiTestCase):
             kk = connection.execute_query("k * k")
             self.assertEqual(kk, k * k)
 
-    @raises(RexProScriptException, MogwaiQueryError)
+    @raises(RuntimeError, MogwaiQueryError)
     def test_wrapper_isolation(self):
         connection.execute_query("k")
 
@@ -174,55 +173,55 @@ def isolation_query(scope):
 
     return scope, scope_values
 
-@nottest
-def nested_wrappers(scope):
-    partition_config = {
-        'write': "characters",
-        'bindings': {'scope': scope},
-        'pool_size': 3
-    }
-    with PartitionGraph(**partition_config) as pool:
-        pile = eventlet.GreenPile()
-        [pile.spawn(isolation_query, i) for i in range(3)]
-        scope_val = connection.execute_query('scope', pool=pool)
-        scope_v = BlueprintsWrapperVertex.create(name=scope_val, pool=pool)
-        scope_v['nested_values'] = list(pile)
-        scope_v.save(pool=pool)
+# @nottest
+# def nested_wrappers(scope):
+#     partition_config = {
+#         'write': "characters",
+#         'bindings': {'scope': scope},
+#         'pool_size': 3
+#     }
+#     with PartitionGraph(**partition_config) as pool:
+#         pile = eventlet.GreenPile()
+#         [pile.spawn(isolation_query, i) for i in range(3)]
+#         scope_val = connection.execute_query('scope', pool=pool)
+#         scope_v = BlueprintsWrapperVertex.create(name=scope_val, pool=pool)
+#         scope_v['nested_values'] = list(pile)
+#         scope_v.save(pool=pool)
+#
+#     return scope, scope_v
 
-    return scope, scope_v
-
-@attr('unit', 'tools', 'blueprintswrapper', 'concurrency')
-class TestWrapperConcurrency(BaseMogwaiTestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        super(TestWrapperConcurrency, cls).setUpClass()
-        host_params = connection.HOST_PARAMS.copy()
-        host_params.pop('port')
-        connection.setup(concurrency='eventlet', **host_params)
-
-    @classmethod
-    def tearDownClass(cls):
-        host_params = connection.HOST_PARAMS.copy()
-        host_params.pop('port')
-        connection.setup(concurrency='sync', **host_params)
-        super(TestWrapperConcurrency, cls).tearDownClass()
-
-    def test_wrapper_isolation(self):
-        pile = eventlet.GreenPile()
-        [pile.spawn(isolation_query, i) for i in range(10)]
-
-        for scope, scope_values in pile:
-            for val in scope_values:
-                self.assertEqual(scope, val)
-
-    def test_nested_values(self):
-        pile = eventlet.GreenPile()
-        [pile.spawn(nested_wrappers, chr(i)) for i in range(97, 103)]
-
-        for scope, scope_v in pile:
-            self.assertEqual(scope, scope_v.name)
-            for inner_scope, scope_values in scope_v['nested_values']:
-                for val in scope_values:
-                    self.assertEqual(inner_scope, val)
-            scope_v.delete()
+# @attr('unit', 'tools', 'blueprintswrapper', 'concurrency')
+# class TestWrapperConcurrency(BaseMogwaiTestCase):
+#
+#     @classmethod
+#     def setUpClass(cls):
+#         super(TestWrapperConcurrency, cls).setUpClass()
+#         host_params = connection.HOST_PARAMS.copy()
+#         host_params.pop('port')
+#         connection.setup(concurrency='eventlet', **host_params)
+#
+#     @classmethod
+#     def tearDownClass(cls):
+#         host_params = connection.HOST_PARAMS.copy()
+#         host_params.pop('port')
+#         connection.setup(concurrency='sync', **host_params)
+#         super(TestWrapperConcurrency, cls).tearDownClass()
+#
+#     def test_wrapper_isolation(self):
+#         pile = eventlet.GreenPile()
+#         [pile.spawn(isolation_query, i) for i in range(10)]
+#
+#         for scope, scope_values in pile:
+#             for val in scope_values:
+#                 self.assertEqual(scope, val)
+#
+#     def test_nested_values(self):
+#         pile = eventlet.GreenPile()
+#         [pile.spawn(nested_wrappers, chr(i)) for i in range(97, 103)]
+#
+#         for scope, scope_v in pile:
+#             self.assertEqual(scope, scope_v.name)
+#             for inner_scope, scope_values in scope_v['nested_values']:
+#                 for val in scope_values:
+#                     self.assertEqual(inner_scope, val)
+#             scope_v.delete()
