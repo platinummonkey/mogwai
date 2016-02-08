@@ -210,7 +210,7 @@ class Vertex(Element):
 
         handlers.append(result_handler)
 
-        def on_result(f):
+        def on_all(f):
             try:
                 stream = f.result()
             except Exception as e:
@@ -219,7 +219,7 @@ class Vertex(Element):
                 [stream.add_handler(h) for h in handlers]
                 future.set_result(stream)
 
-        future_results.add_done_callback(on_result)
+        future_results.add_done_callback(on_all)
 
         return future
 
@@ -252,28 +252,36 @@ class Vertex(Element):
         try:
             future_results = cls.all([id], **kwargs)
             future = Future()
-            def get_results_handler(results):
-                if len(results) > 1:  # pragma: no cover
-                    # This requires to titan to be broken.
-                    raise cls.MultipleObjectsReturned
 
-                result = results[0]
-                if not isinstance(result, cls):
-                    raise cls.WrongElementType(
-                        '%s is not an instance or subclass of %s' % (result.__class__.__name__, cls.__name__)
-                    )
-                return result
+            def on_read(f2):
+                try:
+                    result = f2.result()
+                except Exception as e:
+                    future.set_exception(e)
+                else:
+                    if len(result) > 1:  # pragma: no cover
+                        # This requires to titan to be broken.
+                        raise cls.MultipleObjectsReturned
 
-            def on_result(f):
+                    result = result[0]
+                    if not isinstance(result, cls):
+                        raise cls.WrongElementType(
+                            '%s is not an instance or subclass of %s' % (
+                                result.__class__.__name__, cls.__name__)
+                        )
+                    future.set_result(result)
+
+            def on_get(f):
                 try:
                     stream = f.result()
                 except Exception as e:
                     future.set_exception(e)
                 else:
-                    stream.add_handler(get_results_handler)
-                    future.set_result(stream)
+                    future_read = stream.read()
+                    future_read.add_done_callback(on_read)
 
-            future_results.add_done_callback(on_result)
+            future_results.add_done_callback(on_get)
+
             return future
         except MogwaiQueryError as e:
             logger.exception(e)
@@ -291,23 +299,30 @@ class Vertex(Element):
         future = Future()
         future_result = self._save_vertex(params, **kwargs)
 
-        def handler(result):
-            result = result[0]
-            self._id = result._id
-            for k, v in self._values.items():
-                v.previous_value = result._values[k].previous_value
-            return result
+        def on_read(f2):
+            try:
+                result = f2.result()
+            except Exception as e:
+                future.set_exception(e)
+            else:
+                result = result[0]
+                self._id = result._id
+                for k, v in self._values.items():
+                    v.previous_value = result._values[k].previous_value
+                future.set_result(result)
 
         def on_save(f):
-
             try:
                 stream = f.result()
             except Exception as e:
                 future.set_exception(e)
             else:
-                stream.add_handler(handler)
-                future.set_result(stream)
+                future_read = stream.read()
+
+                future_read.add_done_callback(on_read)
+
         future_result.add_done_callback(on_save)
+
         return future
 
     def delete(self):
@@ -316,7 +331,28 @@ class Vertex(Element):
             raise MogwaiQueryError('Cant delete abstract elements')
         if self._id is None:  # pragma: no cover
             return self
-        return self._delete_vertex()
+        future = Future()
+        future_result = self._delete_vertex()
+
+        def on_read(f2):
+            try:
+                result = f2.result()
+            except Exception as e:
+                future.set_exception(e)
+            else:
+                future.set_result(result[0])
+
+        def on_save(f):
+            try:
+                stream = f.result()
+            except Exception as e:
+                future.set_exception(e)
+            else:
+                future_read = stream.read()
+                future_read.add_done_callback(on_read)
+
+        future_result.add_done_callback(on_save)
+        return future
 
     def _simple_traversal(self,
                           operation,

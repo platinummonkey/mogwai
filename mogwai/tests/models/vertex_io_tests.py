@@ -48,83 +48,70 @@ class TestVertexIO(BaseMogwaiTestCase):
         """
         Tests that unicode is saved and retrieved properly
         """
-        resp = yield TestVertexModel.create(test_val=9, name=u'test2')
-        tm1 = yield resp.read()
+        tm1 = yield TestVertexModel.create(test_val=9, name=u'test2')
         self.assertEqual(tm1.name, u'test2')
-        resp2 = yield TestVertexModel.get(tm1.id)
-        tm2 = yield resp2.read()
+        tm2 = yield TestVertexModel.get(tm1.id)
         self.assertEqual(tm1, tm2)
-        resp3 = yield tm1.delete()
-        yield resp3.read()
+        yield tm1.delete()
+
 
     @gen_test
     def test_model_save_and_load(self):
         """
         Tests that models can be saved and retrieved
         """
-        resp0 = yield TestVertexModel.create(test_val=8, name='123456789')
-        tm0 = yield resp0.read()
-        resp1 = yield TestVertexModel.create(test_val=9, name='456789')
-        tm1 = yield resp1.read()
-        resp2 = yield TestVertexModel.all([tm0.id, tm1.id])
-        tms = yield resp2.read()
+        tm0 = yield TestVertexModel.create(test_val=8, name='123456789')
+        tm1 = yield TestVertexModel.create(test_val=9, name='456789')
+        stream = yield TestVertexModel.all([tm0.id, tm1.id])
+        tms = yield stream.read()
 
         self.assertEqual(len(tms), 2)
 
         for pname in tm0._properties.keys():
             self.assertEquals(getattr(tm0, pname), getattr(tms[0], pname))
 
-        resp3 = yield TestVertexModel.all([tm1.id, tm0.id])
-        tms = yield resp3.read()
+        stream2 = yield TestVertexModel.all([tm1.id, tm0.id])
+        tms = yield stream2.read()
         self.assertEqual(tms[0].id, tm1.id)
         self.assertEqual(tms[1].id, tm0.id)
 
-        resp = yield tm0.delete()
-        yield resp.read()
-        resp = yield tm1.delete()
-        yield resp.read()
+        yield tm0.delete()
+        yield tm1.delete()
 
     @gen_test
     def test_model_updating_works_properly(self):
         """
         Tests that subsequent saves after initial model creation work
         """
-        resp = yield TestVertexModel.create(test_val=8, name='123456789')
-        tm = yield resp.read()
+        tm = yield TestVertexModel.create(test_val=8, name='123456789')
 
         tm.test_val = 100
-        resp = yield tm.save()
-        yield resp.read()
+        yield tm.save()
+
 
         tm.test_val = 80
-        resp = yield tm.save()
-        yield resp.read()
+        yield tm.save()
 
         tm.test_val = 60
-        resp = yield tm.save()
-        yield resp.read()
+        yield tm.save()
 
         tm.test_val = 40
-        resp = yield tm.save()
-        yield resp.read()
+        yield tm.save()
 
         tm.test_val = 20
-        resp = yield tm.save()
-        yield resp.read()
+        yield tm.save()
 
-        resp2 = yield TestVertexModel.get(tm.id)
-        tm2 = yield resp2.read()
+        tm2 = yield TestVertexModel.get(tm.id)
+
         self.assertEquals(tm.test_val, tm2.test_val)
-        resp = yield tm.delete()
-        yield resp.read()
+        yield tm.delete()
 
     @gen_test
     def test_model_deleting_works_properly(self):
         """
         Tests that an instance's delete method deletes the instance
         """
-        resp = yield TestVertexModel.create(test_val=8, name='123456789')
-        tm = yield resp.read()
+        tm = yield TestVertexModel.create(test_val=8, name='123456789')
         vid = tm.id
         tm.delete()
         # gremlinclient handler error handling needs to be fixed
