@@ -113,7 +113,7 @@ class TestVertexIO(BaseMogwaiTestCase):
         """
         tm = yield TestVertexModel.create(test_val=8, name='123456789')
         vid = tm.id
-        tm.delete()
+        yield tm.delete()
         # gremlinclient handler error handling needs to be fixed
         # with self.assertRaises(TestVertexModel.DoesNotExist):
         #     resp = yield TestVertexModel.get(vid)

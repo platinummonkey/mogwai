@@ -333,14 +333,13 @@ class Vertex(Element):
             return self
         future = Future()
         future_result = self._delete_vertex()
-
         def on_read(f2):
             try:
                 result = f2.result()
             except Exception as e:
                 future.set_exception(e)
             else:
-                future.set_result(result[0])
+                future.set_result(result)
 
         def on_save(f):
             try:
@@ -349,6 +348,7 @@ class Vertex(Element):
                 future.set_exception(e)
             else:
                 future_read = stream.read()
+
                 future_read.add_done_callback(on_read)
 
         future_result.add_done_callback(on_save)
