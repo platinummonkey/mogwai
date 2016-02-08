@@ -88,7 +88,6 @@ class TestVertexIO(BaseMogwaiTestCase):
         tm.test_val = 100
         yield tm.save()
 
-
         tm.test_val = 80
         yield tm.save()
 
@@ -119,56 +118,61 @@ class TestVertexIO(BaseMogwaiTestCase):
         #     resp = yield TestVertexModel.get(vid)
         #     tm = yield resp.read()
 
-    # def test_reload(self):
-    #     """ Tests that and instance's reload method does an inplace update of the instance """
-    #     tm0 = TestVertexModel.create(test_val=8, name='123456789')
-    #     tm1 = TestVertexModel.get(tm0.id)
-    #     tm1.test_val = 7
-    #     tm1.save()
+    @gen_test
+    def test_reload(self):
+        """ Tests that and instance's reload method does an inplace update of the instance """
+        tm0 = yield TestVertexModel.create(test_val=8, name='123456789')
+        tm1 = yield TestVertexModel.get(tm0.id)
+        tm1.test_val = 7
+        yield tm1.save()
+
+        yield tm0.reload()
+        self.assertEqual(tm0.test_val, 7)
+        yield tm0.delete()
+
+    @gen_test
+    def test_reload_on_aliased_field(self):
+        """ Tests that reload works with aliased fields """
+        tm0 = yield AliasedTestModel.create(test_val=8, name='123456789')
+        tm1 = yield AliasedTestModel.get(tm0.id)
+        tm1.test_val = 7
+        yield tm1.save()
+
+        yield tm0.reload()
+        self.assertEqual(tm0.test_val, 7)
+        yield tm1.delete()
+
+    @gen_test
+    def test_all_method(self):
+        with self.assertRaises(MogwaiQueryError):
+            yield TestVertexModel.all(1)
+
+    @gen_test
+    def test_all_method_invalid_length(self):
+        v1 = yield TestVertexModel.create()
+        v2 = yield TestVertexModel.create()
+        from mogwai.exceptions import MogwaiQueryError
+        with self.assertRaises(RuntimeError):
+            stream = yield TestVertexModel.all([v1.id, v2.id, 'invalid'])
+            yield stream.read()
+        yield v1.delete()
+        yield v2.delete()
+
+    # def test_find_by_value_method(self):
+    #     v1 = yield TestVertexModel.create(name='v1', test_val=-99)
+    #     v2 = yield TestVertexModel.create(name='v2', test_val=-99)
+    #     v3 = yield TestVertexModelDouble.create(name='v3', test_val=-100.0)
     #
-    #     tm0.reload()
-    #     self.assertEqual(tm0.test_val, 7)
-    #     tm0.delete()
-#
-#     def test_reload_on_aliased_field(self):
-#         """ Tests that reload works with aliased fields """
-#         tm0 = AliasedTestModel.create(test_val=8, name='123456789')
-#         tm1 = AliasedTestModel.get(tm0.id)
-#         tm1.test_val = 7
-#         tm1.save()
-#
-#         tm0.reload()
-#         self.assertEqual(tm0.test_val, 7)
-#         tm1.delete()
-#
-#     def test_all_method(self):
-#         with self.assertRaises(MogwaiQueryError):
-#             TestVertexModel.all(1)
-#
-#     def test_all_method_invalid_length(self):
-#         v1 = TestVertexModel.create()
-#         v2 = TestVertexModel.create()
-#         from mogwai.exceptions import MogwaiQueryError
-#         with self.assertRaises(MogwaiQueryError):
-#             TestVertexModel.all([v1.id, v2.id, 'invalid'])
-#         v1.delete()
-#         v2.delete()
-#
-#     def test_find_by_value_method(self):
-#         v1 = TestVertexModel.create(name='v1', test_val=-99)
-#         v2 = TestVertexModel.create(name='v2', test_val=-99)
-#         v3 = TestVertexModelDouble.create(name='v3', test_val=-100.0)
-#
-#         self.assertEqual(len(TestVertexModel.find_by_value('name', 'v1')), 1)
-#         self.assertEqual(len(TestVertexModel.find_by_value('test_val', -99)), 2)
-#         self.assertEqual(len(TestVertexModel.find_by_value('name', 'bar')), 0)
-#
-#         self.assertEqual(TestVertexModel.find_by_value('name', 'v1')[0], v1)
-#
-#         self.assertEqual(len(TestVertexModelDouble.find_by_value('test_val', -100.0)), 1)
-#         v1.delete()
-#         v2.delete()
-#         v3.delete()
+    #     self.assertEqual(len(TestVertexModel.find_by_value('name', 'v1')), 1)
+    #     self.assertEqual(len(TestVertexModel.find_by_value('test_val', -99)), 2)
+    #     self.assertEqual(len(TestVertexModel.find_by_value('name', 'bar')), 0)
+    #
+    #     self.assertEqual(TestVertexModel.find_by_value('name', 'v1')[0], v1)
+    #
+    #     self.assertEqual(len(TestVertexModelDouble.find_by_value('test_val', -100.0)), 1)
+    #     yield yield v1.delete()
+    #     yield v2.delete()
+    #     yield v3.delete()
 #
 #     def test_get_by_id(self):
 #         v1 = TestVertexModel.create()

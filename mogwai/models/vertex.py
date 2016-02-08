@@ -230,13 +230,32 @@ class Vertex(Element):
 
         """
         reloaded_values = {}
-        results = connection.execute_query('g.v(id)', {'id': self._id}, **kwargs)
-        #del results['_id']
-        del results['_type']
-        reloaded_values['_id'] = results['_id']
-        for name, value in results.get('_properties', {}).items():
-            reloaded_values[name] = value
-        return reloaded_values
+        future = Future()
+        future_result = connection.execute_query('g.V(vid)', {'vid': self._id}, **kwargs)
+
+        def on_read(f2):
+            try:
+                result = f2.result()
+                result = result.data[0]
+            except Exception as e:
+                future.set_exception(e)
+            else:
+                del result['type']
+                reloaded_values['id'] = result['id']
+                for name, value in result.get('properties', {}).items():
+                    reloaded_values[name] = value
+                future.set_result(reloaded_values)
+
+        def on_reload_values(f):
+            try:
+                stream = f.result()
+            except Exception as e:
+                future.set_exception(e)
+            else:
+                future_read = stream.read()
+                future_read.add_done_callback(on_read)
+        future_result.add_done_callback(on_reload_values)
+        return future
 
     @classmethod
     def get(cls, id, *args, **kwargs):

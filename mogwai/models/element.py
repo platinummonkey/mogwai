@@ -2,6 +2,8 @@ from __future__ import unicode_literals
 from collections import OrderedDict
 import re
 
+from tornado.concurrent import Future
+
 from mogwai._compat import string_types, print_, add_metaclass
 from mogwai.tools import import_string
 from mogwai import properties
@@ -291,13 +293,27 @@ class BaseElement(object):
         Reload the given element from the database.
 
         """
-        values = self._reload_values(**kwargs)
-        for name, prop in self._properties.items():
-            value = values.get(prop.db_field_name, None)
-            if value is not None:
-                value = prop.to_python(value)
-            setattr(self, name, value)
-        return self
+        future = Future()
+        future_values = self._reload_values(**kwargs)
+
+        def on_reload(f):
+            try:
+                values = f.result()
+            except Exception as e:
+                future.set_exception(e)
+            else:
+                for name, prop in self._properties.items():
+                    # Again, this is a bit of a hack until decide how
+                    # to deal with titan properties
+                    value = values.get(prop.db_field_name, None)[0]["value"]
+                    if value is not None:
+                        value = prop.to_python(value)
+                    setattr(self, name, value)
+                future.set_result(self)
+
+        future_values.add_done_callback(on_reload)
+
+        return future
 
     @classmethod
     def get_property_by_name(cls, key):
