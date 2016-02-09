@@ -80,7 +80,7 @@ class BaseElement(object):
         # unknown properties that are loaded manually
         from mogwai.properties.base import BaseValueManager
         for kwarg in set(values.keys()).difference(set(self._properties.keys())):  # set(self._properties.keys()) - set(values.keys()):
-            if kwarg not in ('id', 'inV', 'outV', 'element_type'):
+            if kwarg not in ('id', 'inV', 'outV', 'label'):
                 self._manual_values[kwarg] = BaseValueManager(None, values.get(kwarg))
 
     @property
@@ -227,7 +227,9 @@ class BaseElement(object):
         :param data: dict
         :rtype: dict
         """
+        # import ipdb; ipdb.set_trace()
         dst_data = data.copy().get('properties', {})
+        dst_data.update({'label': data.copy()['label']})
         if data.get('id', None):
             dst_data.update({'id': data.copy().get('id')})
         #print_("Raw incoming data: %s" % data)
@@ -546,24 +548,24 @@ class Element(BaseElement):
         dtype = data.get('type')
         data_id = data.get('id')
         properties = data.get('properties')
+        label = data['label']
         # properties are more complex now, this is a temporary hack for the prototype
         properties = {k: v[0]["value"] for (k, v) in properties.items()}
         data["properties"] =  properties
         if dtype == 'vertex':
-            vertex_type = properties['element_type']
-            if vertex_type not in vertex_types:
-                raise ElementDefinitionException('Vertex "%s" not defined' % vertex_type)
+            if label not in vertex_types:
+                raise ElementDefinitionException('Vertex "%s" not defined' % label)
 
-            translated_data = vertex_types[vertex_type].translate_db_fields(data)
-            return vertex_types[vertex_type](**translated_data)
+            translated_data = vertex_types[label].translate_db_fields(data)
+            v = vertex_types[label](**translated_data)
+            return v
 
         elif dtype == 'edge':
-            edge_type = data.get('label') or properties['label']
-            if edge_type not in edge_types:
-                raise ElementDefinitionException('Edge "%s" not defined' % edge_type)
+            if label not in edge_types:
+                raise ElementDefinitionException('Edge "%s" not defined' % label)
 
-            translated_data = edge_types[edge_type].translate_db_fields(data)
-            return edge_types[edge_type](data['outV'], data['inV'], **translated_data)
+            translated_data = edge_types[label].translate_db_fields(data)
+            return edge_types[label](data['outV'], data['inV'], **translated_data)
 
         else:
             raise TypeError("Can't deserialize '%s'" % dtype)

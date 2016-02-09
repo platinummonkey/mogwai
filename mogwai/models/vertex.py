@@ -15,18 +15,17 @@ class VertexMetaClass(ElementMetaClass):
     """Metaclass for vertices."""
 
     def __new__(mcs, name, bases, body):
-
         #short circuit element_type inheritance
-        body['element_type'] = body.pop('element_type', None)
+        body['label'] = body.pop('label', None)
 
         klass = super(VertexMetaClass, mcs).__new__(mcs, name, bases, body)
 
         if not klass.__abstract__:
-            element_type = klass.get_element_type()
-            if element_type in vertex_types and str(vertex_types[element_type]) != str(klass):
-                logger.debug(ElementDefinitionException("%s is already registered as a vertex: \n\tmcs: %s\n\tname: %s\n\tbases: %s\n\tbody: %s" % (element_type, mcs, name, bases, body)))
+            label = klass.get_label()
+            if label in vertex_types and str(vertex_types[label]) != str(klass):
+                logger.debug(ElementDefinitionException("%s is already registered as a vertex: \n\tmcs: %s\n\tname: %s\n\tbases: %s\n\tbody: %s" % (label, mcs, name, bases, body)))
             else:
-                vertex_types[element_type] = klass
+                vertex_types[label] = klass
 
             ##index requested indexed columns
             #klass._create_indices()
@@ -95,20 +94,20 @@ class Vertex(Element):
     _delete_related = GremlinMethod()
     _find_vertex_by_value = GremlinMethod(classmethod=True)
 
-    element_type = None
+    label = None
 
     FACTORY_CLASS = None
 
     def __repr__(self):
-        return "{}(element_type={}, id={}, values={})".format(self.__class__.__name__,
-                                                              self.element_type,
+        return "{}(label={}, id={}, values={})".format(self.__class__.__name__,
+                                                              self.label,
                                                               getattr(self, '_id', None),
                                                               getattr(self, '_values', {}))
 
     def __getstate__(self):
         state = {'_id': self.id, '_type': 'vertex'}
         properties = self.as_save_params()
-        properties['element_type'] = self.get_element_type()
+        properties['label'] = self.get_label()
         state['_properties'] = properties
         return state
 
@@ -130,7 +129,7 @@ class Vertex(Element):
         :rtype: [mogwai.models.Vertex]
         """
         _field = cls.get_property_by_name(field)
-        _element_type = cls.get_element_type()
+        _label = cls.get_label()
 
         value_type = False
         if isinstance(value, integer_types + float_types):
@@ -138,7 +137,7 @@ class Vertex(Element):
 
         results = cls._find_vertex_by_value(
             value_type=value_type,
-            element_type=_element_type,
+            label=_label,
             field=_field,
             value=value
         )
@@ -149,14 +148,14 @@ class Vertex(Element):
         return results
 
     @classmethod
-    def get_element_type(cls):
+    def get_label(cls):
         """
         Returns the element type for this vertex.
 
         @returns: str
 
         """
-        return cls._type_name(cls.element_type)
+        return cls._type_name(cls.label)
 
     @classmethod
     def all(cls, ids=[], as_dict=False, match_length=True, *args, **kwargs):
@@ -178,7 +177,7 @@ class Vertex(Element):
         future = Future()
         if len(ids) == 0:
             future_results = connection.execute_query(
-                'g.V.has("element_type", "%s")' % cls.get_element_type(),
+                'g.V.hasLabel("%s")' % cls.get_label(),
                 **kwargs)
 
         else:
@@ -201,7 +200,7 @@ class Vertex(Element):
                 try:
                     objects += [Element.deserialize(r)]
                 except KeyError:  # pragma: no cover
-                    raise MogwaiQueryError('Vertex type "%s" is unknown' % r.get('element_type', ''))
+                    raise MogwaiQueryError('Vertex type "%s" is unknown' % r.get('label', ''))
 
             if as_dict:  # pragma: no cover
                 return {v._id: v for v in objects}
@@ -313,10 +312,11 @@ class Vertex(Element):
         """
         super(Vertex, self).save()
         params = self.as_save_params()
-        params['element_type'] = self.get_element_type()
+        label = self.get_label()
+        # params['element_type'] = self.get_element_type()  don't think we need this
         # Here this is a future, have to set handler in callback
         future = Future()
-        future_result = self._save_vertex(params, **kwargs)
+        future_result = self._save_vertex(label, params, **kwargs)
 
         def on_read(f2):
             try:
@@ -413,7 +413,7 @@ class Vertex(Element):
             allowed_elts = []
             for e in types:
                 if issubclass(e, Vertex):
-                    allowed_elts += [e.get_element_type()]
+                    allowed_elts += [e.get_label()]
                 elif issubclass(e, Edge):
                     allowed_elts += [e.get_label()]
 

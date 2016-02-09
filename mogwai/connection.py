@@ -129,12 +129,13 @@ def generate_spec():
     from mogwai.models import Edge
     spec_list = []
     for model in _loaded_models:
-        if not model.__abstract__ and hasattr(model, 'get_element_type'):
+        if not model.__abstract__ and hasattr(model, 'get_label'):
 
+            # This will need to be updated
             makeType = 'makeLabel' if issubclass(model, Edge) else 'makeKey'
             element_type = 'Edge' if issubclass(model, Edge) else 'Vertex'
 
-            spec = {'model': model.get_element_type(),
+            spec = {'model': model.get_label(),
                     'element_type': element_type,
                     'makeType': makeType,
                     'properties': {}}

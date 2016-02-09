@@ -18,14 +18,14 @@ def counter():
 
 
 class TestVertexModel(Vertex):
-    element_type = 'test_vertex_model'
+    label = 'test_vertex_model'
 
     name = String(default='test_vertex')
     test_val = Integer(default=counter)
 
 
 class TestVertexModelDouble(Vertex):
-    element_type = 'test_vertex_model_double'
+    label = 'test_vertex_model_double'
 
     name = String(default='test_vertex_double')
     test_val = Double(default=0.0)

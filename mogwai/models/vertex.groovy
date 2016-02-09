@@ -1,5 +1,5 @@
 
-def _save_vertex(vid, attrs) {
+def _save_vertex(vid, vlabel, attrs) {
     /**
      * Saves a vertex
      *
@@ -7,7 +7,7 @@ def _save_vertex(vid, attrs) {
      * :param attrs: map of parameters to set on the vertex
      */
     try {
-        def v = vid == null ? graph.addVertex() : g.V(vid).next()
+        def v = vid == null ? graph.addVertex(label, vlabel) : g.V(vid).next()
 
         for (item in attrs.entrySet()) {
             if (item.value == null) {
@@ -155,15 +155,18 @@ def _delete_related(id, operation, labels) {
     }
 }
 
-def _find_vertex_by_value(value_type, element_type, field, value) {
+def _find_vertex_by_value(value_type, label, field, value) {
+    /**
+     * I'm not sure about the need for value_type
+     */
     try {
        if (value_type) {
-           return g.V("element_type", element_type).filter{it[field] == value}.toList()
+           return g.V().hasLabel(label).filter{it.get().value(field) == value}
        } else {
-           return g.V("element_type", element_type).has(field, value).toList()
+           return g.V().hasLabel(label).has(field, value)
        }
     } catch (err) {
-        g.stopTransaction(FAILURE)
+        graph.tx().rollback()
         raise(err)
     }
 }

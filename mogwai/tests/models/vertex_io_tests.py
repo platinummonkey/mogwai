@@ -54,7 +54,6 @@ class TestVertexIO(BaseMogwaiTestCase):
         self.assertEqual(tm1, tm2)
         yield tm1.delete()
 
-
     @gen_test
     def test_model_save_and_load(self):
         """

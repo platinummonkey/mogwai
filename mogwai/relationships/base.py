@@ -104,7 +104,7 @@ class Relationship(object):
         for e in self.edge_classes:
             allowed_elts += [e.get_label()]
         for v in self.vertex_classes:
-            allowed_vlts += [v.get_element_type()]
+            allowed_vlts += [v.get_label()]
 
         if limit is not None and offset is not None:
             start = offset

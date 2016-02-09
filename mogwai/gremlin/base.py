@@ -98,8 +98,7 @@ class BaseGremlinMethod(object):
         if not self.is_setup:
 
             #construct the default name
-            name_func = getattr(self.parent_class, 'get_element_type', None) or \
-                        getattr(self.parent_class, 'get_label', None)
+            name_func = getattr(self.parent_class, 'get_label', None)
             default_path = (name_func() if name_func else 'gremlin') + '.groovy'
 
             self.path = self.path or default_path
@@ -193,14 +192,15 @@ class BaseGremlinMethod(object):
 
         script = '\n'.join([import_string, self.function_body])
 
+        # Figure out new method to set context for logging...
         # try:
-        if hasattr(instance, 'get_element_type'):
-            context = "vertices.{}".format(instance.get_element_type())
-        elif hasattr(instance, 'get_label'):
-            context = "edges.{}".format(instance.get_label())
-        else:
-            context = "other"
-
+        # if hasattr(instance, 'get_element_type'):
+        #     context = "vertices.{}".format(instance.get_element_type())
+        # elif hasattr(instance, 'get_label'):
+        #     context = "edges.{}".format(instance.get_label())
+        # else:
+        #     context = "other"
+        context = "TODO"
         context = "{}.{}".format(context, self.method_name)
         tmp = connection.execute_query(script, params, context=context,
                                        **query_kwargs)  # Temporary hack
@@ -240,7 +240,7 @@ class BaseGremlinMethod(object):
         if inspect.isclass(params) and issubclass(params, Edge):
             return params.label
         if inspect.isclass(params) and issubclass(params, Vertex):
-            return params.element_type
+            return params.label
         if isinstance(params, datetime):
             return DateTime().to_database(params)
         if isinstance(params, _UUID):
