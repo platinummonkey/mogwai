@@ -1,4 +1,7 @@
 import logging
+
+from tornado.concurrent import Future
+
 from mogwai._compat import array_types, integer_types, float_types, string_types, add_metaclass
 from mogwai import connection
 from mogwai.exceptions import ElementDefinitionException, MogwaiQueryError, ValidationError
@@ -204,12 +207,33 @@ class Edge(Element):
         Save this edge to the graph database.
         """
         super(Edge, self).save()
-        return self._save_edge(self._outV,
-                               self._inV,
-                               self.get_label(),
-                               self.as_save_params(),
-                               exclusive=self.__exclusive__,
-                               **kwargs)
+        future = Future()
+        future_result = self._save_edge(self._outV,
+                                        self._inV,
+                                        self.get_label(),
+                                        self.as_save_params(),
+                                        exclusive=self.__exclusive__,
+                                        **kwargs)
+        def on_read(f2):
+            try:
+                result = f2.result()
+            except Exception as e:
+                future.set_exception(e)
+            else:
+                future.set_result(result)
+
+        def on_save(f):
+            try:
+                stream = f.result()
+            except Exception as e:
+                future.set_exception(e)
+            else:
+                future_read = stream.read()
+                future_read.add_done_callback(on_read)
+
+        future_result.add_done_callback(on_save)
+
+        return future
 
     def _reload_values(self, *args, **kwargs):
         """ Re-read the values for this edge from the graph database. """
@@ -264,7 +288,8 @@ class Edge(Element):
         :type inV: Vertex
 
         """
-        return super(Edge, cls).create(outV, inV, *args, **kwargs)
+        edge = super(Edge, cls).create(outV, inV, *args, **kwargs)
+        return edge
 
     def delete(self):
         """
@@ -274,7 +299,30 @@ class Edge(Element):
             raise MogwaiQueryError('cant delete abstract elements')
         if self._id is None:
             return self
-        self._delete_edge()
+
+        future = Future()
+        future_result = self._delete_edge()
+
+        def on_read(f2):
+            try:
+                result = f2.result()
+            except Exception as e:
+                future.set_exception(e)
+            else:
+                future.set_result(result)
+
+        def on_delete(f):
+            try:
+                stream = f.result()
+            except Exception as e:
+                future.set_exception(e)
+            else:
+                future_read = stream.read()
+                future_read.add_done_callback(on_read)
+
+        future_result.add_done_callback(on_delete)
+
+        return future
 
     def _simple_traversal(self, operation, *args, **kwargs):
         """

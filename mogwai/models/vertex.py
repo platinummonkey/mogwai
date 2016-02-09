@@ -134,12 +134,11 @@ class Vertex(Element):
         value_type = False
         if isinstance(value, integer_types + float_types):
             value_type = True
-
         results = cls._find_vertex_by_value(
             value_type=value_type,
-            label=_label,
+            vlabel=_label,
             field=_field,
-            value=value
+            val=value
         )
 
         if as_dict:  # pragma: no cover
@@ -283,11 +282,13 @@ class Vertex(Element):
 
                     result = result[0]
                     if not isinstance(result, cls):
-                        raise cls.WrongElementType(
+                        e = cls.WrongElementType(
                             '%s is not an instance or subclass of %s' % (
                                 result.__class__.__name__, cls.__name__)
                         )
-                    future.set_result(result)
+                        future.set_exception(e)
+                    else:
+                        future.set_result(result)
 
             def on_get(f):
                 try:
@@ -337,7 +338,6 @@ class Vertex(Element):
                 future.set_exception(e)
             else:
                 future_read = stream.read()
-
                 future_read.add_done_callback(on_read)
 
         future_result.add_done_callback(on_save)
@@ -453,7 +453,29 @@ class Vertex(Element):
                 raise MogwaiException('traversal labels must be edge classes, instances, or strings')
             label_strings.append(label_string)
 
-        return self._delete_related(operation, label_strings)
+        future = Future()
+        future_result = self._delete_related(operation, label_strings)
+
+        def on_read(f2):
+            try:
+                result = f2.result()
+            except Exception as e:
+                future.set_exception(e)
+            else:
+                future.set_result(result)
+
+        def on_save(f):
+            try:
+                stream = f.result()
+            except Exception as e:
+                future.set_exception(e)
+            else:
+                future_read = stream.read()
+                future_read.add_done_callback(on_read)
+
+        future_result.add_done_callback(on_save)
+
+        return future
 
     def outV(self, *labels, **kwargs):
         """
@@ -553,19 +575,19 @@ class Vertex(Element):
 
     def delete_outE(self, *labels):
         """Delete all outgoing edges with the given label."""
-        self._simple_deletion('outE', labels)
+        return self._simple_deletion('outE', labels)
 
     def delete_inE(self, *labels):
         """Delete all incoming edges with the given label."""
-        self._simple_deletion('inE', labels)
+        return self._simple_deletion('inE', labels)
 
     def delete_outV(self, *labels):
         """Delete all outgoing vertices connected with edges with the given label."""
-        self._simple_deletion('outV', labels)
+        return self._simple_deletion('outV', labels)
 
     def delete_inV(self, *labels):
         """Delete all incoming vertices connected with edges with the given label."""
-        self._simple_deletion('inV', labels)
+        return self._simple_deletion('inV', labels)
 
     def query(self):
         from mogwai.models.query import Query

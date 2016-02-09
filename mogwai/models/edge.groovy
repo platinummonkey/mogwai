@@ -1,8 +1,8 @@
 
-def _save_edge(id, outV, inV, label, attrs, exclusive) {
+def _save_edge(eid, outV, inV, elabel, attrs, exclusive) {
 	/**
 	 * Saves an edge between two vertices
-	 *
+	 * MAY NEED TO REWRITE THIS FUNCTION
 	 * :param id: edge id, if null, a new vertex is created
 	 * :param inV: edge inv id
 	 * :param outV: edge outv id
@@ -12,26 +12,34 @@ def _save_edge(id, outV, inV, label, attrs, exclusive) {
 	try{
 	    def e
 		try {
-			e = g.e(id)
+			e = g.E(id).next()
 		} catch (err) {
-			def existing = g.v(outV).outE(label).as('edge').inV().retain([g.v(inV)]).back('edge').toList()
+			/**
+			 * Not sure if that error will be thrown, but with next it should...
+			 * I think this is the best approach, not positive...
+			*/
+			source = g.V(outV).next()
+			target = g.V(inV).next()
+			def existing = g.V(source).outE("label").filter(inV().is(target))
 			if(existing.size() > 0 && exclusive) {
 				e = existing.first()
 			} else {
-				e = g.addEdge(g.v(outV), g.v(inV), label)
+
+
+				e = source.addEdge(elabel, target)
 			}
 		}
 		for (item in attrs.entrySet()) {
             if (item.value == null) {
-                e.removeProperty(item.key)
+                e.property(item.key).remove()
             } else {
-                e.setProperty(item.key, item.value)
+                e.property(item.key, item.value)
             }
 		}
-		g.stopTransaction(SUCCESS)
-		return g.getEdge(e.id)
+		graph.tx().commit()
+		return g.E(e.id()).next()
 	} catch (err) {
-		g.stopTransaction(FAILURE)
+		graph.tx().rollback()
 		throw(err)
 	}
 }
@@ -43,13 +51,13 @@ def _delete_edge(id) {
      * :param id: edge id
      */
      try {
-        e = g.e(id)
+        def e = g.E(id).next()
         if (e != null) {
-          g.removeEdge(e)
+        	e.remove()
         }
-        g.stopTransaction(SUCCESS)
+        g.tx().commit()
      } catch (err) {
-        g.stopTransaction(FAILURE)
+        g.tx().rollback()
         throw(err)
      }
 }

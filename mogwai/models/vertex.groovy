@@ -117,14 +117,13 @@ def _traversal(id, operation, labels, start, end, element_types) {
     return results
 }
 
-def _delete_related(id, operation, labels) {
+def _delete_related(vid, operation, lbs) {
     try{
         /**
          * deletes connected vertices / edges
          */
-        def results = g.v(id)
-        def label_args = labels == null ? [] : labels
-        def vertices = true
+        def results = g.V(vid)
+        def label_args = lbs == null ? [] : lbs
         switch (operation) {
             case "inV":
                 results = results.in(*label_args)
@@ -133,37 +132,31 @@ def _delete_related(id, operation, labels) {
                 results = results.out(*label_args)
                 break
             case "inE":
-                results = results.inE(*label_args)
-                vertices = false
+                results = results.inE().hasLabel(*label_args)
                 break
             case "outE":
-                results = results.outE(*label_args)
-                vertices = false
+                results = results.outE().hasLabel(*label_args)
                 break
             default:
                 throw NamingException()
         }
-        if (vertices) {
-            results.each{g.removeVertex(it)}
-        } else {
-            results.each{g.removeEdge(it)}
-        }
-        g.stopTransaction(SUCCESS)
+        results.each{it.remove()}
+        graph.tx().commit()
     } catch (err) {
-        g.stopTransaction(FAILURE)
+        graph.tx().rollback()
         raise(err)
     }
 }
 
-def _find_vertex_by_value(value_type, label, field, value) {
+def _find_vertex_by_value(value_type, vlabel, field, val) {
     /**
      * I'm not sure about the need for value_type
      */
     try {
        if (value_type) {
-           return g.V().hasLabel(label).filter{it.get().value(field) == value}
+           return g.V().hasLabel(vlabel).filter{it.get().value(field) == val}
        } else {
-           return g.V().hasLabel(label).has(field, value)
+           return g.V().hasLabel(vlabel).has(field, val)
        }
     } catch (err) {
         graph.tx().rollback()

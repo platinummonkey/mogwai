@@ -50,7 +50,6 @@ def execute_query(query, params=None, handler=None, transaction=True,
         raise MogwaiConnectionError('Must call mogwai.connection.setup before querying.')
     future = Future()
     future_conn = connection_pool.acquire()
-
     def on_connect(f):
         try:
             conn = f.result()

@@ -227,7 +227,6 @@ class BaseElement(object):
         :param data: dict
         :rtype: dict
         """
-        # import ipdb; ipdb.set_trace()
         dst_data = data.copy().get('properties', {})
         dst_data.update({'label': data.copy()['label']})
         if data.get('id', None):
@@ -549,10 +548,10 @@ class Element(BaseElement):
         data_id = data.get('id')
         properties = data.get('properties')
         label = data['label']
-        # properties are more complex now, this is a temporary hack for the prototype
-        properties = {k: v[0]["value"] for (k, v) in properties.items()}
-        data["properties"] =  properties
         if dtype == 'vertex':
+            # properties are more complex now, this is a temporary hack for the prototype
+            properties = {k: v[0]["value"] for (k, v) in properties.items()}
+            data["properties"] =  properties
             if label not in vertex_types:
                 raise ElementDefinitionException('Vertex "%s" not defined' % label)
 
