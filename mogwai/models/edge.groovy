@@ -10,29 +10,26 @@ def _save_edge(eid, outV, inV, elabel, attrs, exclusive) {
 	 * :param exclusive: if true, this will check for an existing edge of the same label and modify it, instead of creating another edge
 	 */
 	try{
-	    def e
-		try {
-			e = g.E(eid).next()
-		} catch (err) {
-			/**
-			 * Not sure if that error will be thrown, but with next it should...
-			 * I think this is the best approach, not positive...
-			*/
-			def source = g.V(outV).next()
-			def target = g.V(inV).next()
-			def existing = g.V(source).outE(elabel).filter(inV().is(target))
-			if(existing.size() > 0 && exclusive) {
-				e = existing.first()
+	  if (eid == null) {
+			source = g.V(outV).next()
+			target = g.V(inV).next()
+			if (exclusive) {
+				existing = g.V(source).outE(elabel).filter(inV().is(target))
+				if(existing.size()) {
+					e = existing.first()
+				}
 			} else {
 				e = source.addEdge(elabel, target)
 			}
+		} else {
+			e = g.E(eid).next()
 		}
 		for (item in attrs.entrySet()) {
-            if (item.value == null) {
-                e.property(item.key).remove()
-            } else {
-                e.property(item.key, item.value)
-            }
+      if (item.value == null) {
+        e.property(item.key).remove()
+      } else {
+        e.property(item.key, item.value)
+      }
 		}
 		graph.tx().commit()
 		return g.E(e.id()).next()
@@ -42,6 +39,9 @@ def _save_edge(eid, outV, inV, elabel, attrs, exclusive) {
 	}
 }
 
+source = g.V(outV).next()
+target = g.V(inV).next()
+
 def _delete_edge(eid) {
     /**
      * Deletes an edge
@@ -50,7 +50,9 @@ def _delete_edge(eid) {
      */
      try {
         def e = g.E(eid).next()
-        e.remove()
+        if (e != null) {
+        	e.remove()
+        }
         g.tx().commit()
      } catch (err) {
         g.tx().rollback()

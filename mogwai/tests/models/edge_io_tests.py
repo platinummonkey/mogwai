@@ -23,7 +23,6 @@ class TestEdgeIO(BaseMogwaiTestCase):
         edges = yield stream.read()
         self.assertEqual(len(edges), 1)
         self.assertEqual(edges[0].id, e1.id)
-
         yield e1.delete()
         yield v1.delete()
         yield v2.delete()
