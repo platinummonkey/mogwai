@@ -39,8 +39,6 @@ def _save_edge(eid, outV, inV, elabel, attrs, exclusive) {
 	}
 }
 
-source = g.V(outV).next()
-target = g.V(inV).next()
 
 def _delete_edge(eid) {
     /**
