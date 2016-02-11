@@ -50,10 +50,12 @@ class TestVertexIO(BaseMogwaiTestCase):
         Tests that unicode is saved and retrieved properly
         """
         tm1 = yield TestVertexModel.create(test_val=9, name=u'test2')
-        self.assertEqual(tm1.name, u'test2')
-        tm2 = yield TestVertexModel.get(tm1.id)
-        self.assertEqual(tm1, tm2)
-        yield tm1.delete()
+        try:
+            self.assertEqual(tm1.name, u'test2')
+            tm2 = yield TestVertexModel.get(tm1.id)
+            self.assertEqual(tm1, tm2)
+        finally:
+            yield tm1.delete()
 
     @gen_test
     def test_model_save_and_load(self):
@@ -62,21 +64,22 @@ class TestVertexIO(BaseMogwaiTestCase):
         """
         tm0 = yield TestVertexModel.create(test_val=8, name='123456789')
         tm1 = yield TestVertexModel.create(test_val=9, name='456789')
-        stream = yield TestVertexModel.all([tm0.id, tm1.id])
-        tms = yield stream.read()
+        try:
+            stream = yield TestVertexModel.all([tm0.id, tm1.id])
+            tms = yield stream.read()
 
-        self.assertEqual(len(tms), 2)
+            self.assertEqual(len(tms), 2)
 
-        for pname in tm0._properties.keys():
-            self.assertEquals(getattr(tm0, pname), getattr(tms[0], pname))
+            for pname in tm0._properties.keys():
+                self.assertEquals(getattr(tm0, pname), getattr(tms[0], pname))
 
-        stream2 = yield TestVertexModel.all([tm1.id, tm0.id])
-        tms = yield stream2.read()
-        self.assertEqual(tms[0].id, tm1.id)
-        self.assertEqual(tms[1].id, tm0.id)
-
-        yield tm0.delete()
-        yield tm1.delete()
+            stream2 = yield TestVertexModel.all([tm1.id, tm0.id])
+            tms = yield stream2.read()
+            self.assertEqual(tms[0].id, tm1.id)
+            self.assertEqual(tms[1].id, tm0.id)
+        finally:
+            yield tm0.delete()
+            yield tm1.delete()
 
     @gen_test
     def test_model_updating_works_properly(self):
@@ -84,26 +87,27 @@ class TestVertexIO(BaseMogwaiTestCase):
         Tests that subsequent saves after initial model creation work
         """
         tm = yield TestVertexModel.create(test_val=8, name='123456789')
+        try:
+            tm.test_val = 100
+            yield tm.save()
 
-        tm.test_val = 100
-        yield tm.save()
+            tm.test_val = 80
+            yield tm.save()
 
-        tm.test_val = 80
-        yield tm.save()
+            tm.test_val = 60
+            yield tm.save()
 
-        tm.test_val = 60
-        yield tm.save()
+            tm.test_val = 40
+            yield tm.save()
 
-        tm.test_val = 40
-        yield tm.save()
+            tm.test_val = 20
+            yield tm.save()
 
-        tm.test_val = 20
-        yield tm.save()
+            tm2 = yield TestVertexModel.get(tm.id)
 
-        tm2 = yield TestVertexModel.get(tm.id)
-
-        self.assertEquals(tm.test_val, tm2.test_val)
-        yield tm.delete()
+            self.assertEquals(tm.test_val, tm2.test_val)
+        finally:
+            yield tm.delete()
 
     @gen_test
     def test_model_deleting_works_properly(self):
@@ -123,24 +127,27 @@ class TestVertexIO(BaseMogwaiTestCase):
         """ Tests that and instance's reload method does an inplace update of the instance """
         tm0 = yield TestVertexModel.create(test_val=8, name='123456789')
         tm1 = yield TestVertexModel.get(tm0.id)
-        tm1.test_val = 7
-        yield tm1.save()
+        try:
+            tm1.test_val = 7
+            yield tm1.save()
 
-        yield tm0.reload()
-        self.assertEqual(tm0.test_val, 7)
-        yield tm0.delete()
+            yield tm0.reload()
+            self.assertEqual(tm0.test_val, 7)
+        finally:
+            yield tm0.delete()
 
     @gen_test
     def test_reload_on_aliased_field(self):
         """ Tests that reload works with aliased fields """
         tm0 = yield AliasedTestModel.create(test_val=8, name='123456789')
         tm1 = yield AliasedTestModel.get(tm0.id)
-        tm1.test_val = 7
-        yield tm1.save()
-
-        yield tm0.reload()
-        self.assertEqual(tm0.test_val, 7)
-        yield tm1.delete()
+        try:
+            tm1.test_val = 7
+            yield tm1.save()
+            yield tm0.reload()
+            self.assertEqual(tm0.test_val, 7)
+        finally:
+            yield tm1.delete()
 
     @gen_test
     def test_all_method(self):
@@ -151,59 +158,64 @@ class TestVertexIO(BaseMogwaiTestCase):
     def test_all_method_invalid_length(self):
         v1 = yield TestVertexModel.create()
         v2 = yield TestVertexModel.create()
-        from mogwai.exceptions import MogwaiQueryError
-        with self.assertRaises(RuntimeError):
-            stream = yield TestVertexModel.all([v1.id, v2.id, 'invalid'])
-            yield stream.read()
-        yield v1.delete()
-        yield v2.delete()
+        try:
+            from mogwai.exceptions import MogwaiQueryError
+            with self.assertRaises(RuntimeError):
+                stream = yield TestVertexModel.all([v1.id, v2.id, 'invalid'])
+                yield stream.read()
+        finally:
+            yield v1.delete()
+            yield v2.delete()
 
     @gen_test
     def test_find_by_value_method(self):
         v1 = yield TestVertexModel.create(name='v1', test_val=-99)
         v2 = yield TestVertexModel.create(name='v2', test_val=-99)
         v3 = yield TestVertexModelDouble.create(name='v3', test_val=-100.0)
-        resp = yield TestVertexModel.find_by_value('name', 'v1')
-        res1 = yield resp.read()
-        self.assertEqual(len(res1), 1)
-        resp = yield TestVertexModel.find_by_value('test_val', -99)
-        res2 = yield resp.read()
-        self.assertEqual(len(res2), 2)
-        resp = yield TestVertexModel.find_by_value('name', 'bar')
-        res3 = yield resp.read()
-        self.assertIsNone(res3)
-        resp = yield TestVertexModel.find_by_value('name', 'v1')
-        res4 = yield resp.read()
-        self.assertEqual(res4[0], v1)
-        resp = yield TestVertexModelDouble.find_by_value('test_val', -100.0)
-        res5 = yield resp.read()
-        self.assertEqual(len(res5), 1)
-        yield v1.delete()
-        yield v2.delete()
-        yield v3.delete()
+        try:
+            resp = yield TestVertexModel.find_by_value('name', 'v1')
+            res1 = yield resp.read()
+            self.assertEqual(len(res1), 1)
+            resp = yield TestVertexModel.find_by_value('test_val', -99)
+            res2 = yield resp.read()
+            self.assertEqual(len(res2), 2)
+            resp = yield TestVertexModel.find_by_value('name', 'bar')
+            res3 = yield resp.read()
+            self.assertIsNone(res3)
+            resp = yield TestVertexModel.find_by_value('name', 'v1')
+            res4 = yield resp.read()
+            self.assertEqual(res4[0], v1)
+            resp = yield TestVertexModelDouble.find_by_value('test_val', -100.0)
+            res5 = yield resp.read()
+            self.assertEqual(len(res5), 1)
+        finally:
+            yield v1.delete()
+            yield v2.delete()
+            yield v3.delete()
 
     @gen_test
     def test_get_by_id(self):
         v1 = yield TestVertexModel.create()
-        results = yield TestVertexModel.get(v1.id)
-        self.assertIsInstance(results, TestVertexModel)
-        self.assertEqual(results, v1)
+        try:
+            results = yield TestVertexModel.get(v1.id)
+            self.assertIsInstance(results, TestVertexModel)
+            self.assertEqual(results, v1)
 
-        # Man, gremlinclient errors need some work
-        # with self.assertRaises(TestEdgeModel.DoesNotExist):
-        with self.assertRaises(RuntimeError):
-            results = yield TestVertexModel.get(None)
+            # Man, gremlinclient errors need some work
+            # with self.assertRaises(TestEdgeModel.DoesNotExist):
+            with self.assertRaises(RuntimeError):
+                results = yield TestVertexModel.get(None)
 
-        # with self.assertRaises(TestEdgeModel.DoesNotExist):
-        with self.assertRaises(RuntimeError):
-            results = yield TestVertexModel.get('nonexistant')
+            # with self.assertRaises(TestEdgeModel.DoesNotExist):
+            with self.assertRaises(RuntimeError):
+                results = yield TestVertexModel.get('nonexistant')
 
-        v2 = yield TestVertexModel2.create(test_val=0)
-        with self.assertRaises(TestVertexModel.WrongElementType):
-            results = yield TestVertexModel.get(v2.id)
-
-        yield v2.delete()
-        yield v1.delete()
+            v2 = yield TestVertexModel2.create(test_val=0)
+            with self.assertRaises(TestVertexModel.WrongElementType):
+                results = yield TestVertexModel.get(v2.id)
+        finally:
+            yield v2.delete()
+            yield v1.delete()
 
     @gen_test
     @attr('vertex_delete_methods')
@@ -267,8 +279,8 @@ class TestNestedDeserialization(BaseMogwaiTestCase):
         """
         Tests that elements nested in lists are properly deserialized
         """
+        original = yield DeserializationTestModel.create(count=5, text='happy')
         try:
-            original = yield DeserializationTestModel.create(count=5, text='happy')
             stream = yield original.get_list()
             nested = yield stream.read()
             self.assertIsInstance(nested, list)
@@ -339,287 +351,379 @@ class TestUpdateMethod(BaseMogwaiTestCase):
     def test_success_case(self):
         """ Tests that the update method works as expected """
         tm = yield TestVertexModel.create(test_val=8, name='123456789')
-        tm2 = yield tm.update(test_val=9)
+        try:
+            tm2 = yield tm.update(test_val=9)
 
-        tm3 = yield TestVertexModel.get(tm.id)
-        self.assertEqual(tm2.test_val, 9)
-        self.assertEqual(tm3.test_val, 9)
-        yield tm.delete()
+            tm3 = yield TestVertexModel.get(tm.id)
+            self.assertEqual(tm2.test_val, 9)
+            self.assertEqual(tm3.test_val, 9)
+        finally:
+            yield tm.delete()
 
     @gen_test
     def test_unknown_names_raise_exception(self):
         """ Tests that passing in names for columns that don't exist raises an exception """
         tm = yield TestVertexModel.create(test_val=8, text='123456789')
-        with self.assertRaises(TypeError):
-            yield tm.update(jon='beard')
-        yield tm.delete()
-#
-#
-# @attr('unit', 'vertex_io')
-# class TestVertexTraversal(BaseMogwaiTestCase):
-#     def setUp(self):
-#         super(TestVertexTraversal, self).setUp()
-#         self.v1 = TestVertexModel.create(test_val=1, name='Test1')
-#         self.v2 = TestVertexModel.create(test_val=2, name='Test2')
-#         self.v3 = OtherTestModel.create(test_val=3, name='Test3')
-#         self.v4 = OtherTestModel.create(test_val=3, name='Test3')
-#
-#     def tearDown(self):
-#         self.v1.delete()
-#         self.v2.delete()
-#         self.v3.delete()
-#         self.v4.delete()
-#
-#     def test_outgoing_vertex_traversal(self):
-#         """Test that outgoing vertex traversals work."""
-#         e1 = TestEdgeModel.create(self.v1, self.v2, test_val=12)
-#         e2 = TestEdgeModel.create(self.v1, self.v3, test_val=13)
-#         e3 = TestEdgeModel.create(self.v2, self.v3, test_val=14)
-#
-#         results = self.v1.outV(TestEdgeModel)
-#         self.assertEqual(len(results), 2)
-#         self.assertIn(self.v2, results)
-#         self.assertIn(self.v3, results)
-#
-#         results = self.v1.outV(TestEdgeModel, types=[OtherTestModel])
-#         self.assertEqual(len(results), 1)
-#         self.assertIn(self.v3, results)
-#
-#         e1.delete()
-#         e2.delete()
-#         e3.delete()
-#
-#     def test_incoming_vertex_traversal(self):
-#         """Test that incoming vertex traversals work."""
-#         e1 = TestEdgeModel.create(self.v1, self.v2, test_val=12)
-#         e2 = TestEdgeModel.create(self.v1, self.v3, test_val=13)
-#         e3 = TestEdgeModel.create(self.v2, self.v3, test_val=14)
-#
-#         results = self.v2.inV(TestEdgeModel)
-#         self.assertEqual(len(results), 1)
-#         self.assertIn(self.v1, results)
-#
-#         results = self.v2.inV(TestEdgeModel, types=[OtherTestModel])
-#         self.assertEqual(len(results), 0)
-#
-#         e1.delete()
-#         e2.delete()
-#         e3.delete()
-#
-#     def test_outgoing_edge_traversals(self):
-#         """Test that outgoing edge traversals work."""
-#         e1 = TestEdgeModel.create(self.v1, self.v2, test_val=12)
-#         e2 = TestEdgeModel.create(self.v1, self.v3, test_val=13)
-#         e3 = OtherTestEdge.create(self.v2, self.v3, test_val=14)
-#
-#         results = self.v2.outE()
-#         self.assertEqual(len(results), 1)
-#         self.assertIn(e3, results)
-#
-#         results = self.v2.outE(types=[TestEdgeModel])
-#         self.assertEqual(len(results), 0)
-#
-#         e1.delete()
-#         e2.delete()
-#         e3.delete()
-#
-#     def test_incoming_edge_traversals(self):
-#         """Test that incoming edge traversals work."""
-#         e1 = TestEdgeModel.create(self.v1, self.v2, test_val=12)
-#         e2 = TestEdgeModel.create(self.v1, self.v3, test_val=13)
-#         e3 = OtherTestEdge.create(self.v2, self.v3, test_val=14)
-#
-#         results = self.v2.inE()
-#         self.assertEqual(len(results), 1)
-#         self.assertIn(e1, results)
-#
-#         results = self.v2.inE(types=[OtherTestEdge])
-#         self.assertEqual(len(results), 0)
-#
-#         e1.delete()
-#         e2.delete()
-#         e3.delete()
-#
-#     def test_multiple_label_traversals(self):
-#         """ Tests that using multiple edges for traversals works """
-#         e1 = TestEdgeModel.create(self.v1, self.v2)
-#         e2 = OtherTestEdge.create(self.v1, self.v3)
-#         e3 = YetAnotherTestEdge.create(self.v1, self.v4)
-#
-#         self.assertEqual(len(self.v1.outV()), 3)
-#
-#         self.assertEqual(len(self.v1.outV(TestEdgeModel)), 1)
-#         self.assertEqual(len(self.v1.outV(OtherTestEdge)), 1)
-#         self.assertEqual(len(self.v1.outV(YetAnotherTestEdge)), 1)
-#
-#         out = self.v1.outV(TestEdgeModel, OtherTestEdge)
-#         self.assertEqual(len(out), 2)
-#         self.assertIn(self.v2.id, [v.id for v in out])
-#         self.assertIn(self.v3.id, [v.id for v in out])
-#
-#         out = self.v1.outV(OtherTestEdge, YetAnotherTestEdge)
-#         self.assertEqual(len(out), 2)
-#         self.assertIn(self.v3.id, [v.id for v in out])
-#         self.assertIn(self.v4.id, [v.id for v in out])
-#
-#         e1.delete()
-#         e2.delete()
-#         e3.delete()
-#
-#     def test_multiple_edge_traversal_with_type_filtering(self):
-#         """ Tests that using multiple edges for traversals works """
-#         v = TestVertexModel.create(test_val=1, name='Test1')
-#
-#         v1 = TestVertexModel.create()
-#         e1 = TestEdgeModel.create(v, v1)
-#
-#         v2 = TestVertexModel.create()
-#         e2 = OtherTestEdge.create(v, v2)
-#
-#         v3 = TestVertexModel.create()
-#         e3 = YetAnotherTestEdge.create(v, v3)
-#
-#         v4 = OtherTestModel.create()
-#         e4 = TestEdgeModel.create(v, v4)
-#
-#         v5 = OtherTestModel.create()
-#         e5 = OtherTestEdge.create(v, v5)
-#
-#         v6 = OtherTestModel.create()
-#         e6 = YetAnotherTestEdge.create(v, v6)
-#
-#         self.assertEqual(len(v.outV()), 6)
-#
-#         self.assertEqual(len(v.outV(TestEdgeModel, OtherTestEdge)), 4)
-#         self.assertEqual(len(v.outV(TestEdgeModel, OtherTestEdge, types=[TestVertexModel])), 2)
-#
-#         e1.delete()
-#         e2.delete()
-#         e3.delete()
-#         e4.delete()
-#         e5.delete()
-#         e6.delete()
-#         v.delete()
-#         v1.delete()
-#         v2.delete()
-#         v3.delete()
-#         v4.delete()
-#         v5.delete()
-#         v6.delete()
-#
-#     def test_edge_instance_traversal_types(self):
-#         """ Test traversals with edge instances work properly """
-#         te = TestEdgeModel.create(self.v1, self.v2)
-#         ote = OtherTestEdge.create(self.v1, self.v3)
-#         yate = YetAnotherTestEdge.create(self.v1, self.v4)
-#
-#         out = self.v1.outV(te, ote)
-#         self.assertEqual(len(out), 2)
-#         self.assertIn(self.v2.id, [v.id for v in out])
-#         self.assertIn(self.v3.id, [v.id for v in out])
-#
-#         out = self.v1.outV(ote, yate)
-#         self.assertEqual(len(out), 2)
-#         self.assertIn(self.v3.id, [v.id for v in out])
-#         self.assertIn(self.v4.id, [v.id for v in out])
-#
-#         te.delete()
-#         ote.delete()
-#         yate.delete()
-#
-#     def test_edge_label_string_traversal_types(self):
-#         """ Test traversals with edge instances work properly """
-#         e1 = TestEdgeModel.create(self.v1, self.v2)
-#         e2 = OtherTestEdge.create(self.v1, self.v3)
-#         e3 = YetAnotherTestEdge.create(self.v1, self.v4)
-#
-#         out = self.v1.outV(TestEdgeModel.get_label(), OtherTestEdge.get_label())
-#         self.assertEqual(len(out), 2)
-#         self.assertIn(self.v2.id, [v.id for v in out])
-#         self.assertIn(self.v3.id, [v.id for v in out])
-#
-#         out = self.v1.outV(OtherTestEdge.get_label(), YetAnotherTestEdge.get_label())
-#         self.assertEqual(len(out), 2)
-#         self.assertIn(self.v3.id, [v.id for v in out])
-#         self.assertIn(self.v4.id, [v.id for v in out])
-#
-#         e1.delete()
-#         e2.delete()
-#         e3.delete()
-#
-#     def test_unknown_edge_traversal_filter_type_fails(self):
-#         """
-#         Tests an exception is raised if a traversal filter is
-#         used that's not an edge class, instance or label string fails
-#         """
-#         e1 = TestEdgeModel.create(self.v1, self.v2)
-#         e2 = OtherTestEdge.create(self.v1, self.v3)
-#         e3 = YetAnotherTestEdge.create(self.v1, self.v4)
-#
-#         with self.assertRaises(MogwaiException):
-#             out = self.v1.outV(5)
-#
-#         with self.assertRaises(MogwaiException):
-#             out = self.v1.outV(True)
-#
-#         e1.delete()
-#         e2.delete()
-#         e3.delete()
-#
-#     @attr('manual_properties')
-#     def test_manual_properties(self):
-#         v = TestVertexModel.create(test_val=1, name='Test 7', some_property=32)
-#
-#         print_("Got Results: {}".format(v))
-#         print_("Result dict: {}".format(v.as_dict()))
-#         print_("\tResult properties: {}".format(v._properties.keys()))
-#         print_("\tResult Manaul: {}".format(v._manual_values.items()))
-#
-#         self.assertEqual(v['some_property'], 32)
-#         self.assertIn('some_property', v)  # This also tests __contains__
-#         self.assertIn('test_val', v)  # This also tests __contains__
-#
-#         # test len(Element()), should return len(element._properties) + len(element._manual_values)
-#         self.assertEqual(len(v), 3)
-#
-#         # test __iter__
-#         prop_keys = [key for key in v]
-#         self.assertEqual(len(prop_keys), 3)
-#         for prop_key in v:
-#             self.assertIn(prop_key, ['test_val', 'name', 'some_property'])
-#
-#         # test keys()
-#         self.assertEqual(len(prop_keys), len(v.keys()))
-#         for prop_key in v.keys():
-#             self.assertIn(prop_key, prop_keys)
-#
-#         # test values()
-#         prop_values = v.values()
-#         self.assertEqual(len(prop_values), 3)
-#         for prop_value in prop_values:
-#             self.assertIn(prop_value, [1, 'Test 7', 32])
-#
-#         # test items()
-#         prop_items = v.items()
-#         self.assertEqual(len(prop_items), 3)
-#         for prop_key, prop_value in prop_items:
-#             self.assertIn(prop_key, ['test_val', 'name', 'some_property'])
-#             self.assertIn(prop_value, [1, 'Test 7', 32])
-#
-#         # test change
-#         v['some_property'] = 42
-#         self.assertEqual(v['some_property'], 42)
-#         v.save()
-#         self.assertEqual(v['some_property'], 42)
-#
-#         # test delete
-#         del v['some_property']
-#         # This should still exist, so the property can be removed from the database,
-#         # but should raise an AttributeError if attempted to access normally
-#         self.assertIn('some_property', v)
-#         self.assertIsNone(v._manual_values.get('some_property'))
-#         with self.assertRaises(AttributeError):
-#             value = v['some_property']
-#             print_("Got value: {}".format(value))
-#
-#         v.delete()
+        try:
+            with self.assertRaises(TypeError):
+                yield tm.update(jon='beard')
+        finally:
+            yield tm.delete()
+
+
+@attr('unit', 'vertex_io')
+class TestVertexTraversal(BaseMogwaiTestCase):
+
+    @gen_test
+    def test_outgoing_vertex_traversal(self):
+        """Test that outgoing vertex traversals work."""
+        v1 = yield TestVertexModel.create(test_val=1, name='Test1')
+        v2 = yield TestVertexModel.create(test_val=2, name='Test2')
+        v3 = yield OtherTestModel.create(test_val=3, name='Test3')
+        e1 = yield TestEdgeModel.create(v1, v2, test_val=12)
+        e2 = yield TestEdgeModel.create(v1, v3, test_val=13)
+        e3 = yield TestEdgeModel.create(v2, v3, test_val=14)
+        try:
+            stream = yield v1.outV(TestEdgeModel)
+            results = yield stream.read()
+            self.assertEqual(len(results), 2)
+            self.assertIn(v2, results)
+            self.assertIn(v3, results)
+
+            stream = yield v1.outV(TestEdgeModel, types=[OtherTestModel])
+            results = yield stream.read()
+            self.assertEqual(len(results), 1)
+            self.assertIn(v3, results)
+        finally:
+            yield e1.delete()
+            yield e2.delete()
+            yield e3.delete()
+            yield v1.delete()
+            yield v2.delete()
+            yield v3.delete()
+
+    @gen_test
+    def test_incoming_vertex_traversal(self):
+        """Test that incoming vertex traversals work."""
+        v1 = yield TestVertexModel.create(test_val=1, name='Test1')
+        v2 = yield TestVertexModel.create(test_val=2, name='Test2')
+        v3 = yield OtherTestModel.create(test_val=3, name='Test3')
+        e1 = yield TestEdgeModel.create(v1, v2, test_val=12)
+        e2 = yield TestEdgeModel.create(v1, v3, test_val=13)
+        e3 = yield TestEdgeModel.create(v2, v3, test_val=14)
+        try:
+            stream = yield v2.inV(TestEdgeModel)
+            results = yield stream.read()
+            self.assertEqual(len(results), 1)
+            self.assertIn(v1, results)
+
+            stream = yield v2.inV(TestEdgeModel, types=[OtherTestModel])
+            results = yield stream.read()
+            # Here I think we can expect None
+            self.assertIsNone(results)
+        finally:
+            yield e1.delete()
+            yield e2.delete()
+            yield e3.delete()
+            yield v1.delete()
+            yield v2.delete()
+            yield v3.delete()
+
+    @gen_test
+    def test_outgoing_edge_traversals(self):
+        """Test that outgoing edge traversals work."""
+        v1 = yield TestVertexModel.create(test_val=1, name='Test1')
+        v2 = yield TestVertexModel.create(test_val=2, name='Test2')
+        v3 = yield OtherTestModel.create(test_val=3, name='Test3')
+        e1 = yield TestEdgeModel.create(v1, v2, test_val=12)
+        e2 = yield TestEdgeModel.create(v1, v3, test_val=13)
+        e3 = yield OtherTestEdge.create(v2, v3, test_val=14)
+        try:
+            stream = yield v2.outE()
+            results = yield stream.read()
+            self.assertEqual(len(results), 1)
+            self.assertIn(e3, results)
+            stream = yield v2.outE(types=[TestEdgeModel])
+            results = yield stream.read()
+            self.assertIsNone(results)
+        finally:
+            yield e1.delete()
+            yield e2.delete()
+            yield e3.delete()
+            yield v1.delete()
+            yield v2.delete()
+            yield v3.delete()
+
+    @gen_test
+    def test_incoming_edge_traversals(self):
+        """Test that incoming edge traversals work."""
+        v1 = yield TestVertexModel.create(test_val=1, name='Test1')
+        v2 = yield TestVertexModel.create(test_val=2, name='Test2')
+        v3 = yield OtherTestModel.create(test_val=3, name='Test3')
+        e1 = yield TestEdgeModel.create(v1, v2, test_val=12)
+        e2 = yield TestEdgeModel.create(v1, v3, test_val=13)
+        e3 = yield OtherTestEdge.create(v2, v3, test_val=14)
+        try:
+            stream = yield v2.inE()
+            results = yield stream.read()
+            self.assertEqual(len(results), 1)
+            self.assertIn(e1, results)
+            stream = yield v2.inE(types=[OtherTestEdge])
+            results = yield stream.read()
+            self.assertIsNone(results)
+        finally:
+            yield e1.delete()
+            yield e2.delete()
+            yield e3.delete()
+            yield v1.delete()
+            yield v2.delete()
+            yield v3.delete()
+
+    @gen_test
+    def test_multiple_label_traversals(self):
+        """ Tests that using multiple edges for traversals works """
+        v1 = yield TestVertexModel.create(test_val=1, name='Test1')
+        v2 = yield TestVertexModel.create(test_val=2, name='Test2')
+        v3 = yield OtherTestModel.create(test_val=3, name='Test3')
+        v4 = yield OtherTestModel.create(test_val=3, name='Test3')
+        e1 = yield TestEdgeModel.create(v1, v2)
+        e2 = yield OtherTestEdge.create(v1, v3)
+        e3 = yield YetAnotherTestEdge.create(v1, v4)
+
+        try:
+            stream = yield v1.outV()
+            results = yield stream.read()
+            self.assertEqual(len(results), 3)
+
+            stream = yield v1.outV(TestEdgeModel)
+            results = yield stream.read()
+            self.assertEqual(len(results), 1)
+
+            stream = yield v1.outV(OtherTestEdge)
+            results = yield stream.read()
+            self.assertEqual(len(results), 1)
+
+            stream = yield v1.outV(YetAnotherTestEdge)
+            results = yield stream.read()
+            self.assertEqual(len(results), 1)
+
+            stream = yield v1.outV(TestEdgeModel, OtherTestEdge)
+            out = yield stream.read()
+            self.assertEqual(len(out), 2)
+            self.assertIn(v2.id, [v.id for v in out])
+            self.assertIn(v3.id, [v.id for v in out])
+
+            stream = yield v1.outV(OtherTestEdge, YetAnotherTestEdge)
+            out = yield stream.read()
+            self.assertEqual(len(out), 2)
+            self.assertIn(v3.id, [v.id for v in out])
+            self.assertIn(v4.id, [v.id for v in out])
+        finally:
+            yield e1.delete()
+            yield e2.delete()
+            yield e3.delete()
+            yield v1.delete()
+            yield v2.delete()
+            yield v3.delete()
+            yield v4.delete()
+
+    @gen_test
+    def test_multiple_edge_traversal_with_type_filtering(self):
+        """ Tests that using multiple edges for traversals works """
+        v = yield TestVertexModel.create(test_val=1, name='Test1')
+
+        v1 = yield TestVertexModel.create()
+        e1 = yield TestEdgeModel.create(v, v1)
+
+        v2 = yield TestVertexModel.create()
+        e2 = yield OtherTestEdge.create(v, v2)
+
+        v3 = yield TestVertexModel.create()
+        e3 = yield YetAnotherTestEdge.create(v, v3)
+
+        v4 = yield OtherTestModel.create()
+        e4 = yield TestEdgeModel.create(v, v4)
+
+        v5 = yield OtherTestModel.create()
+        e5 = yield OtherTestEdge.create(v, v5)
+
+        v6 = yield OtherTestModel.create()
+        e6 = yield YetAnotherTestEdge.create(v, v6)
+        try:
+            stream = yield v.outV()
+            results = yield stream.read()
+            self.assertEqual(len(results), 6)
+
+            stream = yield v.outV(TestEdgeModel, OtherTestEdge)
+            results = yield stream.read()
+            self.assertEqual(len(results), 4)
+
+            stream = yield v.outV(
+                TestEdgeModel, OtherTestEdge, types=[TestVertexModel])
+            results = yield stream.read()
+            self.assertEqual(len(results), 2)
+        finally:
+            yield e1.delete()
+            yield e2.delete()
+            yield e3.delete()
+            yield e4.delete()
+            yield e5.delete()
+            yield e6.delete()
+            yield v.delete()
+            yield v1.delete()
+            yield v2.delete()
+            yield v3.delete()
+            yield v4.delete()
+            yield v5.delete()
+            yield v6.delete()
+
+    @gen_test
+    def test_edge_instance_traversal_types(self):
+        """ Test traversals with edge instances work properly """
+        v1 = yield TestVertexModel.create(test_val=1, name='Test1')
+        v2 = yield TestVertexModel.create(test_val=2, name='Test2')
+        v3 = yield OtherTestModel.create(test_val=3, name='Test3')
+        v4 = yield OtherTestModel.create(test_val=3, name='Test3')
+        te = yield TestEdgeModel.create(v1, v2)
+        ote = yield OtherTestEdge.create(v1, v3)
+        yate = yield YetAnotherTestEdge.create(v1, v4)
+        try:
+            stream = yield v1.outV(te, ote)
+            out = yield stream.read()
+            self.assertEqual(len(out), 2)
+            self.assertIn(v2.id, [v.id for v in out])
+            self.assertIn(v3.id, [v.id for v in out])
+
+            stream = yield v1.outV(ote, yate)
+            out = yield stream.read()
+            self.assertEqual(len(out), 2)
+            self.assertIn(v3.id, [v.id for v in out])
+            self.assertIn(v4.id, [v.id for v in out])
+        finally:
+            yield te.delete()
+            yield ote.delete()
+            yield yate.delete()
+            yield v1.delete()
+            yield v2.delete()
+            yield v3.delete()
+            yield v4.delete()
+
+    @gen_test
+    def test_edge_label_string_traversal_types(self):
+        """ Test traversals with edge instances work properly """
+        v1 = yield TestVertexModel.create(test_val=1, name='Test1')
+        v2 = yield TestVertexModel.create(test_val=2, name='Test2')
+        v3 = yield OtherTestModel.create(test_val=3, name='Test3')
+        v4 = yield OtherTestModel.create(test_val=3, name='Test3')
+        e1 = yield TestEdgeModel.create(v1, v2)
+        e2 = yield OtherTestEdge.create(v1, v3)
+        e3 = yield YetAnotherTestEdge.create(v1, v4)
+        try:
+            stream = yield v1.outV(
+                TestEdgeModel.get_label(), OtherTestEdge.get_label())
+            out = yield stream.read()
+            self.assertEqual(len(out), 2)
+            self.assertIn(v2.id, [v.id for v in out])
+            self.assertIn(v3.id, [v.id for v in out])
+
+            stream = yield v1.outV(
+                OtherTestEdge.get_label(), YetAnotherTestEdge.get_label())
+            out = yield stream.read()
+            self.assertEqual(len(out), 2)
+            self.assertIn(v3.id, [v.id for v in out])
+            self.assertIn(v4.id, [v.id for v in out])
+        finally:
+            yield e1.delete()
+            yield e2.delete()
+            yield e3.delete()
+            yield v1.delete()
+            yield v2.delete()
+            yield v3.delete()
+            yield v4.delete()
+
+    @gen_test
+    def test_unknown_edge_traversal_filter_type_fails(self):
+        """
+        Tests an exception is raised if a traversal filter is
+        used that's not an edge class, instance or label string fails
+        """
+        v1 = yield TestVertexModel.create(test_val=1, name='Test1')
+        v2 = yield TestVertexModel.create(test_val=2, name='Test2')
+        v3 = yield OtherTestModel.create(test_val=3, name='Test3')
+        v4 = yield OtherTestModel.create(test_val=3, name='Test3')
+        e1 = yield TestEdgeModel.create(v1, v2)
+        e2 = yield OtherTestEdge.create(v1, v3)
+        e3 = yield YetAnotherTestEdge.create(v1, v4)
+        try:
+            with self.assertRaises(MogwaiException):
+                out = v1.outV(5)
+
+            with self.assertRaises(MogwaiException):
+                out = v1.outV(True)
+        finally:
+            yield e1.delete()
+            yield e2.delete()
+            yield e3.delete()
+            yield v1.delete()
+            yield v2.delete()
+            yield v3.delete()
+            yield v4.delete()
+
+    @gen_test
+    @attr('manual_properties')
+    def test_manual_properties(self):
+        v = yield TestVertexModel.create(test_val=1, name='Test 7', some_property=32)
+        try:
+            print_("Got Results: {}".format(v))
+            print_("Result dict: {}".format(v.as_dict()))
+            print_("\tResult properties: {}".format(v._properties.keys()))
+            print_("\tResult Manaul: {}".format(v._manual_values.items()))
+
+            self.assertEqual(v['some_property'], 32)
+            self.assertIn('some_property', v)  # This also tests __contains__
+            self.assertIn('test_val', v)  # This also tests __contains__
+
+            # test len(Element()), should return len(element._properties) + len(element._manual_values)
+            self.assertEqual(len(v), 3)
+
+            # test __iter__
+            prop_keys = [key for key in v]
+            self.assertEqual(len(prop_keys), 3)
+            for prop_key in v:
+                self.assertIn(prop_key, ['test_val', 'name', 'some_property'])
+
+            # test keys()
+            self.assertEqual(len(prop_keys), len(v.keys()))
+            for prop_key in v.keys():
+                self.assertIn(prop_key, prop_keys)
+
+            # test values()
+            prop_values = v.values()
+            self.assertEqual(len(prop_values), 3)
+            for prop_value in prop_values:
+                self.assertIn(prop_value, [1, 'Test 7', 32])
+
+            # test items()
+            prop_items = v.items()
+            self.assertEqual(len(prop_items), 3)
+            for prop_key, prop_value in prop_items:
+                self.assertIn(prop_key, ['test_val', 'name', 'some_property'])
+                self.assertIn(prop_value, [1, 'Test 7', 32])
+
+            # test change
+            v['some_property'] = 42
+            self.assertEqual(v['some_property'], 42)
+            yield v.save()
+            self.assertEqual(v['some_property'], 42)
+
+            # test delete
+            del v['some_property']
+            # This should still exist, so the property can be removed from the database,
+            # but should raise an AttributeError if attempted to access normally
+            self.assertIn('some_property', v)
+            self.assertIsNone(v._manual_values.get('some_property'))
+            with self.assertRaises(AttributeError):
+                value = v['some_property']
+                print_("Got value: {}".format(value))
+        finally:
+            yield v.delete()

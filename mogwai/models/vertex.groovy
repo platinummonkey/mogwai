@@ -112,7 +112,7 @@ def _traversal(vid, operation, labels, start, end, element_types) {
         results = results[start..<end]
     }
     if (element_types != null) {
-        results = results.filter{it.hasLabel(*element_types)}
+        results = results.filter{it.get().label() in element_types}
     }
     return results
 }

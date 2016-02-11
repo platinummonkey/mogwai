@@ -42,7 +42,6 @@ def execute_query(query, params=None, handler=None, transaction=True,
     if pool:
         connection_pool = pool
     else:
-        global _connection_pool
         """ :type _connection_pool: RexProConnectionPool | None """
         connection_pool = _connection_pool
 
@@ -61,6 +60,11 @@ def execute_query(query, params=None, handler=None, transaction=True,
 
     future_conn.add_done_callback(on_connect)
     return future
+
+
+def close_global_pool():
+    if _connection_pool:
+        _connection_pool.close()
 
 
 _host_re = compile(r'^((?P<user>.+?)(:(?P<password>.*?))?@)?(?P<host>.*?)(:(?P<port>\d+?))?(?P<graph_name>/.*?)?$')

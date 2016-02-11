@@ -3,7 +3,7 @@ from unittest import TestCase
 from nose.tools import nottest
 from tornado.ioloop import IOLoop
 from tornado.testing import gen_test, AsyncTestCase
-from mogwai.connection import setup, sync_spec
+from mogwai.connection import setup, sync_spec, close_global_pool
 from mogwai.models import Vertex, Edge
 from mogwai.properties import Double, Integer, String
 import os
@@ -71,6 +71,11 @@ class BaseMogwaiTestCase(AsyncTestCase):
         super(BaseMogwaiTestCase, cls).setUpClass()
         #sync_spec(filename='test.spec', host='192.168.133.12', graph_name='graph')
         setup(os.getenv('TITAN_REXPRO_URL', 'localhost'), graph_name='graph')
+
+    @classmethod
+    def tearDownClass(cls):
+        close_global_pool()
+        super(BaseMogwaiTestCase, cls).tearDownClass()
 
     def get_new_ioloop(self):
         """Creates a new `.IOLoop` for this test.  May be overridden in
