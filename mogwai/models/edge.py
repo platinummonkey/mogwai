@@ -216,7 +216,7 @@ class Edge(Element):
                                         **kwargs)
         def on_read(f2):
             try:
-                result = f2.result()
+                result = f2.result()[0]
             except Exception as e:
                 future.set_exception(e)
             else:

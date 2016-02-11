@@ -74,7 +74,7 @@ def _create_relationship(id, in_direction, edge_label, edge_attrs, vertex_attrs)
     }
 }
 
-def _traversal(id, operation, labels, start, end, element_types) {
+def _traversal(vid, operation, labels, start, end, element_types) {
     /**
      * performs vertex/edge traversals with optional edge labels and pagination
      * :param id: vertex id to start from
@@ -84,7 +84,7 @@ def _traversal(id, operation, labels, start, end, element_types) {
      * :param per_page: number of objects to return per page
      * :param element_types: list of allowed element types for results
      */
-    def results = g.v(id)
+    def results = g.V(vid)
     def label_args = labels == null ? [] : labels
     switch (operation) {
         case "inV":
@@ -112,7 +112,7 @@ def _traversal(id, operation, labels, start, end, element_types) {
         results = results[start..<end]
     }
     if (element_types != null) {
-        results = results.filter{it.element_type in element_types}
+        results = results.filter{it.hasLabel(*element_types)}
     }
     return results
 }

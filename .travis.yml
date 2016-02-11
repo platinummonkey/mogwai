@@ -27,6 +27,7 @@ before_script:
 
 script:
   - nosetests mogwai.tests.models.vertex_io_tests
+  - nosetests mogwai.tests.models.edge_io_tests
 
 deploy:
   provider: pypi

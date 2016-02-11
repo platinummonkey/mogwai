@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+import json
 from tornado.testing import gen_test
 from mogwai._compat import print_
 from nose.plugins.attrib import attr
@@ -43,270 +44,277 @@ class YetAnotherTestEdge(Edge):
 @attr('unit', 'vertex_io')
 class TestVertexIO(BaseMogwaiTestCase):
 
-        @gen_test
-        def test_unicode_io(self):
-            """
-            Tests that unicode is saved and retrieved properly
-            """
-            tm1 = yield TestVertexModel.create(test_val=9, name=u'test2')
-            self.assertEqual(tm1.name, u'test2')
-            tm2 = yield TestVertexModel.get(tm1.id)
-            self.assertEqual(tm1, tm2)
-            yield tm1.delete()
+    @gen_test
+    def test_unicode_io(self):
+        """
+        Tests that unicode is saved and retrieved properly
+        """
+        tm1 = yield TestVertexModel.create(test_val=9, name=u'test2')
+        self.assertEqual(tm1.name, u'test2')
+        tm2 = yield TestVertexModel.get(tm1.id)
+        self.assertEqual(tm1, tm2)
+        yield tm1.delete()
 
-        @gen_test
-        def test_model_save_and_load(self):
-            """
-            Tests that models can be saved and retrieved
-            """
-            tm0 = yield TestVertexModel.create(test_val=8, name='123456789')
-            tm1 = yield TestVertexModel.create(test_val=9, name='456789')
-            stream = yield TestVertexModel.all([tm0.id, tm1.id])
-            tms = yield stream.read()
+    @gen_test
+    def test_model_save_and_load(self):
+        """
+        Tests that models can be saved and retrieved
+        """
+        tm0 = yield TestVertexModel.create(test_val=8, name='123456789')
+        tm1 = yield TestVertexModel.create(test_val=9, name='456789')
+        stream = yield TestVertexModel.all([tm0.id, tm1.id])
+        tms = yield stream.read()
 
-            self.assertEqual(len(tms), 2)
+        self.assertEqual(len(tms), 2)
 
-            for pname in tm0._properties.keys():
-                self.assertEquals(getattr(tm0, pname), getattr(tms[0], pname))
+        for pname in tm0._properties.keys():
+            self.assertEquals(getattr(tm0, pname), getattr(tms[0], pname))
 
-            stream2 = yield TestVertexModel.all([tm1.id, tm0.id])
-            tms = yield stream2.read()
-            self.assertEqual(tms[0].id, tm1.id)
-            self.assertEqual(tms[1].id, tm0.id)
+        stream2 = yield TestVertexModel.all([tm1.id, tm0.id])
+        tms = yield stream2.read()
+        self.assertEqual(tms[0].id, tm1.id)
+        self.assertEqual(tms[1].id, tm0.id)
 
-            yield tm0.delete()
-            yield tm1.delete()
+        yield tm0.delete()
+        yield tm1.delete()
 
-        @gen_test
-        def test_model_updating_works_properly(self):
-            """
-            Tests that subsequent saves after initial model creation work
-            """
-            tm = yield TestVertexModel.create(test_val=8, name='123456789')
+    @gen_test
+    def test_model_updating_works_properly(self):
+        """
+        Tests that subsequent saves after initial model creation work
+        """
+        tm = yield TestVertexModel.create(test_val=8, name='123456789')
 
-            tm.test_val = 100
-            yield tm.save()
+        tm.test_val = 100
+        yield tm.save()
 
-            tm.test_val = 80
-            yield tm.save()
+        tm.test_val = 80
+        yield tm.save()
 
-            tm.test_val = 60
-            yield tm.save()
+        tm.test_val = 60
+        yield tm.save()
 
-            tm.test_val = 40
-            yield tm.save()
+        tm.test_val = 40
+        yield tm.save()
 
-            tm.test_val = 20
-            yield tm.save()
+        tm.test_val = 20
+        yield tm.save()
 
-            tm2 = yield TestVertexModel.get(tm.id)
+        tm2 = yield TestVertexModel.get(tm.id)
 
-            self.assertEquals(tm.test_val, tm2.test_val)
-            yield tm.delete()
+        self.assertEquals(tm.test_val, tm2.test_val)
+        yield tm.delete()
 
-        @gen_test
-        def test_model_deleting_works_properly(self):
-            """
-            Tests that an instance's delete method deletes the instance
-            """
-            tm = yield TestVertexModel.create(test_val=8, name='123456789')
-            vid = tm.id
-            yield tm.delete()
-            # gremlinclient handler error handling needs to be fixed
-            # with self.assertRaises(TestVertexModel.DoesNotExist):
-            #     resp = yield TestVertexModel.get(vid)
-            #     tm = yield resp.read()
+    @gen_test
+    def test_model_deleting_works_properly(self):
+        """
+        Tests that an instance's delete method deletes the instance
+        """
+        tm = yield TestVertexModel.create(test_val=8, name='123456789')
+        vid = tm.id
+        yield tm.delete()
+        # gremlinclient handler error handling needs to be fixed
+        # with self.assertRaises(TestVertexModel.DoesNotExist):
+        #     resp = yield TestVertexModel.get(vid)
+        #     tm = yield resp.read()
 
-        @gen_test
-        def test_reload(self):
-            """ Tests that and instance's reload method does an inplace update of the instance """
-            tm0 = yield TestVertexModel.create(test_val=8, name='123456789')
-            tm1 = yield TestVertexModel.get(tm0.id)
-            tm1.test_val = 7
-            yield tm1.save()
+    @gen_test
+    def test_reload(self):
+        """ Tests that and instance's reload method does an inplace update of the instance """
+        tm0 = yield TestVertexModel.create(test_val=8, name='123456789')
+        tm1 = yield TestVertexModel.get(tm0.id)
+        tm1.test_val = 7
+        yield tm1.save()
 
-            yield tm0.reload()
-            self.assertEqual(tm0.test_val, 7)
-            yield tm0.delete()
+        yield tm0.reload()
+        self.assertEqual(tm0.test_val, 7)
+        yield tm0.delete()
 
-        @gen_test
-        def test_reload_on_aliased_field(self):
-            """ Tests that reload works with aliased fields """
-            tm0 = yield AliasedTestModel.create(test_val=8, name='123456789')
-            tm1 = yield AliasedTestModel.get(tm0.id)
-            tm1.test_val = 7
-            yield tm1.save()
+    @gen_test
+    def test_reload_on_aliased_field(self):
+        """ Tests that reload works with aliased fields """
+        tm0 = yield AliasedTestModel.create(test_val=8, name='123456789')
+        tm1 = yield AliasedTestModel.get(tm0.id)
+        tm1.test_val = 7
+        yield tm1.save()
 
-            yield tm0.reload()
-            self.assertEqual(tm0.test_val, 7)
-            yield tm1.delete()
+        yield tm0.reload()
+        self.assertEqual(tm0.test_val, 7)
+        yield tm1.delete()
 
-        @gen_test
-        def test_all_method(self):
-            with self.assertRaises(MogwaiQueryError):
-                yield TestVertexModel.all(1)
+    @gen_test
+    def test_all_method(self):
+        with self.assertRaises(MogwaiQueryError):
+            yield TestVertexModel.all(1)
 
-        @gen_test
-        def test_all_method_invalid_length(self):
-            v1 = yield TestVertexModel.create()
-            v2 = yield TestVertexModel.create()
-            from mogwai.exceptions import MogwaiQueryError
-            with self.assertRaises(RuntimeError):
-                stream = yield TestVertexModel.all([v1.id, v2.id, 'invalid'])
-                yield stream.read()
-            yield v1.delete()
-            yield v2.delete()
+    @gen_test
+    def test_all_method_invalid_length(self):
+        v1 = yield TestVertexModel.create()
+        v2 = yield TestVertexModel.create()
+        from mogwai.exceptions import MogwaiQueryError
+        with self.assertRaises(RuntimeError):
+            stream = yield TestVertexModel.all([v1.id, v2.id, 'invalid'])
+            yield stream.read()
+        yield v1.delete()
+        yield v2.delete()
 
-        @gen_test
-        def test_find_by_value_method(self):
-            v1 = yield TestVertexModel.create(name='v1', test_val=-99)
-            v2 = yield TestVertexModel.create(name='v2', test_val=-99)
-            v3 = yield TestVertexModelDouble.create(name='v3', test_val=-100.0)
-            resp = yield TestVertexModel.find_by_value('name', 'v1')
-            res1 = yield resp.read()
-            self.assertEqual(len(res1), 1)
-            resp = yield TestVertexModel.find_by_value('test_val', -99)
-            res2 = yield resp.read()
-            self.assertEqual(len(res2), 2)
-            resp = yield TestVertexModel.find_by_value('name', 'bar')
-            res3 = yield resp.read()
-            self.assertIsNone(res3)
-            resp = yield TestVertexModel.find_by_value('name', 'v1')
-            res4 = yield resp.read()
-            self.assertEqual(res4[0], v1)
-            resp = yield TestVertexModelDouble.find_by_value('test_val', -100.0)
-            res5 = yield resp.read()
-            self.assertEqual(len(res5), 1)
-            yield v1.delete()
-            yield v2.delete()
-            yield v3.delete()
+    @gen_test
+    def test_find_by_value_method(self):
+        v1 = yield TestVertexModel.create(name='v1', test_val=-99)
+        v2 = yield TestVertexModel.create(name='v2', test_val=-99)
+        v3 = yield TestVertexModelDouble.create(name='v3', test_val=-100.0)
+        resp = yield TestVertexModel.find_by_value('name', 'v1')
+        res1 = yield resp.read()
+        self.assertEqual(len(res1), 1)
+        resp = yield TestVertexModel.find_by_value('test_val', -99)
+        res2 = yield resp.read()
+        self.assertEqual(len(res2), 2)
+        resp = yield TestVertexModel.find_by_value('name', 'bar')
+        res3 = yield resp.read()
+        self.assertIsNone(res3)
+        resp = yield TestVertexModel.find_by_value('name', 'v1')
+        res4 = yield resp.read()
+        self.assertEqual(res4[0], v1)
+        resp = yield TestVertexModelDouble.find_by_value('test_val', -100.0)
+        res5 = yield resp.read()
+        self.assertEqual(len(res5), 1)
+        yield v1.delete()
+        yield v2.delete()
+        yield v3.delete()
 
-        @gen_test
-        def test_get_by_id(self):
-            v1 = yield TestVertexModel.create()
-            results = yield TestVertexModel.get(v1.id)
-            self.assertIsInstance(results, TestVertexModel)
-            self.assertEqual(results, v1)
+    @gen_test
+    def test_get_by_id(self):
+        v1 = yield TestVertexModel.create()
+        results = yield TestVertexModel.get(v1.id)
+        self.assertIsInstance(results, TestVertexModel)
+        self.assertEqual(results, v1)
 
-            # Man, gremlinclient errors need some work
-            # with self.assertRaises(TestEdgeModel.DoesNotExist):
-            with self.assertRaises(RuntimeError):
-                results = yield TestVertexModel.get(None)
+        # Man, gremlinclient errors need some work
+        # with self.assertRaises(TestEdgeModel.DoesNotExist):
+        with self.assertRaises(RuntimeError):
+            results = yield TestVertexModel.get(None)
 
-            # with self.assertRaises(TestEdgeModel.DoesNotExist):
-            with self.assertRaises(RuntimeError):
-                results = yield TestVertexModel.get('nonexistant')
+        # with self.assertRaises(TestEdgeModel.DoesNotExist):
+        with self.assertRaises(RuntimeError):
+            results = yield TestVertexModel.get('nonexistant')
 
-            v2 = yield TestVertexModel2.create(test_val=0)
-            with self.assertRaises(TestVertexModel.WrongElementType):
-                results = yield TestVertexModel.get(v2.id)
+        v2 = yield TestVertexModel2.create(test_val=0)
+        with self.assertRaises(TestVertexModel.WrongElementType):
+            results = yield TestVertexModel.get(v2.id)
 
-            yield v2.delete()
-            yield v1.delete()
+        yield v2.delete()
+        yield v1.delete()
 
-        @gen_test
-        @attr('vertex_delete_methods')
-        def test_delete_methods(self):
-            v1 = yield TestVertexModel.create()
-            v2 = yield TestVertexModel.create()
+    @gen_test
+    @attr('vertex_delete_methods')
+    def test_delete_methods(self):
+        v1 = yield TestVertexModel.create()
+        v2 = yield TestVertexModel.create()
 
-            # delete_outE
-            e1 = yield TestEdgeModel.create(v1, v2)
-            yield v1.delete_outE(TestEdgeModel)
+        # delete_outE
+        e1 = yield TestEdgeModel.create(v1, v2)
+        yield v1.delete_outE(TestEdgeModel)
 
-            # delete_inE
-            e1 = yield TestEdgeModel.create(v1, v2)
-            yield v2.delete_inE(TestEdgeModel)
+        # delete_inE
+        e1 = yield TestEdgeModel.create(v1, v2)
+        yield v2.delete_inE(TestEdgeModel)
 
-            # delete_inV
-            e1 = yield TestEdgeModel.create(v1, v2)
-            yield v1.delete_inV(TestEdgeModel)
+        # delete_inV
+        e1 = yield TestEdgeModel.create(v1, v2)
+        yield v1.delete_inV(TestEdgeModel)
 
-            # delete_outV
-            v2 = yield TestVertexModel.create()
-            e1 = yield TestEdgeModel.create(v1, v2)
-            yield v2.delete_outV(TestEdgeModel)
+        # delete_outV
+        v2 = yield TestVertexModel.create()
+        e1 = yield TestEdgeModel.create(v1, v2)
+        yield v2.delete_outV(TestEdgeModel)
 
-            yield v2.delete()
+        yield v2.delete()
 
 
-# class DeserializationTestModel(Vertex):
-#     count = properties.Integer()
-#     text = properties.Text()
-#
-#     gremlin_path = 'deserialize.groovy'
-#
-#     get_map = gremlin.GremlinValue()
-#     get_list = gremlin.GremlinMethod()
-#
-#
-# @attr('unit', 'vertex_io')
-# class TestNestedDeserialization(BaseMogwaiTestCase):
-#     """
-#     Tests that vertices are properly deserialized when nested in map and list data structures
-#     """
-#
-#     def test_map_deserialization(self):
-#         """
-#         Tests that elements nested in maps are properly deserialized
-#         """
-#
-#         original = DeserializationTestModel.create(count=5, text='happy')
-#         nested = original.get_map()
-#
-#         self.assertIsInstance(nested, dict)
-#         self.assertEqual(nested['vertex'], original)
-#         self.assertEqual(nested['number'], 5)
-#         original.delete()
-#
-#     def test_list_deserialization(self):
-#         """
-#         Tests that elements nested in lists are properly deserialized
-#         """
-#
-#         original = DeserializationTestModel.create(count=5, text='happy')
-#         nested = original.get_list()
-#
-#         self.assertIsInstance(nested, list)
-#         self.assertEqual(nested[0], None)
-#         self.assertEqual(nested[1], 0)
-#         self.assertEqual(nested[2], 1)
-#
-#         self.assertIsInstance(nested[3], list)
-#         self.assertEqual(nested[3][0], 2)
-#         self.assertEqual(nested[3][1], original)
-#         self.assertEqual(nested[3][2], 3)
-#
-#         self.assertEqual(nested[4], 5)
-#         original.delete()
-#
-#
-# class TestEnumVertexModel(with_metaclass(EnumVertexBaseMeta, Vertex)):
-#     __enum_id_only__ = False
-#     name = properties.String(default='test text')
-#     test_val = properties.Integer(default=0)
-#
-#     def enum_generator(self):
-#         return '%s_%s' % (self.name.replace(' ', '_').upper(), self.test_val)
-#
-#
-# class TestEnumVertexModel2(with_metaclass(EnumVertexBaseMeta, Vertex)):
-#     name = properties.String(default='test text')
-#     test_val = properties.Integer(default=0)
-#
-#
+class DeserializationTestModel(Vertex):
+    count = properties.Integer()
+    text = properties.Text()
+
+    gremlin_path = 'deserialize.groovy'
+
+    get_maps = gremlin.GremlinValue()
+    get_list = gremlin.GremlinMethod()
+
+
+@attr('unit', 'vertex_io')
+class TestNestedDeserialization(BaseMogwaiTestCase):
+    """
+    Tests that vertices are properly deserialized when nested in map and list data structures
+    """
+
+    # @gen_test
+    # def test_map_deserialization(self):
+    #     """
+    #     Tests that elements nested in maps are properly deserialized
+    #     Not sure of the best approach for this, groovy associative arrays
+    #     aren't deserialized as dicts
+    #     """
+    #     original = yield DeserializationTestModel.create(count=5, text='happy')
+    #     nested = yield original.get_maps()
+    #     nested = json.loads(nested)
+    #     self.assertIsInstance(nested, dict)
+    #     # self.assertEqual(nested['vertex'], original)
+    #     self.assertEqual(nested['number'], 5)
+    #     yield original.delete()
+
+    @gen_test
+    def test_list_deserialization(self):
+        """
+        Tests that elements nested in lists are properly deserialized
+        """
+        try:
+            original = yield DeserializationTestModel.create(count=5, text='happy')
+            stream = yield original.get_list()
+            nested = yield stream.read()
+            self.assertIsInstance(nested, list)
+            self.assertEqual(nested[0], None)
+            self.assertEqual(nested[1], 0)
+            self.assertEqual(nested[2], 1)
+
+            self.assertIsInstance(nested[3], list)
+            self.assertEqual(nested[3][0], 2)
+            self.assertEqual(nested[3][1], original)
+            self.assertEqual(nested[3][2], 3)
+
+            self.assertEqual(nested[4], 5)
+        finally:
+            yield original.delete()
+
+
+class TestEnumVertexModel(with_metaclass(EnumVertexBaseMeta, Vertex)):
+    __enum_id_only__ = False
+    name = properties.String(default='test text')
+    test_val = properties.Integer(default=0)
+
+    def enum_generator(self):
+        return '%s_%s' % (self.name.replace(' ', '_').upper(), self.test_val)
+
+
+class TestEnumVertexModel2(with_metaclass(EnumVertexBaseMeta, Vertex)):
+    name = properties.String(default='test text')
+    test_val = properties.Integer(default=0)
+
+
+# Enum has not been implemented
 # @attr('unit', 'vertex_io', 'vertex_enum')
 # class TestVertexEnumModel(BaseMogwaiTestCase):
 #
+#     @gen_test
 #     def test_default_enum_handling(self):
 #         """ Default enum handling test
 #
 #         Works by grabbing the `name` property and substituting ' ' for '_' and capitalizing
 #         The enum returns the Vertex ID
 #         """
-#         tv = TestEnumVertexModel2.create()
-#         self.assertEqual(TestEnumVertexModel2.TEST_TEXT, tv.id)
-#         tv.delete()
+#         tv = yield TestEnumVertexModel2.create()
+#         txt = yield TestEnumVertexModel2.TEST_TEXT
+#         self.assertEqual(txt, tv.id)
+#         yield tv.delete()
 #
 #     def test_custom_enum_handling(self):
 #         """ Custom enum handling test
@@ -324,24 +332,27 @@ class TestVertexIO(BaseMogwaiTestCase):
 #             TestEnumVertexModel.WRONG
 #
 #
-# @attr('unit', 'vertex_io')
-# class TestUpdateMethod(BaseMogwaiTestCase):
-#     def test_success_case(self):
-#         """ Tests that the update method works as expected """
-#         tm = TestVertexModel.create(test_val=8, name='123456789')
-#         tm2 = tm.update(test_val=9)
-#
-#         tm3 = TestVertexModel.get(tm.id)
-#         self.assertEqual(tm2.test_val, 9)
-#         self.assertEqual(tm3.test_val, 9)
-#         tm.delete()
-#
-#     def test_unknown_names_raise_exception(self):
-#         """ Tests that passing in names for columns that don't exist raises an exception """
-#         tm = TestVertexModel.create(test_val=8, text='123456789')
-#         with self.assertRaises(TypeError):
-#             tm.update(jon='beard')
-#         tm.delete()
+@attr('unit', 'vertex_io')
+class TestUpdateMethod(BaseMogwaiTestCase):
+
+    @gen_test
+    def test_success_case(self):
+        """ Tests that the update method works as expected """
+        tm = yield TestVertexModel.create(test_val=8, name='123456789')
+        tm2 = yield tm.update(test_val=9)
+
+        tm3 = yield TestVertexModel.get(tm.id)
+        self.assertEqual(tm2.test_val, 9)
+        self.assertEqual(tm3.test_val, 9)
+        yield tm.delete()
+
+    @gen_test
+    def test_unknown_names_raise_exception(self):
+        """ Tests that passing in names for columns that don't exist raises an exception """
+        tm = yield TestVertexModel.create(test_val=8, text='123456789')
+        with self.assertRaises(TypeError):
+            yield tm.update(jon='beard')
+        yield tm.delete()
 #
 #
 # @attr('unit', 'vertex_io')

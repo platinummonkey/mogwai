@@ -263,6 +263,7 @@ class GremlinMethod(BaseGremlinMethod):
 
         """
         from mogwai.models.element import Element
+
         if isinstance(obj, dict) and 'id' in obj and 'type' in obj:
             return Element.deserialize(obj)
         elif isinstance(obj, dict):
@@ -294,25 +295,48 @@ class GremlinValue(GremlinMethod):
     """Gremlin Method that returns one value"""
 
     def __call__(self, instance, *args, **kwargs):
-        results = super(GremlinValue, self).__call__(instance, *args, **kwargs)
+        future = Future()
+        future_result = super(GremlinValue, self).__call__(instance, *args, **kwargs)
 
-        if results is None:  # pragma: no cover
-            return
+        def on_read(f2):
+            try:
+                result = f2.result()
+            except Exception as e:
+                future.set_exception(e)
+            else:
+                from mogwai.models.element import Element
+                if result is None:  # pragma: no cover
+                    future.set_result(None)
+                # we have to make a special case for dictionaries, python
+                # len returns number of keys, even though it is one
+                # object. Don't do the same for lists or tuples, since
+                # they arevGremlin Methods not GremlinValues.
+                elif isinstance(result, dict):
+                    future.set_result(result)
+                elif isinstance(result,
+                                integer_types + float_types + string_types):
+                    future.set_result(result)
+                elif isinstance(result, Element):
+                    future.set_result(result)
+                elif len(result) != 1:
+                    e = MogwaiGremlinException(
+                        '''GremlinValue requires a single value is
+                           returned (%s returned)''' % len(result))
+                    future.set_exception(e)
+                else:
+                    future.set_result(result[0])
 
-        # we have to make a special case for dictionaries, python len returns number of keys,
-        # even though it is one object. Don't do the same for lists or tuples, since they are
-        # Gremlin Methods not GremlinValues.
-        if isinstance(results, dict):
-            return results
-        if isinstance(results, integer_types + float_types + string_types):
-            return results
-        from mogwai.models.element import Element
-        if isinstance(results, Element):
-            return results
+        def on_call(f):
+            try:
+                stream = f.result()
+            except Exception as e:
+                future.set_exception(e)
+            else:
+                future_read = stream.read()
+                future_read.add_done_callback(on_read)
 
-        if len(results) != 1:
-            raise MogwaiGremlinException('GremlinValue requires a single value is returned (%s returned)' % len(results))
-        return results[0]
+        future_result.add_done_callback(on_call)
+        return future
 
 
 class GremlinTable(GremlinMethod):  # pragma: no cover

@@ -100,9 +100,9 @@ class Vertex(Element):
 
     def __repr__(self):
         return "{}(label={}, id={}, values={})".format(self.__class__.__name__,
-                                                              self.label,
-                                                              getattr(self, '_id', None),
-                                                              getattr(self, '_values', {}))
+                                                       self.get_label(),
+                                                       getattr(self, '_id', None),
+                                                       getattr(self, '_values', {}))
 
     def __getstate__(self):
         state = {'_id': self.id, '_type': 'vertex'}
@@ -176,7 +176,7 @@ class Vertex(Element):
         future = Future()
         if len(ids) == 0:
             future_results = connection.execute_query(
-                'g.V.hasLabel("%s")' % cls.get_label(),
+                'g.V.hasLabel(x)', params={"x": cls.get_label()} ,
                 **kwargs)
 
         else:
