@@ -51,16 +51,18 @@ def _delete_edge(eid) {
         if (e != null) {
         	e.remove()
         }
-        g.tx().commit()
+        graph.tx().commit()
      } catch (err) {
-        g.tx().rollback()
+        graph.tx().rollback()
         throw(err)
      }
 }
 
-def _get_edges_between(out_v, in_v, label, page_num, per_page) {
+def _get_edges_between(out_v, in_v, elabel, page_num, per_page) {
     try {
-        def results = g.v(out_v).outE(label).as('e').inV().retain([g.v(in_v)]).back('e')
+			def source = g.V(out_v).next()
+			def target = g.V(in_v).next()
+			def results = g.V(source).outE(elabel).filter(inV().is(target))
         if (page_num != null && per_page != null) {
             def start = (page_num - 1) * per_page
             def end = start + per_page
@@ -69,20 +71,20 @@ def _get_edges_between(out_v, in_v, label, page_num, per_page) {
             return results
         }
     } catch(err) {
-        g.stopTransaction(FAILURE)
+        graph.tx().rollback()
         throw(err)
     }
 }
 
-def _find_edge_by_value(value_type, label, field, value) {
+def _find_edge_by_value(value_type, elabel, field, val) {
     try {
        if (value_type) {
-           return g.E("label", label).filter{it[field] == value}.toList()
+           return g.E().hasLabel(elabel).filter{it.get().value(field) == val}
        } else {
-           return g.E("label", label).has(field, value).toList()
+           return g.E().hasLabel(elabel).has(field, val)
        }
     } catch (err) {
-        g.stopTransaction(FAILURE)
+        graph.tx().rollback()
         raise(err)
     }
 }

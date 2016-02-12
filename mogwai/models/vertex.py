@@ -238,10 +238,11 @@ class Vertex(Element):
             except Exception as e:
                 future.set_exception(e)
             else:
-                del result['type']
+                # del result['type']  # don't think I need this
                 reloaded_values['id'] = result['id']
                 for name, value in result.get('properties', {}).items():
-                    reloaded_values[name] = value
+                    # This is a hack until decide how to deal with props
+                    reloaded_values[name] = value[0]['value']
                 future.set_result(reloaded_values)
 
         def on_reload_values(f):
@@ -422,12 +423,29 @@ class Vertex(Element):
             end = offset + limit
         else:
             start = end = None
+        future = Future()
+        future_result = self._traversal(operation,
+                                        label_strings,
+                                        start,
+                                        end,
+                                        allowed_elts)
 
-        return self._traversal(operation,
-                               label_strings,
-                               start,
-                               end,
-                               allowed_elts)
+        def traversal_handler(data):
+            if data is None:
+                data = []
+            return data
+
+        def on_traversal(f):
+            try:
+                stream = f.result()
+            except Exception as e:
+                future.set_exception(e)
+            else:
+                stream.add_handler(traversal_handler)
+                future.set_result(stream)
+
+        future_result.add_done_callback(on_traversal)
+        return future
 
     def _simple_deletion(self, operation, labels):
         """

@@ -111,17 +111,33 @@ class Edge(Element):
         if isinstance(value, integer_types + float_types):
             value_type = True
 
-        results = cls._find_edge_by_value(
+        future = Future()
+        future_results = cls._find_edge_by_value(
             value_type=value_type,
-            label=_label,
+            elabel=_label,
             field=_field,
-            value=value
+            val=value
         )
 
-        if as_dict:  # pragma: no cover
-            return {v._id: v for v in results}
+        def by_value_handler(data):
+            if data is None:
+                data = []
+            if as_dict:  # pragma: no cover
+                data = {v._id: v for v in data}
+            return data
 
-        return results
+        def on_find_by_value(f):
+            try:
+                stream = f.result()
+            except Exception as e:
+                future.set_exception(e)
+            else:
+                stream.add_handler(by_value_handler)
+                future.set_result(stream)
+
+        future_results.add_done_callback(on_find_by_value)
+
+        return future
 
     @classmethod
     def all(cls, ids, as_dict=False, *args, **kwargs):
@@ -138,26 +154,30 @@ class Edge(Element):
         if not isinstance(ids, array_types):
             raise MogwaiQueryError("ids must be of type list or tuple")
 
-        strids = [str(i) for i in ids]
-        qs = ['ids.collect{g.e(it)}']
+        # strids = [str(i) for i in ids]
+        def edge_handler(results):
+            results = list(filter(None, results))
 
-        results = connection.execute_query('\n'.join(qs), {'ids': strids}, **kwargs)
-        results = list(filter(None, results))
+            if len(results) != len(ids):
+                raise MogwaiQueryError("the number of results don't match the number of edge ids requested")
 
-        if len(results) != len(ids):
-            raise MogwaiQueryError("the number of results don't match the number of edge ids requested")
+            objects = []
+            for r in results:
+                try:
+                    objects += [Element.deserialize(r)]
+                except KeyError:  # pragma: no cover
+                    raise MogwaiQueryError('Edge type "%s" is unknown' % '')
 
-        objects = []
-        for r in results:
-            try:
-                objects += [Element.deserialize(r)]
-            except KeyError:  # pragma: no cover
-                raise MogwaiQueryError('Edge type "%s" is unknown' % '')
+            if as_dict:  # pragma: no cover
+                return {e._id: e for e in objects}
 
-        if as_dict:  # pragma: no cover
-            return {e._id: e for e in objects}
+            return objects
 
-        return objects
+        return connection.execute_query("g.E(*eids)",
+                                        params={'eids': ids},
+                                        handler=edge_handler,
+                                        **kwargs)
+
 
     @classmethod
     def get_label(cls):
@@ -187,7 +207,7 @@ class Edge(Element):
         """
         return cls._get_edges_between(out_v=outV,
                                       in_v=inV,
-                                      label=cls.get_label(),
+                                      elabel=cls.get_label(),
                                       page_num=page_num,
                                       per_page=per_page)
 
@@ -238,18 +258,41 @@ class Edge(Element):
     def _reload_values(self, *args, **kwargs):
         """ Re-read the values for this edge from the graph database. """
         reloaded_values = {}
-        results = connection.execute_query('g.e(id)', {'id': self._id}, **kwargs)
-        if results:  # note this won't work if you update a node for titan pre-0.5.x, new id's are created
-            #del results['_id']
-            del results['_type']
-            reloaded_values['_id'] = results['_id']
-            for name, value in results.get('_properties', {}).items():
-                reloaded_values[name] = value
-            if results['_id']:
-                setattr(self, '_id', results['_id'])
-            return reloaded_values
-        else:
-            return {}
+        future = Future()
+        future_result = connection.execute_query(
+            'g.E(eid)', {'eid': self._id}, **kwargs)
+
+        def on_read(f2):
+            try:
+                result = f2.result()
+                result = result.data[0]
+            except Exception as e:
+                future.set_exception(e)
+            else:
+                if result:
+                    # del result['type']
+                    reloaded_values['id'] = result['id']
+                    for name, value in result.get('properties', {}).items():
+                        reloaded_values[name] = value
+                    if result['id']:
+                        setattr(self, 'id', result['id'])
+                    future.set_result(reloaded_values)
+                else:
+                    future.set_result({})
+
+        def on_reload(f):
+            try:
+                stream = f.result()
+            except Exception as e:
+                future.set_exception(e)
+            else:
+                future_read = stream.read()
+                future_read.add_done_callback(on_read)
+
+        future_result.add_done_callback(on_reload)
+
+        return future
+
 
     @classmethod
     def get(cls, id, *args, **kwargs):
@@ -262,17 +305,41 @@ class Edge(Element):
         :rtype: mogwai.models.Edge
         """
         try:
-            results = cls.all([id], **kwargs)
-            if len(results) > 1:  # pragma: no cover
-                # This requires titan to be broken.
-                raise cls.MultipleObjectsReturned
+            future = Future()
+            future_result = cls.all([id], **kwargs)
 
-            result = results[0]
-            if not isinstance(result, cls):
-                raise cls.WrongElementType(
-                    '%s is not an instance or subclass of %s' % (result.__class__.__name__, cls.__name__)
-                )
-            return result
+            def on_read(f2):
+                try:
+                    result = f2.result()
+                except Exception as e:
+                    future.set_exception(e)
+                else:
+                    if len(result) > 1:  # pragma: no cover
+                        # This requires titan to be broken.
+                        e = cls.MultipleObjectsReturned
+                        future.set_exception(e)
+                    else:
+                        result = result[0]
+                        if not isinstance(result, cls):
+                            e = cls.WrongElementType(
+                                '%s is not an instance or subclass of %s' % (result.__class__.__name__, cls.__name__))
+                            future.set_exception(e)
+                        else:
+                            future.set_result(result)
+
+            def on_get(f):
+                try:
+                    stream = f.result()
+                except Exception as e:
+                    future.set_exception(e)
+                else:
+                    future_read = stream.read()
+                    future_read.add_done_callback(on_read)
+
+            future_result.add_done_callback(on_get)
+
+            return future
+
         except MogwaiQueryError:
             raise cls.DoesNotExist
 

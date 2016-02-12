@@ -419,8 +419,7 @@ class TestVertexTraversal(BaseMogwaiTestCase):
 
             stream = yield v2.inV(TestEdgeModel, types=[OtherTestModel])
             results = yield stream.read()
-            # Here I think we can expect None
-            self.assertIsNone(results)
+            self.assertEqual(len(results), 0)
         finally:
             yield e1.delete()
             yield e2.delete()
@@ -445,7 +444,7 @@ class TestVertexTraversal(BaseMogwaiTestCase):
             self.assertIn(e3, results)
             stream = yield v2.outE(types=[TestEdgeModel])
             results = yield stream.read()
-            self.assertIsNone(results)
+            self.assertEqual(len(results), 0)
         finally:
             yield e1.delete()
             yield e2.delete()
@@ -470,7 +469,7 @@ class TestVertexTraversal(BaseMogwaiTestCase):
             self.assertIn(e1, results)
             stream = yield v2.inE(types=[OtherTestEdge])
             results = yield stream.read()
-            self.assertIsNone(results)
+            self.assertEqual(len(results), 0)
         finally:
             yield e1.delete()
             yield e2.delete()
