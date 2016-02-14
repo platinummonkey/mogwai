@@ -1,11 +1,12 @@
 # in blueprints this is part of the Query.compare
 # see http://www.tinkerpop.com/docs/javadocs/blueprints/2.2.0/
-EQUAL = "EQUAL"
-GREATER_THAN = "GREATER_THAN"
-GREATER_THAN_EQUAL = "GREATER_THAN_EQUAL"
-LESS_THAN = "LESS_THAN"
-LESS_THAN_EQUAL = "LESS_THAN_EQUAL"
-NOT_EQUAL = "NOT_EQUAL"
+EQUAL = "eq"
+GREATER_THAN = "gt"
+GREATER_THAN_EQUAL = "gte"
+LESS_THAN = "lt"
+LESS_THAN_EQUAL = "lte"
+NOT_EQUAL = "neq"
+WITHIN = "within"
 
 # direction
 OUT = "OUT"

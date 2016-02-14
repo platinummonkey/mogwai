@@ -7,7 +7,7 @@ from mogwai._compat import float_types, print_
 from mogwai import connection
 from mogwai.exceptions import MogwaiQueryError
 from .element import Element, EQUAL, NOT_EQUAL, GREATER_THAN, GREATER_THAN_EQUAL, LESS_THAN, LESS_THAN_EQUAL,\
-    OUT, IN, BOTH
+    OUT, IN, BOTH, WITHIN
 import copy
 from mogwai.properties.base import GraphProperty
 
@@ -64,8 +64,6 @@ class Query(object):
         :type compare: str
         :rtype: Query
         """
-        compare = "Query.Compare.{}".format(compare)
-
         q = copy.copy(self)
         #print_("Trying for key: %s with value: %s" % (key, value))
         if issubclass(type(key), property):
@@ -80,7 +78,6 @@ class Query(object):
         """
         if start > end:
             start, end = end, start
-
         q = copy.copy(self)
         q._interval.append((key, start, end))
         return q
@@ -126,7 +123,7 @@ class Query(object):
         if self._labels:
             labels = ["'{}'".format(x) for x in self._labels]
             labels = ", ".join(labels)
-            labels = ".labels({})".format(labels)
+            labels = ".hasLabel({})".format(labels)
 
         ### construct has clauses
         has = []
@@ -135,9 +132,10 @@ class Query(object):
             c = "v{}".format(len(self._vars))
             self._vars[c] = x[1]
 
-            val = "{} as double".format(c) if isinstance(x[1], float_types) else c
+            # not sure if necessary with new titan
+            # val = "{} as double".format(c) if isinstance(x[1], float_types) else c
             key = x[0]
-            has.append("has('{}', {}, {})".format(key, val, x[2]))
+            has.append("has('{}', {}({}))".format(key, x[2], c))
 
         if has:
             tmp = ".".join(has)
@@ -153,11 +151,11 @@ class Query(object):
             c2 = "v{}".format(len(self._vars))
             self._vars[c2] = x[2]
 
+            # not sure if necessary
+            # val1 = "{} as double".format(c) if isinstance(x[1], float_types) else c
+            # val2 = "{} as double".format(c2) if isinstance(x[2], float_types) else c2
 
-            val1 = "{} as double".format(c) if isinstance(x[1], float_types) else c
-            val2 = "{} as double".format(c2) if isinstance(x[2], float_types) else c2
-
-            tmp = "interval('{}', {}, {})".format(x[0], val1, val2)
+            tmp = "has('{}', {}({}, {}))".format(x[0], WITHIN, c, c2)
             intervals.append(tmp)
 
         if intervals:
@@ -165,7 +163,7 @@ class Query(object):
         else:
             intervals = ""
 
-        return "g.v(id).query(){}{}{}{}{}".format(labels, limit, dir, has, intervals)
+        return "g.V(id){}{}{}{}{}".format(labels, limit, dir, has, intervals)
 
     def _execute(self, func, deserialize=True, *args, **kwargs):
         tmp = "{}.{}()".format(self._get_partial(), func)
@@ -176,6 +174,6 @@ class Query(object):
                 results = [Element.deserialize(r) for r in results]
 
         future_results = connection.execute_query(
-            tmp, self._vars, handler=process_results, **kwargs)
+            tmp, params=self._vars, handler=process_results, **kwargs)
 
         return future_results

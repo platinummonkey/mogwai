@@ -14,7 +14,7 @@ from mogwai import connection
 
 # import for backward compatibility
 from mogwai.constants import BOTH, EQUAL, GREATER_THAN, GREATER_THAN_EQUAL, \
-    IN, LESS_THAN, LESS_THAN_EQUAL, NOT_EQUAL, OUT
+    IN, LESS_THAN, LESS_THAN_EQUAL, NOT_EQUAL, OUT, WITHIN
 
 
 import logging

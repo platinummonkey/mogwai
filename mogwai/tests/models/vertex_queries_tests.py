@@ -23,58 +23,59 @@ class MockEdge(Edge):
 @attr('unit', 'query_vertex')
 class SimpleQueryTest(BaseMogwaiTestCase):
     def setUp(self):
+        super(SimpleQueryTest, self).setUp()
         self.q = Query(MockVertex())
 
     def test_limit(self):
         result = self.q.limit(10)._get_partial()
-        self.assertEqual(result, "g.v(id).query().limit(limit)")
+        self.assertEqual(result, "g.V(id).limit(limit)")
 
-    def test_direction_in(self):
-        result = self.q.direction(IN)._get_partial()
-        self.assertEqual(result, "g.v(id).query().direction(IN)")
-
-    def test_direction_out(self):
-        result = self.q.direction(OUT)._get_partial()
-        self.assertEqual(result, "g.v(id).query().direction(OUT)")
-
+    # def test_direction_in(self):
+    #     result = self.q.direction(IN)._get_partial()
+    #     self.assertEqual(result, "g.v(id).query().direction(IN)")
+    #
+    # def test_direction_out(self):
+    #     result = self.q.direction(OUT)._get_partial()
+    #     self.assertEqual(result, "g.v(id).query().direction(OUT)")
+    #
     def test_labels(self):
         result = self.q.labels('test')._get_partial()
-        self.assertEqual(result, "g.v(id).query().labels('test')")
+        self.assertEqual(result, "g.V(id).hasLabel('test')")
         # ensure the original wasn't modified
         self.assertListEqual(self.q._labels, [])
 
     def test_2labels(self):
         result = self.q.labels('test', 'test2')._get_partial()
-        self.assertEqual(result, "g.v(id).query().labels('test', 'test2')")
+        self.assertEqual(result, "g.V(id).hasLabel('test', 'test2')")
 
     def test_object_label(self):
         result = self.q.labels(MockEdge)._get_partial()
-        self.assertEqual(result, "g.v(id).query().labels('mock_edge')")
+        self.assertEqual(result, "g.V(id).hasLabel('mock_edge')")
 
     def test_has(self):
         result = self.q.has(MockEdge.get_property_by_name("age"), 10)._get_partial()
-        self.assertEqual(result, "g.v(id).query().has('mockedge_age', v0, Query.Compare.EQUAL)")
+        self.assertEqual(result, "g.V(id).has('mockedge_age', eq(v0))")
 
     def test_has_double_casting(self):
         result = self.q.has(MockEdge.get_property_by_name("fierceness"), 3.3)._get_partial()
-        self.assertEqual(result, "g.v(id).query().has('mockedge_fierceness', v0 as double, Query.Compare.EQUAL)")
-
-    def test_direction_except(self):
-        with self.assertRaises(MogwaiQueryError):
-            self.q.direction(OUT).direction(OUT)
-
-    def test_has_double_casting_plain(self):
-        result = self.q.has('fierceness', 3.3)._get_partial()
-        self.assertEqual(result, "g.v(id).query().has('fierceness', v0 as double, Query.Compare.EQUAL)")
-
+        self.assertEqual(result, "g.V(id).has('mockedge_fierceness', eq(v0))")
+    #
+    # def test_direction_except(self):
+    #     with self.assertRaises(MogwaiQueryError):
+    #         self.q.direction(OUT).direction(OUT)
+    #
+    # def test_has_double_casting_plain(self):
+    #     result = self.q.has('fierceness', 3.3)._get_partial()
+    #     self.assertEqual(result, "g.v(id).query().has('fierceness', v0 as double, Query.Compare.EQUAL)")
+    #
     def test_has_int(self):
         result = self.q.has('age', 21, GREATER_THAN)._get_partial()
-        self.assertEqual(result, "g.v(id).query().has('age', v0, Query.Compare.GREATER_THAN)")
+        self.assertEqual(result, "g.V(id).has('age', gt(v0))")
 
     def test_intervals(self):
         result = self.q.interval('age', 10, 20)._get_partial()
-        self.assertEqual(result, "g.v(id).query().interval('age', v0, v1)")
-
-    def test_double_interval(self):
-        result = self.q.interval('fierceness', 2.5, 5.2)._get_partial()
-        self.assertEqual(result, "g.v(id).query().interval('fierceness', v0 as double, v1 as double)")
+        self.assertEqual(result, "g.V(id).has('age', within(v0, v1))")
+    #
+    # def test_double_interval(self):
+    #     result = self.q.interval('fierceness', 2.5, 5.2)._get_partial()
+    #     self.assertEqual(result, "g.v(id).query().interval('fierceness', v0 as double, v1 as double)")
