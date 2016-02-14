@@ -74,8 +74,8 @@ class TestModelClassFunction(BaseMogwaiTestCase):
 class TestManualTableNaming(BaseMogwaiTestCase):
 
     def test_proper_table_naming(self):
-        self.assertEqual(TestVertexModel.element_type, 'test_vertex_model')
-        self.assertEqual(TestVertexModel.get_element_type(), 'test_vertex_model')
+        self.assertEqual(TestVertexModel.label, 'test_vertex_model')
+        self.assertEqual(TestVertexModel.get_label(), 'test_vertex_model')
 
 
 class BaseAbstractVertex(Vertex):

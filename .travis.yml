@@ -17,7 +17,7 @@ before_install:
   - docker pull davebshow/titan-websockets
 
 install:
-  - pip install -r requirements.pip
+  - pip install -r requirements.txt
   - docker run -d --name es1 elasticsearch
   - docker run -d --name cas1 elubow/cassandra
   - docker run -d --name titan1 --link es1:elasticsearch --link cas1:cassandra -p 8182:8182 davebshow/titan-websockets
@@ -26,8 +26,14 @@ before_script:
   - sleep 30
 
 script:
+  - nosetests mogwai.tests.models.class_construction_tests
   - nosetests mogwai.tests.models.vertex_io_tests
   - nosetests mogwai.tests.models.edge_io_tests
+  - nosetests mogwai.tests.properties_tests.validators_tests
+  - nosetests mogwai.tests.properties_tests.value_manager_tests
+
+after_success:
+  - coveralls
 
 deploy:
   provider: pypi
