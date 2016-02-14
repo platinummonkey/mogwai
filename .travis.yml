@@ -26,11 +26,11 @@ before_script:
   - sleep 30
 
 script:
-  - coverage run --source=gremlinclient nosetests mogwai.tests.models.class_construction_tests
-  - coverage run --source=gremlinclient nosetests mogwai.tests.models.vertex_io_tests
-  - coverage run --source=gremlinclient nosetests mogwai.tests.models.edge_io_tests
-  - coverage run --source=gremlinclient nosetests mogwai.tests.properties_tests.validators_tests
-  - coverage run --source=gremlinclient nosetests mogwai.tests.properties_tests.value_manager_tests
+  - nosetests --with-coverage --cover-package=gremlinclient mogwai.tests.models.class_construction_tests
+  - nosetests --with-coverage --cover-package=gremlinclient mogwai.tests.models.vertex_io_tests
+  - nosetests --with-coverage --cover-package=gremlinclient mogwai.tests.models.edge_io_tests
+  - nosetests --with-coverage --cover-package=gremlinclient mogwai.tests.properties_tests.validators_tests
+  - nosetests --with-coverage --cover-package=gremlinclient mogwai.tests.properties_tests.value_manager_tests
 
 after_success:
   - coveralls
