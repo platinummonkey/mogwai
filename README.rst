@@ -7,7 +7,7 @@ mogwai
 .. image:: https://ga-beacon.appspot.com/UA-50275923-1/platinummonkey/mogwai
     :target: http://github.com/platinummonkey/mogwai
 
-.. image:: https://coveralls.io/repos/github/platinummonkey/mogwai/badge.svg?branch=master :target: https://coveralls.io/github/platinummonkey/mogwai?branch=master
+.. image:: https://coveralls.io/repos/github/platinummonkey/mogwai/badge.svg?branch=tinkerpop3 :target: https://coveralls.io/github/platinummonkey/mogwai?branch=tinkerpop3
 
 mogwai in an object-graph mapper (OGM) designed specifically for use with Tinkerpop3 graph databases.
 Originally focused on TitanDB (0.5.x and below) (http://thinkaurelius.github.io/titan/) via RexPro (mogwai versions pre-1.x), the current
