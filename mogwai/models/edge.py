@@ -156,8 +156,10 @@ class Edge(Element):
 
         # strids = [str(i) for i in ids]
         def edge_handler(results):
-            results = list(filter(None, results))
-
+            try:
+                results = list(filter(None, results))
+            except TypeError:
+                raise cls.DoesNotExist
             if len(results) != len(ids):
                 raise MogwaiQueryError("the number of results don't match the number of edge ids requested")
 
@@ -304,44 +306,42 @@ class Edge(Element):
         :type id: str | basestring
         :rtype: mogwai.models.Edge
         """
-        try:
-            future = Future()
-            future_result = cls.all([id], **kwargs)
+        if not id:
+            raise cls.DoesNotExist
+        future = Future()
+        future_result = cls.all([id], **kwargs)
 
-            def on_read(f2):
-                try:
-                    result = f2.result()
-                except Exception as e:
+        def on_read(f2):
+            try:
+                result = f2.result()
+            except Exception as e:
+                future.set_exception(e)
+            else:
+                if len(result) > 1:  # pragma: no cover
+                    # This requires titan to be broken.
+                    e = cls.MultipleObjectsReturned
                     future.set_exception(e)
                 else:
-                    if len(result) > 1:  # pragma: no cover
-                        # This requires titan to be broken.
-                        e = cls.MultipleObjectsReturned
+                    result = result[0]
+                    if not isinstance(result, cls):
+                        e = cls.WrongElementType(
+                            '%s is not an instance or subclass of %s' % (result.__class__.__name__, cls.__name__))
                         future.set_exception(e)
                     else:
-                        result = result[0]
-                        if not isinstance(result, cls):
-                            e = cls.WrongElementType(
-                                '%s is not an instance or subclass of %s' % (result.__class__.__name__, cls.__name__))
-                            future.set_exception(e)
-                        else:
-                            future.set_result(result)
+                        future.set_result(result)
 
-            def on_get(f):
-                try:
-                    stream = f.result()
-                except Exception as e:
-                    future.set_exception(e)
-                else:
-                    future_read = stream.read()
-                    future_read.add_done_callback(on_read)
+        def on_get(f):
+            try:
+                stream = f.result()
+            except Exception as e:
+                future.set_exception(e)
+            else:
+                future_read = stream.read()
+                future_read.add_done_callback(on_read)
 
-            future_result.add_done_callback(on_get)
+        future_result.add_done_callback(on_get)
 
-            return future
-
-        except MogwaiQueryError:
-            raise cls.DoesNotExist
+        return future
 
     @classmethod
     def create(cls, outV, inV, label=None, *args, **kwargs):

@@ -6,7 +6,7 @@ coveralls==1.1
 docutils==0.12
 factory-boy==2.6.0
 fake-factory==0.5.3
-gremlinclient==0.1.4
+gremlinclient==0.1.6
 Jinja2==2.8
 MarkupSafe==0.23
 newrelic==2.60.0.46

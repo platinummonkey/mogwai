@@ -117,10 +117,9 @@ class TestVertexIO(BaseMogwaiTestCase):
         tm = yield TestVertexModel.create(test_val=8, name='123456789')
         vid = tm.id
         yield tm.delete()
-        # gremlinclient handler error handling needs to be fixed
-        # with self.assertRaises(TestVertexModel.DoesNotExist):
-        #     resp = yield TestVertexModel.get(vid)
-        #     tm = yield resp.read()
+        with self.assertRaises(TestVertexModel.DoesNotExist):
+            resp = yield TestVertexModel.get(vid)
+
 
     @gen_test
     def test_reload(self):
@@ -196,21 +195,21 @@ class TestVertexIO(BaseMogwaiTestCase):
     @gen_test
     def test_get_by_id(self):
         v1 = yield TestVertexModel.create()
+        v2 = yield TestVertexModel2.create(test_val=0)
         try:
             results = yield TestVertexModel.get(v1.id)
             self.assertIsInstance(results, TestVertexModel)
             self.assertEqual(results, v1)
 
-            # Man, gremlinclient errors need some work
-            # with self.assertRaises(TestEdgeModel.DoesNotExist):
-            with self.assertRaises(RuntimeError):
+            with self.assertRaises(TestEdgeModel.DoesNotExist):
                 results = yield TestVertexModel.get(None)
 
+            # This shoudl raise DoesNotExist
             # with self.assertRaises(TestEdgeModel.DoesNotExist):
             with self.assertRaises(RuntimeError):
                 results = yield TestVertexModel.get('nonexistant')
 
-            v2 = yield TestVertexModel2.create(test_val=0)
+
             with self.assertRaises(TestVertexModel.WrongElementType):
                 results = yield TestVertexModel.get(v2.id)
         finally:
@@ -259,6 +258,7 @@ class TestNestedDeserialization(BaseMogwaiTestCase):
     Tests that vertices are properly deserialized when nested in map and list data structures
     """
 
+    # This might be a bug in titan
     # @gen_test
     # def test_map_deserialization(self):
     #     """

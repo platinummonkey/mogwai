@@ -232,33 +232,44 @@ class TestEdgeIO(BaseMogwaiTestCase):
             yield v1.delete()
             yield v2.delete()
 
-    #
-    # def test_get_by_id(self):
-    #     e1 = TestEdgeModel.create(v1, v2, test_val=3)
-    #     results = TestEdgeModel.get(e1.id)
-    #     self.assertIsInstance(results, TestEdgeModel)
-    #     self.assertEqual(results, e1)
-    #
-    #     from mogwai.exceptions import MogwaiQueryError
-    #     with self.assertRaises(TestEdgeModel.DoesNotExist):
-    #         results = TestEdgeModel.get(None)
-    #
-    #     with self.assertRaises(TestEdgeModel.DoesNotExist):
-    #         results = TestEdgeModel.get('nonexistant')
-    #
-    #     e2 = TestEdgeModel2.create(v1, v2, test_val=2)
-    #     with self.assertRaises(TestEdgeModel.WrongElementType):
-    #         results = TestEdgeModel.get(e2.id)
-    #
-    #     e1.delete()
-    #     e2.delete()
-    #
-    # def test_inV_ouV_vertex_traversal(self):
-    #     e1 = TestEdgeModel.create(v1, v2, test_val=3)
-    #
-    #     v1 = e1.outV()
-    #     v2 = e1.inV()
-    #     self.assertEqual(v1, v1)
-    #     self.assertEqual(v2, v2)
-    #
-    #     e1.delete()
+    @gen_test
+    def test_get_by_id(self):
+        v1 = yield TestVertexModel.create(test_val=8, name='a')
+        v2 = yield TestVertexModel.create(test_val=7, name='b')
+        e1 = yield TestEdgeModel.create(v1, v2, test_val=3)
+        e2 = yield TestEdgeModel2.create(v1, v2, test_val=2)
+        try:
+            results = yield TestEdgeModel.get(e1.id)
+            self.assertIsInstance(results, TestEdgeModel)
+            self.assertEqual(results, e1)
+
+            from mogwai.exceptions import MogwaiQueryError
+            with self.assertRaises(TestEdgeModel.DoesNotExist):
+                results = yield TestEdgeModel.get(None)
+
+            with self.assertRaises(TestEdgeModel.DoesNotExist):
+                results = yield TestEdgeModel.get('nonexistant')
+
+            with self.assertRaises(TestEdgeModel.WrongElementType):
+                results = yield TestEdgeModel.get(e2.id)
+        finally:
+            yield e1.delete()
+            yield e2.delete()
+            yield v1.delete()
+            yield v2.delete()
+
+    @gen_test
+    def test_inV_ouV_vertex_traversal(self):
+        v1 = yield TestVertexModel.create(test_val=8, name='a')
+        v2 = yield TestVertexModel.create(test_val=7, name='b')
+        e1 = yield TestEdgeModel.create(v1, v2, test_val=3)
+        try:
+            v1 = yield e1.outV()
+            v2 = yield e1.inV()
+            self.assertEqual(v1, v1)
+            self.assertEqual(v2, v2)
+
+        finally:
+            yield e1.delete()
+            yield v1.delete()
+            yield v2.delete()

@@ -187,10 +187,14 @@ class Vertex(Element):
                 'g.V(%s)' % vids, **kwargs)
 
             def id_handler(results):
-                results = list(filter(None, results))
+                try:
+                    results = list(filter(None, results))
+                except TypeError:
+                    raise cls.DoesNotExist
                 if len(results) != len(ids) and match_length:
                     raise MogwaiQueryError("the number of results don't match the number of ids requested")
                 return results
+
             handlers.append(id_handler)
 
         def result_handler(results):
@@ -267,45 +271,43 @@ class Vertex(Element):
         :rtype: mogwai.models.Vertex
 
         """
-        try:
-            future_results = cls.all([id], **kwargs)
-            future = Future()
-
-            def on_read(f2):
-                try:
-                    result = f2.result()
-                except Exception as e:
-                    future.set_exception(e)
-                else:
-                    if len(result) > 1:  # pragma: no cover
-                        # This requires to titan to be broken.
-                        raise cls.MultipleObjectsReturned
-
-                    result = result[0]
-                    if not isinstance(result, cls):
-                        e = cls.WrongElementType(
-                            '%s is not an instance or subclass of %s' % (
-                                result.__class__.__name__, cls.__name__)
-                        )
-                        future.set_exception(e)
-                    else:
-                        future.set_result(result)
-
-            def on_get(f):
-                try:
-                    stream = f.result()
-                except Exception as e:
-                    future.set_exception(e)
-                else:
-                    future_read = stream.read()
-                    future_read.add_done_callback(on_read)
-
-            future_results.add_done_callback(on_get)
-
-            return future
-        except MogwaiQueryError as e:
-            logger.exception(e)
+        if not id:
             raise cls.DoesNotExist
+        future_results = cls.all([id], **kwargs)
+        future = Future()
+
+        def on_read(f2):
+            try:
+                result = f2.result()
+            except Exception as e:
+                future.set_exception(e)
+            else:
+                if len(result) > 1:  # pragma: no cover
+                    # This requires to titan to be broken.
+                    raise cls.MultipleObjectsReturned
+
+                result = result[0]
+                if not isinstance(result, cls):
+                    e = cls.WrongElementType(
+                        '%s is not an instance or subclass of %s' % (
+                            result.__class__.__name__, cls.__name__)
+                    )
+                    future.set_exception(e)
+                else:
+                    future.set_result(result)
+
+        def on_get(f):
+            try:
+                stream = f.result()
+            except Exception as e:
+                future.set_exception(e)
+            else:
+                future_read = stream.read()
+                future_read.add_done_callback(on_read)
+
+        future_results.add_done_callback(on_get)
+
+        return future
 
     def save(self, *args, **kwargs):
         """
