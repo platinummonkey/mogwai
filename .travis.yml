@@ -26,12 +26,8 @@ before_script:
   - sleep 30
 
 script:
-  - nosetests --with-coverage --cover-package=mogwai mogwai.tests.models.class_construction_tests
-  - nosetests --with-coverage --cover-package=mogwai mogwai.tests.models.vertex_io_tests
-  - nosetests --with-coverage --cover-package=mogwai mogwai.tests.models.edge_io_tests
-  - nosetests --with-coverage --cover-package=mogwai mogwai.tests.properties_tests.validators_tests
-  - nosetests --with-coverage --cover-package=mogwai mogwai.tests.properties_tests.value_manager_tests
-  - nosetests --with-coverage --cover-package=mogwai mogwai.tests.models.vertex_queries_tests
+  - nosetests --with-coverage --cover-package=mogwai mogwai.tests.models
+  - nosetests --with-coverage --cover-package=mogwai mogwai.tests.properties_tests
 
 after_success:
   - coveralls

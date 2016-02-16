@@ -9,6 +9,6 @@ NOT_EQUAL = "neq"
 WITHIN = "within"
 
 # direction
-OUT = "OUT"
-IN = "IN"
-BOTH = "BOTH"
+OUT = "out"
+IN = "in"
+BOTH = "both"

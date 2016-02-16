@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 from nose.plugins.attrib import attr
+
+from tornado.testing import gen_test
 from .base_tests import GraphPropertyBaseClassTestCase
 from mogwai.properties.properties import IPV6, IPV6WithV4
 from mogwai.models import Vertex
@@ -32,23 +34,24 @@ class IPV6TestVertex(Vertex):
 @attr('unit', 'property', 'property_ipv6')
 class IPV6VertexTestCase(GraphPropertyBaseClassTestCase):
 
+    @gen_test
     def test_ipv6_io(self):
         print_("creating vertex")
-        dt = IPV6TestVertex.create(test_val='1::8')
+        dt = yield IPV6TestVertex.create(test_val='1::8')
         print_("getting vertex from vertex: %s" % dt)
-        dt2 = IPV6TestVertex.get(dt._id)
+        dt2 = yield IPV6TestVertex.get(dt._id)
         print_("got vertex: %s\n" % dt2)
         self.assertEqual(dt2.test_val, dt.test_val)
         print_("deleting vertex")
-        dt2.delete()
+        yield dt2.delete()
 
-        dt = IPV6TestVertex.create(test_val='1::7:8')
+        dt = yield IPV6TestVertex.create(test_val='1::7:8')
         print_("\ncreated vertex: %s" % dt)
-        dt2 = IPV6TestVertex.get(dt._id)
+        dt2 = yield IPV6TestVertex.get(dt._id)
         print_("Got vertex: %s" % dt2)
         self.assertEqual(dt2.test_val, '1::7:8')
         print_("deleting vertex")
-        dt2.delete()
+        yield dt2.delete()
 
 
 @attr('unit', 'property', 'property_ipv6w4')
@@ -80,20 +83,21 @@ class IPV64TestVertex(Vertex):
 @attr('unit', 'property', 'property_ipv6w4')
 class IPV64VertexTestCase(GraphPropertyBaseClassTestCase):
 
+    @gen_test
     def test_ipv64_io(self):
         print_("creating vertex")
-        dt = IPV64TestVertex.create(test_val='::255.255.255.255')
+        dt = yield IPV64TestVertex.create(test_val='::255.255.255.255')
         print_("getting vertex from vertex: %s" % dt)
-        dt2 = IPV64TestVertex.get(dt._id)
+        dt2 = yield IPV64TestVertex.get(dt._id)
         print_("got vertex: %s\n" % dt2)
         self.assertEqual(dt2.test_val, dt.test_val)
         print_("deleting vertex")
-        dt2.delete()
+        yield dt2.delete()
 
-        dt = IPV64TestVertex.create(test_val='::ffff:255.255.255.255')
+        dt = yield IPV64TestVertex.create(test_val='::ffff:255.255.255.255')
         print_("\ncreated vertex: %s" % dt)
-        dt2 = IPV64TestVertex.get(dt._id)
+        dt2 = yield IPV64TestVertex.get(dt._id)
         print_("Got vertex: %s" % dt2)
         self.assertEqual(dt2.test_val, '::ffff:255.255.255.255')
         print_("deleting vertex")
-        dt2.delete()
+        yield dt2.delete()

@@ -1,5 +1,8 @@
 from __future__ import unicode_literals
 from nose.plugins.attrib import attr
+
+from tornado.testing import gen_test
+
 from .base_tests import GraphPropertyBaseClassTestCase
 from mogwai._compat import PY2
 from mogwai.properties.properties import UUID
@@ -31,23 +34,24 @@ class UUID4TestVertex(Vertex):
 @attr('unit', 'property', 'property_uuid')
 class UUID4VertexTestCase(GraphPropertyBaseClassTestCase):
 
+    @gen_test
     def test_uuid4_io(self):
         print_("creating vertex")
-        dt = UUID4TestVertex.create(test_val='bb19eaed-c946-4cef-8001-7cc3357cc439')
+        dt = yield UUID4TestVertex.create(test_val='bb19eaed-c946-4cef-8001-7cc3357cc439')
         print_("getting vertex from vertex: %s" % dt)
-        dt2 = UUID4TestVertex.get(dt._id)
+        dt2 = yield UUID4TestVertex.get(dt._id)
         print_("got vertex: %s\n" % dt2)
         self.assertEqual(dt2.test_val, dt.test_val)
         print_("deleting vertex")
-        dt2.delete()
+        yield dt2.delete()
 
-        dt = UUID4TestVertex.create(test_val='bb19eaed-c946-4cef-8001-7cc3357cc439')
+        dt = yield UUID4TestVertex.create(test_val='bb19eaed-c946-4cef-8001-7cc3357cc439')
         print_("\ncreated vertex: %s" % dt)
-        dt2 = UUID4TestVertex.get(dt._id)
+        dt2 = yield UUID4TestVertex.get(dt._id)
         print_("Got vertex: %s" % dt2)
         self.assertEqual(dt2.test_val, 'bb19eaed-c946-4cef-8001-7cc3357cc439')
         print_("deleting vertex")
-        dt2.delete()
+        yield dt2.delete()
 
 
 @attr('unit', 'property', 'property_uuid')
@@ -82,20 +86,21 @@ class UUID1TestVertex(Vertex):
 @attr('unit', 'property', 'property_uuid')
 class UUID1VertexTestCase(GraphPropertyBaseClassTestCase):
 
+    @gen_test
     def test_uuid1_io(self):
         print_("creating vertex")
-        dt = UUID1TestVertex.create(test_val='bb19eaed-c946-4cef-8001-7cc3357cc439')
+        dt = yield UUID1TestVertex.create(test_val='bb19eaed-c946-4cef-8001-7cc3357cc439')
         print_("getting vertex from vertex: %s" % dt)
-        dt2 = UUID1TestVertex.get(dt._id)
+        dt2 = yield UUID1TestVertex.get(dt._id)
         print_("got vertex: %s\n" % dt2)
         self.assertEqual(dt2.test_val, dt.test_val)
         print_("deleting vertex")
-        dt2.delete()
+        yield dt2.delete()
 
-        dt = UUID1TestVertex.create(test_val='bb19eaed-c946-4cef-8001-7cc3357cc439')
+        dt = yield UUID1TestVertex.create(test_val='bb19eaed-c946-4cef-8001-7cc3357cc439')
         print_("\ncreated vertex: %s" % dt)
-        dt2 = UUID1TestVertex.get(dt._id)
+        dt2 = yield UUID1TestVertex.get(dt._id)
         print_("Got vertex: %s" % dt2)
         self.assertEqual(dt2.test_val, 'bb19eaed-c946-4cef-8001-7cc3357cc439')
         print_("deleting vertex")
-        dt2.delete()
+        yield dt2.delete()

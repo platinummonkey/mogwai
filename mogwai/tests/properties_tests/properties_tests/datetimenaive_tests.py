@@ -1,6 +1,8 @@
 from __future__ import unicode_literals
 from nose.plugins.attrib import attr
 from nose.tools import nottest
+
+from tornado.testing import gen_test
 from mogwai.tests import BaseMogwaiTestCase
 from mogwai._compat import PY2
 from .base_tests import GraphPropertyBaseClassTestCase
@@ -53,51 +55,55 @@ class DateTimeNaiveTestChoicesVertex(Vertex):
 @attr('unit', 'property', 'property_datetime')
 class DateTimeNaiveVertexTestCase(GraphPropertyBaseClassTestCase):
 
+    @gen_test
     def test_datetime_naive_io(self):
         print_("creating vertex")
-        dt = DateTimeNaiveTestVertex.create(test_val=datetime.datetime(2014, 1, 1))
+        dt = yield DateTimeNaiveTestVertex.create(test_val=datetime.datetime(2014, 1, 1))
         print_("getting vertex from vertex: %s" % dt)
-        dt2 = DateTimeNaiveTestVertex.get(dt._id)
+        dt2 = yield DateTimeNaiveTestVertex.get(dt._id)
         print_("got vertex: %s\n" % dt2)
         self.assertEqual(dt2.test_val, dt.test_val)
         print_("deleting vertex")
-        dt2.delete()
+        yield dt2.delete()
 
-        dt = DateTimeNaiveTestVertex.create(test_val=datetime.datetime(2014, 1, 1))
+        dt = yield DateTimeNaiveTestVertex.create(test_val=datetime.datetime(2014, 1, 1))
         print_("\ncreated vertex: %s" % dt)
-        dt2 = DateTimeNaiveTestVertex.get(dt._id)
+        dt2 = yield DateTimeNaiveTestVertex.get(dt._id)
         print_("Got vertex: %s" % dt2)
         self.assertEqual(dt2.test_val, datetime.datetime(2014, 1, 1))
         print_("deleting vertex")
-        dt2.delete()
+        yield dt2.delete()
 
 
 @attr('unit', 'property', 'property_datetime')
 class TestVertexChoicesTestCase(BaseMogwaiTestCase):
 
+    @gen_test
     def test_good_choices_key_io(self):
         print_("creating vertex")
-        dt = DateTimeNaiveTestChoicesVertex.create(test_val=datetime.datetime(2014, 1, 1))
+        dt = yield DateTimeNaiveTestChoicesVertex.create(test_val=datetime.datetime(2014, 1, 1))
         print_("validating input")
         self.assertEqual(dt.test_val, datetime.datetime(2014, 1, 1))
         print_("deleting vertex")
-        dt.delete()
+        yield dt.delete()
 
     @nottest
+    @gen_test
     def test_good_choices_value_io(self):
         # Known to be a bug, all keys and choices must be int | long | datetime
         print_("creating vertex")
-        dt = DateTimeNaiveTestChoicesVertex.create(test_val='B')
+        dt = yield DateTimeNaiveTestChoicesVertex.create(test_val='B')
         print_("validating input")
         self.assertEqual(dt.test_val, datetime.datetime(2014, 2, 1))
         print_("deleting vertex")
-        dt.delete()
+        yield t.delete()
 
+    @gen_test
     def test_bad_choices_io(self):
         with self.assertRaises(ValidationError):
             print_("creating vertex")
-            dt = DateTimeNaiveTestChoicesVertex.create(test_val=datetime.datetime(2014, 3, 1))
+            dt = yield DateTimeNaiveTestChoicesVertex.create(test_val=datetime.datetime(2014, 3, 1))
             print_("validating input")
             self.assertEqual(dt.test_val, 'C')
             print_("deleting vertex")
-            dt.delete()
+            yield dt.delete()

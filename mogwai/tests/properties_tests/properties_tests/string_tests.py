@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 from nose.plugins.attrib import attr
+
+from tornado.testing import gen_test
 from mogwai.tests import BaseMogwaiTestCase
 from .base_tests import GraphPropertyBaseClassTestCase
 from mogwai.properties.properties import String, Text, GraphProperty
@@ -42,23 +44,24 @@ class StringTestChoicesVertex(Vertex):
 @attr('unit', 'property', 'property_string')
 class StringVertexTestCase(GraphPropertyBaseClassTestCase):
 
+    @gen_test
     def test_string_io(self):
         print_("creating vertex")
-        dt = StringTestVertex.create(test_val='test')
+        dt = yield StringTestVertex.create(test_val='test')
         print_("getting vertex from vertex: %s" % dt)
-        dt2 = StringTestVertex.get(dt._id)
+        dt2 = yield StringTestVertex.get(dt._id)
         print_("got vertex: %s\n" % dt2)
         self.assertEqual(dt2.test_val, dt.test_val)
         print_("deleting vertex")
-        dt2.delete()
+        yield dt2.delete()
 
-        dt = StringTestVertex.create(test_val='tset')
+        dt = yield StringTestVertex.create(test_val='tset')
         print_("\ncreated vertex: %s" % dt)
-        dt2 = StringTestVertex.get(dt._id)
+        dt2 = yield StringTestVertex.get(dt._id)
         print_("Got vertex: %s" % dt2)
         self.assertEqual(dt2.test_val, 'tset')
         print_("deleting vertex")
-        dt2.delete()
+        yield dt2.delete()
 
 
 @attr('unit', 'property', 'property_string')
@@ -75,49 +78,53 @@ class TextTestVertex(Vertex):
 @attr('unit', 'property', 'property_string')
 class TextVertexTestCase(GraphPropertyBaseClassTestCase):
 
+    @gen_test
     def test_text_io(self):
         print_("creating vertex")
-        dt = TextTestVertex.create(test_val='ab12')
+        dt = yield TextTestVertex.create(test_val='ab12')
         print_("getting vertex from vertex: %s" % dt)
-        dt2 = TextTestVertex.get(dt._id)
+        dt2 = yield TextTestVertex.get(dt._id)
         print_("got vertex: %s\n" % dt2)
         self.assertEqual(dt2.test_val, dt.test_val)
         print_("deleting vertex")
-        dt2.delete()
+        yield dt2.delete()
 
-        dt = TextTestVertex.create(test_val='12ab')
+        dt = yield TextTestVertex.create(test_val='12ab')
         print_("\ncreated vertex: %s" % dt)
-        dt2 = TextTestVertex.get(dt._id)
+        dt2 = yield TextTestVertex.get(dt._id)
         print_("Got vertex: %s" % dt2)
         self.assertEqual(dt2.test_val, '12ab')
         print_("deleting vertex")
-        dt2.delete()
+        yield dt2.delete()
 
 
 @attr('unit', 'property', 'property_string')
 class TestVertexChoicesTestCase(BaseMogwaiTestCase):
 
+    @gen_test
     def test_good_choices_value_io(self):
         print_("creating vertex")
-        dt = StringTestChoicesVertex.create(test_val=1)
+        dt = yield StringTestChoicesVertex.create(test_val=1)
         print_("validating input")
         self.assertEqual(dt.test_val, 'A')
         print_("deleting vertex")
-        dt.delete()
+        yield dt.delete()
 
+    @gen_test
     def test_good_choices_key_io(self):
         print_("creating vertex")
-        dt = StringTestChoicesVertex.create(test_val='B')
+        dt = yield StringTestChoicesVertex.create(test_val='B')
         print_("validating input")
         self.assertEqual(dt.test_val, 'B')
         print_("deleting vertex")
-        dt.delete()
+        yield dt.delete()
 
+    @gen_test
     def test_bad_choices_io(self):
         with self.assertRaises(ValidationError):
             print_("creating vertex")
-            dt = StringTestChoicesVertex.create(test_val=3)
+            dt = yield StringTestChoicesVertex.create(test_val=3)
             print_("validating input")
             self.assertEqual(dt.test_val, 'C')
             print_("deleting vertex")
-            dt.delete()
+            yield dt.delete()

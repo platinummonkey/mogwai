@@ -52,7 +52,7 @@ class Query(object):
         """
         :rtype: list[edge.Edge]
         """
-        return self._execute('edges', **kwargs)
+        return self._execute('', dir_element='E', **kwargs)
 
     def has(self, key, value, compare=EQUAL):
         """
@@ -112,11 +112,11 @@ class Query(object):
         return self._execute('vertexIds', deserialize=False, **kwargs)
 
     def vertices(self, *args, **kwargs):
-        return self._execute('vertices', **kwargs)
+        return self._execute('', dir_element='', **kwargs)
 
-    def _get_partial(self):
+    def _get_partial(self, dir_element=""):
         limit = ".limit(limit)" if self._limit else ""
-        dir = ".direction({})".format(self._direction) if self._direction else ""
+        dir = ".{}{}()".format(self._direction, dir_element) if self._direction else ""
 
         # do labels
         labels = ""
@@ -166,7 +166,11 @@ class Query(object):
         return "g.V(id){}{}{}{}{}".format(labels, limit, dir, has, intervals)
 
     def _execute(self, func, deserialize=True, *args, **kwargs):
-        tmp = "{}.{}()".format(self._get_partial(), func)
+        dir_element = kwargs.get("dir_element", "")
+        if func:
+            func = ".{}()".format(func)
+        tmp = "{}{}".format(self._get_partial(dir_element=dir_element), func)
+        import ipdb; ipdb.set_trace()
         self._vars.update({"id": self._vertex._id, "limit": self._limit})
 
         def process_results(results):

@@ -9,6 +9,7 @@ class StrategyBaseClassTestCase(BaseMogwaiTestCase):
     """ Test Base Strategy Callable Object """
 
     def setUp(self):
+        super(StrategyBaseClassTestCase, self).setUp()
         self.klass = Strategy
 
     def test_callable(self):
@@ -25,6 +26,7 @@ class SaveOnceStrategyTestCase(StrategyBaseClassTestCase):
     """ Test SaveOnce Strategy """
 
     def setUp(self):
+        super(SaveOnceStrategyTestCase, self).setUp()
         self.klass = SaveOnce
 
     def test_strategy(self):
@@ -41,6 +43,7 @@ class SaveAlwaysStrategyTestCase(StrategyBaseClassTestCase):
     """ Test SaveAlways Strategy """
 
     def setUp(self):
+        super(SaveAlwaysStrategyTestCase, self).setUp()
         self.klass = SaveAlways
 
     def test_strategy(self):
@@ -56,6 +59,7 @@ class SaveOnChangeStrategyTestCase(StrategyBaseClassTestCase):
     """ Test SaveOnChange Strategy """
 
     def setUp(self):
+        super(SaveOnChangeStrategyTestCase, self).setUp()
         self.klass = SaveOnChange
 
     def test_strategy(self):
@@ -75,6 +79,7 @@ class SaveOnIncreaseStrategyTestCase(StrategyBaseClassTestCase):
     """ Test SaveIncrease Strategy """
 
     def setUp(self):
+        super(SaveOnIncreaseStrategyTestCase, self).setUp()
         self.klass = SaveOnIncrease
 
     def test_strategy(self):
@@ -98,6 +103,7 @@ class SaveOnDecreaseStrategyTestCase(StrategyBaseClassTestCase):
     """ Test SaveOnDecrease Strategy """
 
     def setUp(self):
+        super(SaveOnDecreaseStrategyTestCase, self).setUp()
         self.klass = SaveOnDecrease
 
     def test_strategy(self):

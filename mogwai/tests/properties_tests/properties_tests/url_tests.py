@@ -1,5 +1,8 @@
 from __future__ import unicode_literals
 from nose.plugins.attrib import attr
+
+from tornado.testing import gen_test
+
 from .base_tests import GraphPropertyBaseClassTestCase
 from mogwai.properties.properties import URL
 from mogwai.models import Vertex
@@ -36,20 +39,21 @@ class URLTestVertex(Vertex):
 @attr('unit', 'property', 'property_url')
 class URLVertexTestCase(GraphPropertyBaseClassTestCase):
 
+    @gen_test
     def test_url_io(self):
         print_("creating vertex")
-        dt = URLTestVertex.create(test_val='http://wellaware.us')
+        dt = yield URLTestVertex.create(test_val='http://wellaware.us')
         print_("getting vertex from vertex: %s" % dt)
-        dt2 = URLTestVertex.get(dt._id)
+        dt2 = yield URLTestVertex.get(dt._id)
         print_("got vertex: %s\n" % dt2)
         self.assertEqual(dt2.test_val, dt.test_val)
         print_("deleting vertex")
-        dt2.delete()
+        yield dt2.delete()
 
-        dt = URLTestVertex.create(test_val='http://www.wellaware.us/')
+        dt = yield URLTestVertex.create(test_val='http://www.wellaware.us/')
         print_("\ncreated vertex: %s" % dt)
-        dt2 = URLTestVertex.get(dt._id)
+        dt2 = yield URLTestVertex.get(dt._id)
         print_("Got vertex: %s" % dt2)
         self.assertEqual(dt2.test_val, 'http://www.wellaware.us/')
         print_("deleting vertex")
-        dt2.delete()
+        yield dt2.delete()

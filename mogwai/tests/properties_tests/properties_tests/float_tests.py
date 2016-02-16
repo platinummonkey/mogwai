@@ -1,5 +1,8 @@
 from __future__ import unicode_literals
 from nose.plugins.attrib import attr
+
+from tornado.testing import gen_test
+
 from .base_tests import GraphPropertyBaseClassTestCase
 from mogwai.properties.properties import Float, Double
 from mogwai.models import Vertex
@@ -22,23 +25,24 @@ class FloatTestVertex(Vertex):
 @attr('unit', 'property', 'property_float')
 class FloatVertexTestCase(GraphPropertyBaseClassTestCase):
 
+    @gen_test
     def test_float_io(self):
         print_("creating vertex")
-        dt = FloatTestVertex.create(test_val=1.1)
+        dt = yield FloatTestVertex.create(test_val=1.1)
         print_("getting vertex from vertex: %s" % dt)
-        dt2 = FloatTestVertex.get(dt._id)
+        dt2 = yield FloatTestVertex.get(dt._id)
         print_("got vertex: %s\n" % dt2)
         self.assertEqual(dt2.test_val, dt.test_val)
         print_("deleting vertex")
-        dt2.delete()
+        yield dt2.delete()
 
-        dt = FloatTestVertex.create(test_val=2.2)
+        dt = yield FloatTestVertex.create(test_val=2.2)
         print_("\ncreated vertex: %s" % dt)
-        dt2 = FloatTestVertex.get(dt._id)
+        dt2 = yield FloatTestVertex.get(dt._id)
         print_("Got vertex: %s" % dt2)
         self.assertEqual(dt2.test_val, 2.2)
         print_("deleting vertex")
-        dt2.delete()
+        yield dt2.delete()
 
 @attr('unit', 'property', 'property_double')
 class DoublePropertyTestCase(FloatPropertyTestCase):
@@ -54,20 +58,21 @@ class DoubleTestVertex(Vertex):
 @attr('unit', 'property', 'property_double')
 class DoubleVertexTestCase(GraphPropertyBaseClassTestCase):
 
+    @gen_test
     def test_double_io(self):
         print_("creating vertex")
-        dt = DoubleTestVertex.create(test_val=1.1)
+        dt = yield DoubleTestVertex.create(test_val=1.1)
         print_("getting vertex from vertex: %s" % dt)
-        dt2 = DoubleTestVertex.get(dt._id)
+        dt2 = yield DoubleTestVertex.get(dt._id)
         print_("got vertex: %s\n" % dt2)
         self.assertEqual(dt2.test_val, dt.test_val)
         print_("deleting vertex")
-        dt2.delete()
+        yield dt2.delete()
 
-        dt = DoubleTestVertex.create(test_val=2.2)
+        dt = yield DoubleTestVertex.create(test_val=2.2)
         print_("\ncreated vertex: %s" % dt)
-        dt2 = DoubleTestVertex.get(dt._id)
+        dt2 = yield DoubleTestVertex.get(dt._id)
         print_("Got vertex: %s" % dt2)
         self.assertEqual(dt2.test_val, 2.2)
         print_("deleting vertex")
-        dt2.delete()
+        yield dt2.delete()

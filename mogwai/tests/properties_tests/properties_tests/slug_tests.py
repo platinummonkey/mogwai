@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 from nose.plugins.attrib import attr
+
+from tornado.testing import gen_test
 from .base_tests import GraphPropertyBaseClassTestCase
 from mogwai.properties.properties import Slug
 from mogwai.models import Vertex
@@ -25,20 +27,21 @@ class SlugTestVertex(Vertex):
 @attr('unit', 'property', 'property_slug')
 class SlugVertexTestCase(GraphPropertyBaseClassTestCase):
 
+    @gen_test
     def test_slug_io(self):
         print_("creating vertex")
-        dt = SlugTestVertex.create(test_val='ab12')
+        dt = yield SlugTestVertex.create(test_val='ab12')
         print_("getting vertex from vertex: %s" % dt)
-        dt2 = SlugTestVertex.get(dt._id)
+        dt2 = yield SlugTestVertex.get(dt._id)
         print_("got vertex: %s\n" % dt2)
         self.assertEqual(dt2.test_val, dt.test_val)
         print_("deleting vertex")
-        dt2.delete()
+        yield dt2.delete()
 
-        dt = SlugTestVertex.create(test_val='12ab')
+        dt = yield SlugTestVertex.create(test_val='12ab')
         print_("\ncreated vertex: %s" % dt)
-        dt2 = SlugTestVertex.get(dt._id)
+        dt2 = yield SlugTestVertex.get(dt._id)
         print_("Got vertex: %s" % dt2)
         self.assertEqual(dt2.test_val, '12ab')
         print_("deleting vertex")
-        dt2.delete()
+        yield dt2.delete()

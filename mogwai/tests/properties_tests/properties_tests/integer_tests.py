@@ -1,5 +1,8 @@
 from __future__ import unicode_literals
 from nose.plugins.attrib import attr
+
+from tornado.testing import gen_test
+
 from .base_tests import GraphPropertyBaseClassTestCase
 from mogwai.properties.properties import Integer, Short, PositiveInteger, Long, PositiveLong
 from mogwai.models import Vertex
@@ -22,23 +25,24 @@ class IntegerTestVertex(Vertex):
 @attr('unit', 'property', 'property_int')
 class IntegerVertexTestCase(GraphPropertyBaseClassTestCase):
 
+    @gen_test
     def test_integer_io(self):
         print_("creating vertex")
-        dt = IntegerTestVertex.create(test_val=1)
+        dt = yield IntegerTestVertex.create(test_val=1)
         print_("getting vertex from vertex: %s" % dt)
-        dt2 = IntegerTestVertex.get(dt._id)
+        dt2 = yield IntegerTestVertex.get(dt._id)
         print_("got vertex: %s\n" % dt2)
         self.assertEqual(dt2.test_val, dt.test_val)
         print_("deleting vertex")
-        dt2.delete()
+        yield dt2.delete()
 
-        dt = IntegerTestVertex.create(test_val=2)
+        dt = yield IntegerTestVertex.create(test_val=2)
         print_("\ncreated vertex: %s" % dt)
-        dt2 = IntegerTestVertex.get(dt._id)
+        dt2 = yield IntegerTestVertex.get(dt._id)
         print_("Got vertex: %s" % dt2)
         self.assertEqual(dt2.test_val, 2)
         print_("deleting vertex")
-        dt2.delete()
+        yield dt2.delete()
 
 
 @attr('unit', 'property', 'property_long')
@@ -57,23 +61,24 @@ class LongTestVertex(Vertex):
 @attr('unit', 'property', 'property_long')
 class LongVertexTestCase(GraphPropertyBaseClassTestCase):
 
+    @gen_test
     def test_long_io(self):
         print_("creating vertex")
-        dt = LongTestVertex.create(test_val=1)
+        dt = yield LongTestVertex.create(test_val=1)
         print_("getting vertex from vertex: %s" % dt)
-        dt2 = LongTestVertex.get(dt._id)
+        dt2 = yield LongTestVertex.get(dt._id)
         print_("got vertex: %s\n" % dt2)
         self.assertEqual(dt2.test_val, dt.test_val)
         print_("deleting vertex")
-        dt2.delete()
+        yield dt2.delete()
 
-        dt = LongTestVertex.create(test_val=2)
+        dt = yield LongTestVertex.create(test_val=2)
         print_("\ncreated vertex: %s" % dt)
-        dt2 = LongTestVertex.get(dt._id)
+        dt2 = yield LongTestVertex.get(dt._id)
         print_("Got vertex: %s" % dt2)
         self.assertEqual(dt2.test_val, 2)
         print_("deleting vertex")
-        dt2.delete()
+        yield dt2.delete()
 
 
 @attr('unit', 'property', 'property_short')
@@ -90,23 +95,24 @@ class ShortTestVertex(Vertex):
 @attr('unit', 'property', 'property_short')
 class ShortVertexTestCase(GraphPropertyBaseClassTestCase):
 
+    @gen_test
     def test_short_io(self):
         print_("creating vertex")
-        dt = ShortTestVertex.create(test_val=1)
+        dt = yield ShortTestVertex.create(test_val=1)
         print_("getting vertex from vertex: %s" % dt)
-        dt2 = ShortTestVertex.get(dt._id)
+        dt2 = yield ShortTestVertex.get(dt._id)
         print_("got vertex: %s\n" % dt2)
         self.assertEqual(dt2.test_val, dt.test_val)
         print_("deleting vertex")
-        dt2.delete()
+        yield dt2.delete()
 
-        dt = ShortTestVertex.create(test_val=2)
+        dt = yield ShortTestVertex.create(test_val=2)
         print_("\ncreated vertex: %s" % dt)
-        dt2 = ShortTestVertex.get(dt._id)
+        dt2 = yield ShortTestVertex.get(dt._id)
         print_("Got vertex: %s" % dt2)
         self.assertEqual(dt2.test_val, 2)
         print_("deleting vertex")
-        dt2.delete()
+        yield dt2.delete()
 
 
 @attr('unit', 'property', 'property_posint')
@@ -123,23 +129,24 @@ class PositiveIntegerTestVertex(Vertex):
 @attr('unit', 'property', 'property_posint')
 class PositiveIntegerVertexTestCase(GraphPropertyBaseClassTestCase):
 
+    @gen_test
     def test_positive_integer_io(self):
         print_("creating vertex")
-        dt = PositiveIntegerTestVertex.create(test_val=1)
+        dt = yield PositiveIntegerTestVertex.create(test_val=1)
         print_("getting vertex from vertex: %s" % dt)
-        dt2 = PositiveIntegerTestVertex.get(dt._id)
+        dt2 = yield PositiveIntegerTestVertex.get(dt._id)
         print_("got vertex: %s\n" % dt2)
         self.assertEqual(dt2.test_val, dt.test_val)
         print_("deleting vertex")
-        dt2.delete()
+        yield dt2.delete()
 
-        dt = PositiveIntegerTestVertex.create(test_val=2)
+        dt = yield PositiveIntegerTestVertex.create(test_val=2)
         print_("\ncreated vertex: %s" % dt)
-        dt2 = PositiveIntegerTestVertex.get(dt._id)
+        dt2 = yield PositiveIntegerTestVertex.get(dt._id)
         print_("Got vertex: %s" % dt2)
         self.assertEqual(dt2.test_val, 2)
         print_("deleting vertex")
-        dt2.delete()
+        yield dt2.delete()
 
 
 @attr('unit', 'property', 'property_poslong')
@@ -156,20 +163,21 @@ class PositiveLongTestVertex(Vertex):
 @attr('unit', 'property', 'property_poslong')
 class PositiveLongVertexTestCase(GraphPropertyBaseClassTestCase):
 
+    @gen_test
     def test_positive_long_io(self):
         print_("creating vertex")
-        dt = PositiveLongTestVertex.create(test_val=1)
+        dt = yield PositiveLongTestVertex.create(test_val=1)
         print_("getting vertex from vertex: %s" % dt)
-        dt2 = PositiveLongTestVertex.get(dt._id)
+        dt2 = yield PositiveLongTestVertex.get(dt._id)
         print_("got vertex: %s\n" % dt2)
         self.assertEqual(dt2.test_val, dt.test_val)
         print_("deleting vertex")
-        dt2.delete()
+        yield dt2.delete()
 
-        dt = PositiveLongTestVertex.create(test_val=2)
+        dt = yield PositiveLongTestVertex.create(test_val=2)
         print_("\ncreated vertex: %s" % dt)
-        dt2 = PositiveLongTestVertex.get(dt._id)
+        dt2 = yield PositiveLongTestVertex.get(dt._id)
         print_("Got vertex: %s" % dt2)
         self.assertEqual(dt2.test_val, 2)
         print_("deleting vertex")
-        dt2.delete()
+        yield dt2.delete()

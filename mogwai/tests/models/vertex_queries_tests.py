@@ -30,14 +30,14 @@ class SimpleQueryTest(BaseMogwaiTestCase):
         result = self.q.limit(10)._get_partial()
         self.assertEqual(result, "g.V(id).limit(limit)")
 
-    # def test_direction_in(self):
-    #     result = self.q.direction(IN)._get_partial()
-    #     self.assertEqual(result, "g.v(id).query().direction(IN)")
-    #
-    # def test_direction_out(self):
-    #     result = self.q.direction(OUT)._get_partial()
-    #     self.assertEqual(result, "g.v(id).query().direction(OUT)")
-    #
+    def test_direction_in(self):
+        result = self.q.direction(IN)._get_partial()
+        self.assertEqual(result, "g.V(id).in()")
+
+    def test_direction_out(self):
+        result = self.q.direction(OUT)._get_partial()
+        self.assertEqual(result, "g.V(id).out()")
+
     def test_labels(self):
         result = self.q.labels('test')._get_partial()
         self.assertEqual(result, "g.V(id).hasLabel('test')")
