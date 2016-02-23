@@ -54,17 +54,17 @@ bob_serialized = pickle.dumps(bob)
 print_("Bob Serialized: {}".format(bob_serialized))
 deserialized_bob = pickle.loads(bob_serialized)
 print_("Bob Deserialized: {}".format(deserialized_bob))
-assert bob == bob_serialized
+assert bob == deserialized_bob
 
 relationship_serialized = pickle.dumps(relationship)
 print_("Relationship Serialized: {}".format(relationship_serialized))
 deserialized_relationship = pickle.loads(relationship_serialized)
 print_("Relationship Deserialized: {}".format(deserialized_relationship))
-assert relationship == relationship_serialized
+assert relationship == deserialized_relationship
 
 
 trinket_serialized = pickle.dumps(trinket)
 print_("Trinket Serialized: {}".format(trinket_serialized))
 deserialized_trinket = pickle.loads(trinket_serialized)
 print_("Trinket Deserialized: {}".format(deserialized_trinket))
-assert trinket == trinket_serialized
+assert trinket == deserialized_trinket
