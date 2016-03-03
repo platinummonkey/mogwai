@@ -11,6 +11,10 @@ mogwai is an object graph mapper (OGM) designed for Titan Graph Database.
    :target: https://app.wercker.com/project/bykey/767e3cb41d7c6866fd88712bda8fede2
 
 
+NOTE: TinkerPop3 Support
+========================
+ZEROFAIL has graciously adopted mogwai to grow into a full fledged goblin for TinkerPop3! See more here: https://github.com/ZEROFAIL/goblin
+
 .. _features:
 
 Features

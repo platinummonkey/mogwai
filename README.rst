@@ -13,6 +13,10 @@ Mogwai supports easily integrating Gremlin graph-traversals with vertex and edge
 already familiar with Blueprints (https://github.com/tinkerpop/blueprints/wiki) there is is a
 simple example.
 
+NOTE: TinkerPop3 Support
+========================
+ZEROFAIL has graciously adopted mogwai to grow into a full fledged goblin for TinkerPop3! See more here: https://github.com/ZEROFAIL/goblin
+
 
 Documentation
 =============
